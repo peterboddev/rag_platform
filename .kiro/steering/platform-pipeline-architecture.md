@@ -105,14 +105,118 @@ platform-pipeline/
 
 ### Security and Credentials Management
 
-#### Git Ignore Requirements
-- **CRITICAL**: Add `.git_credentials` to `.gitignore` file
-- GitHub credentials must be stored locally in `.git_credentials` file for platform engineer workstations
-- Never commit credential files to the repository
-- Use environment variables or AWS Secrets Manager for CodeBuild credential access
+#### Repository Configuration Requirements
+
+**CRITICAL**: The platform pipeline must be configured to point to the correct source repository containing the platform pipeline code.
+
+1. **Repository Identification**:
+   - The platform pipeline source repository is configured in `cdk.json` under the `githubOrg` and `githubRepo` context values
+   - This repository MUST contain all platform pipeline infrastructure code (CDK stacks, buildspec.yml, package.json, etc.)
+   - Verify the repository contains the complete codebase before deployment
+
+2. **Common Repository Configuration Mistakes**:
+   - ❌ Pointing to an empty or different repository
+   - ❌ Using placeholder repository names that don't exist
+   - ❌ Mixing up application repositories with platform pipeline repository
+   - ✅ Ensure `cdk.json` points to the repository containing THIS platform pipeline code
+
+3. **Repository Validation Checklist**:
+   - [ ] Repository exists and is accessible
+   - [ ] Repository contains `package.json`, `buildspec.yml`, and CDK code
+   - [ ] Repository is not just a LICENSE file or empty
+   - [ ] `githubOrg` and `githubRepo` in `cdk.json` match the actual repository
+   - [ ] All platform pipeline code has been committed and pushed
+
+#### Git Credentials File (.git_credentials)
+
+**PURPOSE**: The `.git_credentials` file stores GitHub authentication credentials for local development workstations.
+
+**CRITICAL SECURITY REQUIREMENTS**:
+- **NEVER commit `.git_credentials` to any repository**
+- **ALWAYS add `.git_credentials` to `.gitignore` file**
+- This file contains sensitive authentication tokens/credentials
+- Used only for local platform engineer workstation authentication
+- CodeBuild uses AWS Secrets Manager and CodeStar connections, NOT this file
+
+**File Location and Usage**:
+```
+# Local workstation only - NEVER in repository
+.git_credentials
+
+# Must be in .gitignore
+echo ".git_credentials" >> .gitignore
+```
+
+**What NOT to do**:
+- ❌ Commit `.git_credentials` to repository
+- ❌ Share `.git_credentials` between team members
+- ❌ Use `.git_credentials` for CodeBuild authentication
+- ❌ Store `.git_credentials` in shared locations
+
+**What TO do**:
+- ✅ Keep `.git_credentials` local to each engineer's workstation
+- ✅ Add `.git_credentials` to `.gitignore`
+- ✅ Use AWS Secrets Manager for CodeBuild credential access
+- ✅ Use CodeStar connections for pipeline GitHub integration
+
+#### CodeBuild Credential Access
+- CodeBuild uses AWS Secrets Manager to store GitHub tokens securely
+- CodeStar connections provide secure GitHub integration for pipelines
+- Environment variables pass credentials to CodeBuild without exposing them
+- Never use local credential files for automated pipeline authentication
 
 ## Configuration Management
 
+### Repository Configuration (CRITICAL)
+
+**The platform pipeline MUST be configured to monitor the correct source repository.**
+
+#### CDK Context Configuration
+The repository is configured in `cdk.json`:
+```json
+{
+  "context": {
+    "githubOrg": "your-github-org",
+    "githubRepo": "your-platform-pipeline-repo",
+    "branch": "main"
+  }
+}
+```
+
+#### Verification Steps
+Before deploying the platform pipeline:
+
+1. **Verify Repository Contents**:
+   ```bash
+   # Check current repository
+   git remote -v
+   
+   # Verify all platform code is committed
+   git status
+   
+   # Ensure no untracked files remain
+   git add . && git commit -m "Platform pipeline code"
+   git push origin main
+   ```
+
+2. **Validate CDK Configuration**:
+   - Open `cdk.json`
+   - Verify `githubOrg` matches your GitHub organization
+   - Verify `githubRepo` matches the repository containing THIS code
+   - Verify `branch` matches your main branch (usually "main")
+
+3. **Test Repository Access**:
+   - Ensure CodeStar connection is authorized for the repository
+   - Verify the repository is not empty (contains more than just LICENSE)
+   - Confirm all necessary files are present: `package.json`, `buildspec.yml`, CDK code
+
+#### Common Configuration Errors
+- **Wrong Repository**: Pipeline points to different/empty repository
+- **Missing Code**: Repository exists but doesn't contain platform pipeline code
+- **Untracked Files**: Code exists locally but wasn't committed/pushed
+- **Branch Mismatch**: Pipeline monitors different branch than where code was pushed
+
+### Application Repository Management
 - Application repository URLs stored as CDK context values or parameters
 - Pipeline configurations managed through CDK stacks and constructs
 - Environment-specific settings handled through CDK context files
@@ -120,3 +224,74 @@ platform-pipeline/
 - CDK asset management for build artifacts and dependencies
 
 This architecture enables the platform team to maintain control and consistency while allowing application teams to focus on their core development work. The use of CDK provides type-safe infrastructure definitions and powerful abstraction capabilities for managing complex pipeline architectures.
+
+## Troubleshooting Common Issues
+
+### Pipeline Build Failures
+
+#### "package.json not found" Error
+**Symptoms**: CodeBuild logs show `npm error enoent Could not read package.json`
+
+**Root Cause**: Repository is empty or doesn't contain platform pipeline code
+
+**Solution**:
+1. Verify repository contents: `git ls-remote origin`
+2. Check if code was committed: `git status`
+3. Push missing code: `git add . && git commit -m "Add platform code" && git push`
+4. Verify `cdk.json` points to correct repository
+
+#### "npm: not found" Error
+**Symptoms**: CodeBuild logs show `npm: not found` or `exit status 127`
+
+**Root Cause**: Incorrect CodeBuild image or Node.js runtime configuration
+
+**Solution**:
+1. Verify CodeBuild image is Amazon Linux 2023 (`AMAZON_LINUX_2_5`)
+2. Check `buildspec.yml` has `nodejs: 18` in runtime-versions
+3. Ensure buildspec.yml is properly formatted YAML
+
+#### CodeStar Connection Issues
+**Symptoms**: Source stage fails with connection errors
+
+**Root Cause**: CodeStar connection not authorized or misconfigured
+
+**Solution**:
+1. Go to AWS Console → CodePipeline → Settings → Connections
+2. Find your connection and click "Update pending connection"
+3. Complete GitHub authorization in browser
+4. Verify connection status shows "Available"
+
+### Repository Configuration Issues
+
+#### Wrong Repository Referenced
+**Symptoms**: Pipeline builds but uses wrong source code
+
+**Root Cause**: `cdk.json` points to different repository
+
+**Solution**:
+1. Check `git remote -v` to see current repository
+2. Update `cdk.json` with correct `githubOrg` and `githubRepo`
+3. Redeploy pipeline: `cdk deploy PlatformPipelineStack`
+
+#### Empty Repository
+**Symptoms**: CodeBuild shows only LICENSE file or minimal content
+
+**Root Cause**: Platform code not pushed to repository
+
+**Solution**:
+1. Commit all platform code: `git add . && git commit -m "Platform pipeline"`
+2. Push to repository: `git push origin main`
+3. Wait for automatic pipeline trigger or manually start execution
+
+### Security and Credentials
+
+#### .git_credentials Accidentally Committed
+**Symptoms**: Security scan flags or credential exposure
+
+**Root Cause**: `.git_credentials` file was committed to repository
+
+**Solution**:
+1. Remove from repository: `git rm .git_credentials`
+2. Add to .gitignore: `echo ".git_credentials" >> .gitignore`
+3. Commit changes: `git commit -m "Remove credentials and update gitignore"`
+4. Rotate any exposed credentials immediately
