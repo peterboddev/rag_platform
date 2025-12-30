@@ -1,0 +1,107 @@
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      nodejs: 18
+    commands:
+      - echo "Checking environment and working directory..."
+      - pwd
+      - ls -la
+      - echo "Checking if package.json exists..."
+      - test -f package.json && echo "✅ package.json found" || echo "❌ package.json not found"
+      - echo "Node.js version: $(node --version)"
+      - echo "NPM version: $(npm --version)"
+      - echo "Installing CDK CLI globally..."
+      - npm install -g aws-cdk@2.100.0
+      - echo "CDK version installed: $(cdk --version)"
+      - echo "Installing project dependencies..."
+      - npm install
+      
+  pre_build:
+    commands:
+      - echo "Pre-build phase started on $(date)"
+      - echo "🔐 Validating secure credential access..."
+      # Validate that required environment variables are available
+      - |
+        if [ "$CREDENTIAL_VALIDATION_ENABLED" = "true" ]; then
+          echo "📋 Credential validation is enabled"
+          
+          # Check if GitHub token is available (for token-based auth)
+          if [ -n "$GITHUB_TOKEN" ]; then
+            echo "✅ GitHub token is configured"
+            # Validate token by making a test API call
+            if curl -s -H "Authorization: token $GITHUB_TOKEN" https://api.github.com/user | grep -q '"login"'; then
+              echo "✅ GitHub token is valid"
+            else
+              echo "❌ GitHub token is invalid"
+              exit 1
+            fi
+          fi
+          
+          # Check if CodeStar connection ARN is available (for connection-based auth)
+          if [ -n "$CONNECTION_ARN" ]; then
+            echo "✅ CodeStar connection ARN is configured: $CONNECTION_ARN"
+          fi
+          
+          # Validate AWS credentials
+          if aws sts get-caller-identity > /dev/null 2>&1; then
+            echo "✅ AWS credentials are valid"
+            aws sts get-caller-identity --output text --query 'Arn'
+          else
+            echo "❌ AWS credentials are invalid"
+            exit 1
+          fi
+          
+          echo "✅ All credential validations passed"
+        else
+          echo "⚠️  Credential validation is disabled"
+        fi
+      - echo "Validating TypeScript configuration..."
+      - npx tsc --noEmit --skipLibCheck
+      - echo "Compiling TypeScript..."
+      - npm run build
+      - echo "Running tests..."
+      - npm test
+      
+  build:
+    commands:
+      - echo "Build phase started on $(date)"
+      - echo "Compiling TypeScript..."
+      - npm run build
+      - echo "Running tests..."
+      - npm test
+      - echo "Synthesizing CDK templates..."
+      - npx cdk synth
+      
+  post_build:
+    commands:
+      - echo "Build completed on $(date)"
+      - echo "Deployment successful"
+      # Log credential usage for audit purposes (without exposing sensitive data)
+      - |
+        if [ "$CREDENTIAL_VALIDATION_ENABLED" = "true" ]; then
+          echo "📊 Credential usage audit:"
+          echo "  - GitHub authentication method: $([ -n "$GITHUB_TOKEN" ] && echo "Token" || echo "CodeStar Connection")"
+          echo "  - AWS identity: $(aws sts get-caller-identity --output text --query 'Arn' 2>/dev/null || echo "Unknown")"
+          echo "  - Secrets prefix: ${SECRETS_PREFIX:-"Not configured"}"
+        fi
+
+cache:
+  paths:
+    - 'node_modules/**/*'
+    - '/root/.npm/**/*'
+    - '/usr/local/lib/node_modules/**/*'
+
+artifacts:
+  base-directory: 'cdk.out'
+  files:
+    - '**/*'
+
+env:
+  variables:
+    NODE_ENV: production
+    CDK_NEW_BOOTSTRAP: 1
+    CDK_DISABLE_VERSION_CHECK: 1
+    # Credential validation is enabled by default for security
+    CREDENTIAL_VALIDATION_ENABLED: true

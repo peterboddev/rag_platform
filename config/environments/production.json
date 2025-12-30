@@ -1,0 +1,20 @@
+{
+  "environments": {
+    "prod": {
+      "name": "Production",
+      "account": "987654321098",
+      "region": "us-east-1",
+      "isProd": true,
+      "requiresApproval": true,
+      "parameters": {
+        "logLevel": "INFO",
+        "retentionDays": "30"
+      }
+    }
+  },
+  "defaults": {
+    "buildRuntime": "18",
+    "computeType": "BUILD_GENERAL1_MEDIUM",
+    "cacheEnabled": true
+  }
+}

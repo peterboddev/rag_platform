@@ -1,0 +1,29 @@
+{
+  "applicationName": "sample-app",
+  "team": "platform-team",
+  "sourceRepo": {
+    "owner": "platform-team",
+    "repo": "sample-application",
+    "branch": "main"
+  },
+  "buildConfig": {
+    "runtime": "18",
+    "commands": [
+      "echo 'Installing dependencies...'",
+      "npm ci",
+      "echo 'Running tests...'",
+      "npm run test",
+      "echo 'Building application...'",
+      "npm run build"
+    ],
+    "environment": {
+      "NODE_ENV": "production",
+      "BUILD_ENV": "pipeline"
+    }
+  },
+  "deploymentTargets": ["dev", "staging", "prod"],
+  "notifications": {
+    "emailAddresses": ["platform-team@company.com"]
+  },
+  "enabled": true
+}

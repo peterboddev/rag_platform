@@ -1,0 +1,30 @@
+{
+  "applicationName": "rag-app",
+  "team": "ai-team",
+  "sourceRepo": {
+    "owner": "peterboddev",
+    "repo": "rag",
+    "branch": "main"
+  },
+  "buildConfig": {
+    "runtime": "18",
+    "commands": [
+      "echo 'Installing dependencies...'",
+      "npm ci",
+      "echo 'Running tests...'",
+      "npm run test",
+      "echo 'Building RAG application...'",
+      "npm run build"
+    ],
+    "environment": {
+      "NODE_ENV": "production",
+      "BUILD_ENV": "pipeline",
+      "APP_TYPE": "rag"
+    }
+  },
+  "deploymentTargets": ["dev", "staging", "prod"],
+  "notifications": {
+    "emailAddresses": ["ai-team@company.com"]
+  },
+  "enabled": true
+}

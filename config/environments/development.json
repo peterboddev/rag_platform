@@ -1,0 +1,20 @@
+{
+  "environments": {
+    "dev": {
+      "name": "Development",
+      "account": "123456789012",
+      "region": "us-east-1",
+      "isProd": false,
+      "requiresApproval": false,
+      "parameters": {
+        "logLevel": "DEBUG",
+        "retentionDays": "7"
+      }
+    }
+  },
+  "defaults": {
+    "buildRuntime": "18",
+    "computeType": "BUILD_GENERAL1_SMALL",
+    "cacheEnabled": true
+  }
+}
