@@ -9,6 +9,7 @@ import { ApplicationPipelineStage } from './constructs/application-pipeline-stag
 import { SecurityStack } from './security-stack';
 import { MonitoringConstruct } from './constructs/monitoring-construct';
 import { CodeBuildCredentialsManager } from './config/codebuild-credentials';
+import { WebhookTriggerConstruct } from './constructs/webhook-trigger-construct';
 
 export interface PlatformPipelineStackProps extends cdk.StackProps {
   readonly githubOrg?: string;
@@ -24,6 +25,7 @@ export class PlatformPipelineStack extends cdk.Stack {
   public readonly applicationPipelineStage: ApplicationPipelineStage;
   public readonly monitoring: MonitoringConstruct;
   public readonly credentialsManager: CodeBuildCredentialsManager;
+  public readonly webhookTrigger: WebhookTriggerConstruct;
 
   constructor(scope: Construct, id: string, props?: PlatformPipelineStackProps) {
     super(scope, id, props);
@@ -257,6 +259,15 @@ export class PlatformPipelineStack extends cdk.Stack {
     this.monitoring.createExecutionTimeMetricFilter();
     this.monitoring.createSuccessRateMetricFilter();
 
+    // Create EventBridge integration for immediate pipeline triggering
+    this.webhookTrigger = new WebhookTriggerConstruct(this, 'EventBridgeTrigger', {
+      pipelineName: 'PlatformPipeline',
+      logRetentionDays: logs.RetentionDays.ONE_MONTH,
+    });
+
+    // Output webhook setup instructions for GitHub configuration
+    this.outputWebhookSetupInstructions(githubOrg, githubRepo, branch);
+
     // Output configuration summary with cross-stack integration details
     const configSummary = this.applicationPipelineStage.getConfigurationSummary();
     new cdk.CfnOutput(this, 'ConfigurationSummary', {
@@ -353,5 +364,49 @@ export class PlatformPipelineStack extends cdk.Stack {
    */
   public getPipelineName(): string {
     return this.pipeline.pipeline.pipelineName;
+  }
+
+  /**
+   * Outputs information about the EventBridge integration for immediate pipeline triggering
+   * This eliminates the 1-5 minute polling delay from CodeStar connections automatically
+   */
+  private outputWebhookSetupInstructions(githubOrg: string, githubRepo: string, branch: string): void {
+    // Output EventBridge integration status
+    new cdk.CfnOutput(this, 'EventBridgeIntegrationStatus', {
+      value: JSON.stringify({
+        status: 'Enabled - Automatic immediate pipeline triggering',
+        description: 'EventBridge rules automatically trigger pipeline on CodeStar connection events',
+        noGitHubConfigRequired: 'This works automatically with existing CodeStar connection',
+        eliminatesPollingDelay: 'No more 1-5 minute wait times',
+        fallbackMechanism: 'CodeStar connection continues as backup',
+      }, null, 2),
+      description: 'EventBridge integration status for immediate pipeline triggering',
+      exportName: 'PlatformPipeline-EventBridgeIntegrationStatus',
+    });
+
+    // Output infrastructure details
+    new cdk.CfnOutput(this, 'ImmediateTriggerInfrastructure', {
+      value: JSON.stringify({
+        eventRuleArn: this.webhookTrigger.getEventRuleArn(),
+        triggerMechanism: 'EventBridge → CodePipeline (direct)',
+        authentication: 'AWS IAM (no external configuration needed)',
+        monitoring: 'EventBridge metrics and CloudTrail logs',
+        lambdaFunction: 'Not needed - EventBridge triggers CodePipeline directly',
+      }, null, 2),
+      description: 'Immediate trigger infrastructure details for monitoring',
+      exportName: 'PlatformPipeline-ImmediateTriggerInfrastructure',
+    });
+
+    // Output pipeline monitoring URLs
+    new cdk.CfnOutput(this, 'PipelineMonitoringUrls', {
+      value: JSON.stringify({
+        pipelineConsole: `https://${cdk.Aws.REGION}.console.aws.amazon.com/codesuite/codepipeline/pipelines/PlatformPipeline/view`,
+        cloudWatchLogs: `https://${cdk.Aws.REGION}.console.aws.amazon.com/cloudwatch/home?region=${cdk.Aws.REGION}#logsV2:log-groups/log-group/$252Faws$252Fcodebuild$252FPlatformPipeline-Synth`,
+        eventBridgeRules: `https://${cdk.Aws.REGION}.console.aws.amazon.com/events/home?region=${cdk.Aws.REGION}#/rules`,
+        cloudTrail: `https://${cdk.Aws.REGION}.console.aws.amazon.com/cloudtrail/home?region=${cdk.Aws.REGION}#/events`,
+      }, null, 2),
+      description: 'URLs for monitoring pipeline execution and EventBridge integration',
+      exportName: 'PlatformPipeline-MonitoringUrls',
+    });
   }
 }

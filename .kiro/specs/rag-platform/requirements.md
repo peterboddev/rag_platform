@@ -88,7 +88,19 @@ This document defines the requirements for a platform-owned CI/CD pipeline syste
 4. THE System SHALL support rollback of configuration changes through CloudFormation stack operations
 5. THE System SHALL provide clear documentation for all configuration parameters
 
-### Requirement 7: Monitoring and Observability
+### Requirement 7: Immediate Pipeline Triggering
+
+**User Story:** As a platform engineer, I want the pipeline to trigger immediately after pushing changes, so that I don't have to wait for CodeStar connection polling delays.
+
+#### Acceptance Criteria
+
+1. WHEN the platform pipeline is deployed, THE System SHALL create webhook infrastructure for immediate pipeline triggering
+2. THE System SHALL deploy API Gateway endpoint and Lambda function for webhook processing
+3. THE System SHALL output webhook URL for GitHub configuration via CloudFormation outputs
+4. THE System SHALL authenticate webhook requests to prevent unauthorized triggering
+5. THE System SHALL provide EventBridge integration for advanced webhook processing
+
+### Requirement 8: Monitoring and Observability
 
 **User Story:** As a platform engineer, I want comprehensive monitoring of both platform and application pipelines, so that I can troubleshoot issues and ensure system reliability.
 

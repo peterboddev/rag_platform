@@ -53,24 +53,26 @@ export class MonitoringConstruct extends Construct {
   public readonly failureNotificationTopic?: sns.Topic;
   public readonly pipelineFailureRule?: events.Rule;
   public readonly buildFailureRule?: events.Rule;
+  
+  private readonly config: MonitoringConfig;
 
   constructor(scope: Construct, id: string, props: MonitoringConstructProps) {
     super(scope, id);
 
-    const { config } = props;
-    const logRetention = config.logRetentionDays || logs.RetentionDays.ONE_MONTH;
-    const metricNamespace = config.metricNamespace || 'PlatformPipeline/Monitoring';
+    this.config = props.config;
+    const logRetention = this.config.logRetentionDays || logs.RetentionDays.ONE_MONTH;
+    const metricNamespace = this.config.metricNamespace || 'PlatformPipeline/Monitoring';
 
     // Create CloudWatch Log Groups for pipeline execution logging
     this.pipelineLogGroup = new logs.LogGroup(this, 'PipelineLogGroup', {
-      logGroupName: `/aws/platform-pipeline/${config.pipelineName}/execution`,
+      logGroupName: `/aws/platform-pipeline/${this.config.pipelineName}/execution`,
       retention: logRetention,
       removalPolicy: cdk.RemovalPolicy.DESTROY,
     });
 
     // Create CloudWatch Log Group for audit logging
     this.auditLogGroup = new logs.LogGroup(this, 'AuditLogGroup', {
-      logGroupName: `/aws/platform-pipeline/${config.pipelineName}/audit`,
+      logGroupName: `/aws/platform-pipeline/${this.config.pipelineName}/audit`,
       retention: logRetention,
       removalPolicy: cdk.RemovalPolicy.DESTROY,
     });
@@ -80,7 +82,7 @@ export class MonitoringConstruct extends Construct {
       namespace: metricNamespace,
       metricName: 'PipelineExecutionTime',
       dimensionsMap: {
-        PipelineName: config.pipelineName,
+        PipelineName: this.config.pipelineName,
       },
       statistic: 'Average',
       unit: cloudwatch.Unit.SECONDS,
@@ -90,7 +92,7 @@ export class MonitoringConstruct extends Construct {
       namespace: metricNamespace,
       metricName: 'PipelineSuccessRate',
       dimensionsMap: {
-        PipelineName: config.pipelineName,
+        PipelineName: this.config.pipelineName,
       },
       statistic: 'Average',
       unit: cloudwatch.Unit.PERCENT,
@@ -98,29 +100,29 @@ export class MonitoringConstruct extends Construct {
 
     // Create EventBridge rules for pipeline state changes
     if (props.pipeline) {
-      this.pipelineStateRule = this.createPipelineStateRule(props.pipeline, config);
+      this.pipelineStateRule = this.createPipelineStateRule(props.pipeline, this.config);
     } else {
       // Create a generic rule that will capture all CodePipeline events for this pipeline name
-      this.pipelineStateRule = this.createGenericPipelineStateRule(config);
+      this.pipelineStateRule = this.createGenericPipelineStateRule(this.config);
     }
 
     if (props.buildProject) {
-      this.buildStateRule = this.createBuildStateRule(props.buildProject, config);
+      this.buildStateRule = this.createBuildStateRule(props.buildProject, this.config);
     }
 
     // Create CloudWatch Dashboard for monitoring
-    if (config.enableDetailedMetrics) {
-      this.createMonitoringDashboard(config);
+    if (this.config.enableDetailedMetrics) {
+      this.createMonitoringDashboard(this.config);
     }
 
     // Set up failure notification system
-    if (config.enableFailureNotifications !== false) {
-      this.setupFailureNotifications(config, props);
+    if (this.config.enableFailureNotifications !== false) {
+      this.setupFailureNotifications(this.config, props);
     }
 
     // Add tags for resource management
     cdk.Tags.of(this).add('Component', 'Monitoring');
-    cdk.Tags.of(this).add('Pipeline', config.pipelineName);
+    cdk.Tags.of(this).add('Pipeline', this.config.pipelineName);
     cdk.Tags.of(this).add('ManagedBy', 'PlatformPipeline');
   }
 
@@ -475,5 +477,35 @@ This is an automated notification from the Platform Pipeline monitoring system.`
         })
       );
     }
+  }
+
+  /**
+   * Creates CloudWatch alarm for GitHub webhook failures
+   * Monitors EventBridge rule failures and sends notifications
+   */
+  public createWebhookFailureAlarm(webhookRuleArn: string): cloudwatch.Alarm {
+    const alarm = new cloudwatch.Alarm(this, 'WebhookFailureAlarm', {
+      alarmName: `${this.config.pipelineName}-webhook-failures`,
+      alarmDescription: 'Alarm for GitHub webhook delivery failures',
+      metric: new cloudwatch.Metric({
+        namespace: 'AWS/Events',
+        metricName: 'FailedInvocations',
+        dimensionsMap: {
+          RuleName: webhookRuleArn.split('/').pop() || 'unknown',
+        },
+        statistic: 'Sum',
+        period: cdk.Duration.minutes(5),
+      }),
+      threshold: 1,
+      evaluationPeriods: 1,
+      treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
+    });
+
+    // Add SNS notification if failure notifications are enabled
+    if (this.config.enableFailureNotifications && this.failureNotificationTopic) {
+      alarm.addAlarmAction(new cloudwatchActions.SnsAction(this.failureNotificationTopic));
+    }
+
+    return alarm;
   }
 }

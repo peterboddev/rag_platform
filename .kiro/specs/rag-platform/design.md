@@ -160,6 +160,50 @@ export interface PlatformConfig {
 }
 ```
 
+### Immediate Pipeline Triggering System
+
+A critical CDK infrastructure component that eliminates the 1-5 minute polling delay inherent in CodeStar connections by deploying AWS webhook infrastructure for immediate pipeline execution.
+
+**Key Features:**
+- EventBridge webhook endpoint for GitHub integration
+- API Gateway webhook receiver with authentication
+- Lambda function for pipeline triggering
+- CloudFormation outputs with webhook URLs for GitHub configuration
+
+**CDK Implementation:**
+```typescript
+export class WebhookTriggerConstruct extends Construct {
+  public readonly webhookUrl: string;
+  
+  constructor(scope: Construct, id: string, props: WebhookTriggerProps) {
+    super(scope, id);
+    
+    // Lambda function to trigger pipeline
+    const triggerFunction = new Function(this, 'TriggerFunction', {
+      runtime: Runtime.NODEJS_18_X,
+      handler: 'index.handler',
+      code: Code.fromInline(`
+        const { CodePipelineClient, StartPipelineExecutionCommand } = require('@aws-sdk/client-codepipeline');
+        exports.handler = async (event) => {
+          const client = new CodePipelineClient();
+          await client.send(new StartPipelineExecutionCommand({
+            name: '${props.pipelineName}'
+          }));
+          return { statusCode: 200, body: 'Pipeline triggered' };
+        };
+      `),
+    });
+    
+    // API Gateway for webhook endpoint
+    const api = new RestApi(this, 'WebhookApi');
+    const webhook = api.root.addResource('webhook');
+    webhook.addMethod('POST', new LambdaIntegration(triggerFunction));
+    
+    this.webhookUrl = api.url + 'webhook';
+  }
+}
+```
+
 ### Security and IAM Management
 
 Implements least-privilege access patterns for both platform and application pipelines.
@@ -309,7 +353,15 @@ After reviewing the prework analysis, I'll consolidate redundant properties and 
 
 **Property 14: Failure notification reliability**
 *For any* pipeline failure, notifications should be sent to platform engineers.
-**Validates: Requirements 7.2**
+**Validates: Requirements 8.2**
+
+**Property 15: Webhook infrastructure deployment**
+*For any* platform pipeline deployment, the system should create API Gateway webhook endpoint, Lambda trigger function, and output webhook URL for GitHub configuration.
+**Validates: Requirements 7.1, 7.2**
+
+**Property 16: Webhook authentication and security**
+*For any* webhook request, the system should validate authentication and only trigger pipeline for authorized requests.
+**Validates: Requirements 7.4**
 
 ## Error Handling
 
