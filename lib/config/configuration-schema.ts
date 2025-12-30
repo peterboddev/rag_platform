@@ -192,7 +192,7 @@ export const ConfigurationSchemas = {
     properties: {
       buildRuntime: {
         type: 'string',
-        enum: ['14', '16', '18', '20'],
+        enum: ['16', '18', '20', '22'],
         description: 'Default Node.js runtime version',
       },
       computeType: {
@@ -212,6 +212,8 @@ export const ConfigurationSchemas = {
           'STANDARD_6_0',
           'STANDARD_7_0',
           'AMAZON_LINUX_2_STANDARD_3_0_ARM',
+          'AMAZON_LINUX_2023_STANDARD_5_0',
+          'AMAZON_LINUX_2023_STANDARD_5_0_ARM',
         ],
         description: 'Default CodeBuild image',
       },
@@ -486,7 +488,7 @@ export class ConfigurationSchemaValidator {
             branch: 'main',
           },
           buildConfig: {
-            runtime: '18',
+            runtime: '20',
             commands: ['npm ci', 'npm run test', 'npm run build'],
             environment: {
               NODE_ENV: 'production',
