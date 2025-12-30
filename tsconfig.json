@@ -23,10 +23,6 @@
     "typeRoots": [
       "./node_modules/@types"
     ],
-    "types": [
-      "node",
-      "jest"
-    ],
     "outDir": "./lib",
     "rootDir": "./",
     "resolveJsonModule": true,
