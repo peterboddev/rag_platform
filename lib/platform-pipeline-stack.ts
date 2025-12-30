@@ -71,9 +71,6 @@ export class PlatformPipelineStack extends cdk.Stack {
         
         // Commands for TypeScript compilation and CDK synthesis
         commands: [
-          // Install TypeScript globally first (since it's not in package.json dependencies)
-          'npm install -g typescript@5.2.2',
-          
           // Check environment and working directory
           'echo "Checking environment and working directory..."',
           'pwd',
@@ -85,7 +82,7 @@ export class PlatformPipelineStack extends cdk.Stack {
           'echo "Checking if package.json exists..."',
           'test -f package.json && echo "✅ package.json found" || echo "❌ package.json not found"',
           
-          // Install dependencies
+          // Install dependencies (now includes TypeScript and @types/node)
           'echo "Installing dependencies..."',
           'npm install',
           
@@ -94,8 +91,8 @@ export class PlatformPipelineStack extends cdk.Stack {
           'ls -la node_modules/.bin/ | head -10',
           'echo "Checking if TypeScript is installed..."',
           'npm list typescript || echo "TypeScript not found in dependencies"',
-          'echo "Checking global TypeScript..."',
-          'which tsc && tsc --version',
+          'echo "Checking if @types/node is installed..."',
+          'npm list @types/node || echo "@types/node not found in dependencies"',
           
           // TypeScript compilation using npm script
           'echo "Compiling TypeScript..."',
