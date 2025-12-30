@@ -104,11 +104,11 @@ dist
 cdk.out
 
 # Compiled JavaScript files
-*.js
-*.d.ts
+lib/**/*.js
+lib/**/*.d.ts
 
-# Exclude from source control
-lib/
+# Exclude from source control - only compiled files, not TypeScript sources
+# lib/ - REMOVED: We need to commit TypeScript source files
 
 # AWS credentials and sensitive files
 .git_credentials
