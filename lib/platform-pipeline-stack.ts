@@ -82,9 +82,9 @@ export class PlatformPipelineStack extends cdk.Stack {
           'echo "Installing dependencies..."',
           'npm install',
           
-          // TypeScript compilation using npx to ensure tsc is available
+          // TypeScript compilation using npm script (which has proper tsc path)
           'echo "Compiling TypeScript..."',
-          'npx tsc',
+          'npm run build',
           
           // Run tests to ensure code quality
           'echo "Running tests..."',
