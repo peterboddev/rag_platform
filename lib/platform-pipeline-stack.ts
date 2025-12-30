@@ -71,6 +71,9 @@ export class PlatformPipelineStack extends cdk.Stack {
         
         // Commands for TypeScript compilation and CDK synthesis
         commands: [
+          // Install TypeScript globally first (since it's not in package.json dependencies)
+          'npm install -g typescript@5.2.2',
+          
           // Check environment and working directory
           'echo "Checking environment and working directory..."',
           'pwd',
@@ -91,6 +94,8 @@ export class PlatformPipelineStack extends cdk.Stack {
           'ls -la node_modules/.bin/ | head -10',
           'echo "Checking if TypeScript is installed..."',
           'npm list typescript || echo "TypeScript not found in dependencies"',
+          'echo "Checking global TypeScript..."',
+          'which tsc && tsc --version',
           
           // TypeScript compilation using npm script
           'echo "Compiling TypeScript..."',
@@ -107,6 +112,18 @@ export class PlatformPipelineStack extends cdk.Stack {
         
         // Primary output directory for CDK synthesis
         primaryOutputDirectory: 'cdk.out',
+        
+        // Partial buildspec to specify runtime version
+        partialBuildSpec: codebuild.BuildSpec.fromObject({
+          version: '0.2',
+          phases: {
+            install: {
+              'runtime-versions': {
+                nodejs: '20',
+              },
+            },
+          },
+        }),
         
         // Enhanced CodeBuild configuration with ARM-based Amazon Linux 2 for Node.js 20
         buildEnvironment: {
