@@ -4,7 +4,7 @@
   "description": "Platform-owned CI/CD pipeline system using AWS CDK with TypeScript",
   "main": "lib/index.js",
   "scripts": {
-    "build": "npx tsc",
+    "build": "tsc",
     "watch": "tsc -w",
     "test": "jest",
     "test:watch": "jest --watch",
