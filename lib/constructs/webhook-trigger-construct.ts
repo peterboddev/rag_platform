@@ -36,10 +36,10 @@ export class WebhookTriggerConstruct extends Construct {
         }
       },
       targets: [
-        new targets.CodePipeline(codepipeline.Pipeline.fromPipelineName(
+        new targets.CodePipeline(codepipeline.Pipeline.fromPipelineArn(
           this, 
           'TargetPipeline', 
-          props.pipelineName
+          `arn:aws:codepipeline:${cdk.Aws.REGION}:${cdk.Aws.ACCOUNT_ID}:pipeline/${props.pipelineName}`
         ))
       ],
     });
