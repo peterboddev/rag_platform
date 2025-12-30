@@ -15,9 +15,9 @@ test('Platform Pipeline Stack Creation', () => {
       'environments': {},
       'applications': {},
       'defaults': {
-        'buildRuntime': '18',
+        'buildRuntime': '20',
         'computeType': 'BUILD_GENERAL1_SMALL',
-        'buildImage': 'STANDARD_7_0',
+        'buildImage': 'AMAZON_LINUX_2_STANDARD_3_0_ARM',
         'cacheEnabled': true
       }
     }

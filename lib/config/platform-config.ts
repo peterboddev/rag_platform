@@ -121,9 +121,9 @@ export class ConfigurationManager {
         environments: node.tryGetContext('environments') || {},
         applications: node.tryGetContext('applications') || {},
         defaults: node.tryGetContext('defaults') || {
-          buildRuntime: '18',
+          buildRuntime: '20',
           computeType: 'BUILD_GENERAL1_SMALL',
-          buildImage: 'STANDARD_7_0',
+          buildImage: 'AMAZON_LINUX_2_STANDARD_3_0_ARM',
           cacheEnabled: true,
         },
       };
@@ -140,9 +140,9 @@ export class ConfigurationManager {
       environments: node.tryGetContext('environments') || {},
       applications: node.tryGetContext('applications') || {},
       defaults: {
-        buildRuntime: node.tryGetContext('defaults.buildRuntime') || '18',
+        buildRuntime: node.tryGetContext('defaults.buildRuntime') || '20',
         computeType: node.tryGetContext('defaults.computeType') || 'BUILD_GENERAL1_SMALL',
-        buildImage: node.tryGetContext('defaults.buildImage') || 'STANDARD_7_0',
+        buildImage: node.tryGetContext('defaults.buildImage') || 'AMAZON_LINUX_2_STANDARD_3_0_ARM',
         cacheEnabled: node.tryGetContext('defaults.cacheEnabled') !== false,
       },
     };
@@ -171,9 +171,9 @@ export class ConfigurationManager {
       environments: {},
       applications: {},
       defaults: {
-        buildRuntime: '18',
+        buildRuntime: '20',
         computeType: 'BUILD_GENERAL1_SMALL',
-        buildImage: 'STANDARD_7_0',
+        buildImage: 'AMAZON_LINUX_2_STANDARD_3_0_ARM',
         cacheEnabled: true,
       },
     };
@@ -580,9 +580,9 @@ export class ConfigurationUtils {
         },
       },
       defaults: {
-        buildRuntime: '18',
+        buildRuntime: '20',
         computeType: 'BUILD_GENERAL1_SMALL',
-        buildImage: 'STANDARD_7_0',
+        buildImage: 'AMAZON_LINUX_2_STANDARD_3_0_ARM',
         cacheEnabled: true,
       },
     };

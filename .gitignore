@@ -102,6 +102,7 @@ dist
 # CDK asset staging directory
 .cdk.staging
 cdk.out
+cdk-deploy*
 
 # Compiled JavaScript files
 lib/**/*.js

@@ -37,6 +37,25 @@ This project uses AWS CDK (Cloud Development Kit) with TypeScript for Infrastruc
 2. **Platform Pipeline Execution**: CodeBuild within the platform pipeline uses CDK to deploy/update application pipelines
 3. **Infrastructure as Code**: All pipeline infrastructure defined in CDK TypeScript code
 
+### Runtime Environment Standards
+
+**Node.js and npm Versions:**
+- **Node.js**: Version 20 (LTS) - provides optimal performance and security
+- **npm**: Version 11.6.2+ - fully compatible with Node.js 20
+- **TypeScript**: Version 5.2.2+ - for type-safe infrastructure code
+
+**CodeBuild Environment:**
+- **Build Image**: `AMAZON_LINUX_2_STANDARD_3_0` (ARM-based)
+- **Architecture**: ARM64 (AArch64) for better price/performance ratio
+- **Compute Type**: `BUILD_GENERAL1_SMALL` (default) or larger as needed
+- **Runtime**: Amazon Linux 2023 with Node.js 20 pre-installed
+
+**Benefits of ARM-based Images:**
+- Better price/performance ratio compared to x86 instances
+- Native Node.js 20 support eliminates npm compatibility warnings
+- Consistent runtime environment across all CodeBuild projects
+- Future-proof architecture aligned with AWS recommendations
+
 ### Platform Pipeline Responsibilities
 - Define and maintain CDK TypeScript stacks for CodePipeline infrastructure
 - Manage CodeBuild project configurations through CDK constructs
@@ -79,6 +98,24 @@ platform-pipeline/
 4. **Standardization**: Enforce consistent patterns across all application pipelines through CDK constructs
 5. **Security**: Implement least-privilege access and secure credential management via CDK IAM constructs
 6. **Monitoring**: Include comprehensive logging and monitoring for both platform and application pipelines using CDK constructs
+7. **ARM Architecture**: Use ARM-based CodeBuild images for better price/performance ratio and Node.js 20 compatibility
+
+### ARM Migration Benefits
+
+**Performance and Cost:**
+- ARM-based instances typically provide 20% better price/performance ratio
+- Native Node.js 20 support eliminates compatibility issues
+- Faster build times due to optimized ARM architecture
+
+**Compatibility:**
+- Node.js 20 + npm 11+ fully supported out of the box
+- No more npm version compatibility warnings
+- Future-proof architecture aligned with AWS recommendations
+
+**Migration Considerations:**
+- Ensure all dependencies support ARM64 architecture
+- Test thoroughly in development environment before production deployment
+- Some legacy packages may require ARM-compatible alternatives
 
 ## Development Workflow
 
@@ -96,12 +133,34 @@ platform-pipeline/
 - Platform engineers run `cdk diff` to preview changes before deployment
 - Platform engineers use `cdk synth` to generate CloudFormation templates locally
 - Platform engineers test CDK code with unit tests before committing
+- **Node.js 20** and **npm 11+** required for local development consistency
 
 ### Platform Pipeline CodeBuild
-- Install CDK CLI and Node.js/TypeScript runtime in CodeBuild environment
+- **Runtime Environment**: Amazon Linux 2023 with Node.js 20 pre-installed
+- **Build Image**: `AMAZON_LINUX_2_STANDARD_3_0` (ARM-based) for optimal performance
+- **Architecture**: ARM64 (AArch64) provides better price/performance ratio
+- Install CDK CLI and TypeScript runtime in CodeBuild environment
 - Use appropriate IAM roles for CDK deployment permissions
 - Cache Node.js dependencies (`node_modules`) for faster builds
 - Include TypeScript compilation and CDK deployment commands in buildspec.yml
+
+### CodeBuild Configuration Standards
+```typescript
+// Example CDK configuration for ARM-based CodeBuild
+buildEnvironment: {
+  buildImage: codebuild.LinuxArmBuildImage.AMAZON_LINUX_2_STANDARD_3_0,
+  computeType: codebuild.ComputeType.SMALL,
+  // Node.js 20 is pre-installed in this image
+}
+```
+
+### Runtime Versions in buildspec.yml
+```yaml
+phases:
+  install:
+    runtime-versions:
+      nodejs: 20  # Use Node.js 20 for npm 11+ compatibility
+```
 
 ### Security and Credentials Management
 
@@ -246,9 +305,21 @@ This architecture enables the platform team to maintain control and consistency 
 **Root Cause**: Incorrect CodeBuild image or Node.js runtime configuration
 
 **Solution**:
-1. Verify CodeBuild image is Amazon Linux 2023 (`AMAZON_LINUX_2_5`)
-2. Check `buildspec.yml` has `nodejs: 18` in runtime-versions
+1. Verify CodeBuild image is ARM-based Amazon Linux 2023 (`AMAZON_LINUX_2_STANDARD_3_0`)
+2. Check `buildspec.yml` has `nodejs: 20` in runtime-versions
 3. Ensure buildspec.yml is properly formatted YAML
+4. Confirm ARM architecture is supported in your AWS region
+
+#### npm Version Compatibility Issues
+**Symptoms**: CodeBuild logs show `npm warn cli npm v11.6.2 does not support Node.js v18.20.8`
+
+**Root Cause**: Node.js 18 is incompatible with npm 11+
+
+**Solution**:
+1. Update `buildspec.yml` to use `nodejs: 20` instead of `nodejs: 18`
+2. Use ARM-based CodeBuild image (`AMAZON_LINUX_2_STANDARD_3_0`) which includes Node.js 20
+3. Update CDK configuration to use `LinuxArmBuildImage.AMAZON_LINUX_2_STANDARD_3_0`
+4. Node.js 20 is fully compatible with npm 11.6.2+
 
 #### CodeStar Connection Issues
 **Symptoms**: Source stage fails with connection errors

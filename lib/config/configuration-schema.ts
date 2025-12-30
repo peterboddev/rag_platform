@@ -211,6 +211,7 @@ export const ConfigurationSchemas = {
           'STANDARD_5_0',
           'STANDARD_6_0',
           'STANDARD_7_0',
+          'AMAZON_LINUX_2_STANDARD_3_0_ARM',
         ],
         description: 'Default CodeBuild image',
       },
@@ -500,9 +501,9 @@ export class ConfigurationSchemaValidator {
 
       case 'defaults':
         return {
-          buildRuntime: '18',
+          buildRuntime: '20',
           computeType: 'BUILD_GENERAL1_SMALL',
-          buildImage: 'STANDARD_7_0',
+          buildImage: 'AMAZON_LINUX_2_STANDARD_3_0_ARM',
           cacheEnabled: true,
         };
 

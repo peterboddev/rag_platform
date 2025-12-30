@@ -86,9 +86,15 @@ export class PlatformPipelineStack extends cdk.Stack {
           'echo "Installing dependencies..."',
           'npm install',
           
-          // TypeScript compilation using local tsc directly from node_modules
+          // Debug: Check what was installed
+          'echo "Checking node_modules structure..."',
+          'ls -la node_modules/.bin/ | head -10',
+          'echo "Checking if TypeScript is installed..."',
+          'npm list typescript || echo "TypeScript not found in dependencies"',
+          
+          // TypeScript compilation using npm script
           'echo "Compiling TypeScript..."',
-          './node_modules/.bin/tsc',
+          'npm run build',
           
           // Run tests to ensure code quality
           'echo "Running tests..."',
@@ -102,10 +108,10 @@ export class PlatformPipelineStack extends cdk.Stack {
         // Primary output directory for CDK synthesis
         primaryOutputDirectory: 'cdk.out',
         
-        // Enhanced CodeBuild configuration with secure credential access
+        // Enhanced CodeBuild configuration with ARM-based Amazon Linux 2 for Node.js 20
         buildEnvironment: {
-          // Use Amazon Linux 2023 with explicit Node.js 20 runtime
-          buildImage: codebuild.LinuxBuildImage.AMAZON_LINUX_2_5,
+          // Use ARM-based Amazon Linux 2 Standard 3.0 with Node.js 20 by default
+          buildImage: codebuild.LinuxArmBuildImage.AMAZON_LINUX_2_STANDARD_3_0,
           computeType: codebuild.ComputeType.SMALL,
           
           // Environment variables including secure credential access
@@ -200,7 +206,7 @@ export class PlatformPipelineStack extends cdk.Stack {
             'echo "Configuration validation completed"',
           ],
           buildEnvironment: {
-            buildImage: codebuild.LinuxBuildImage.AMAZON_LINUX_2_5,
+            buildImage: codebuild.LinuxArmBuildImage.AMAZON_LINUX_2_STANDARD_3_0,
             computeType: codebuild.ComputeType.SMALL,
           },
         }),
@@ -231,7 +237,7 @@ export class PlatformPipelineStack extends cdk.Stack {
                   `echo "Promotion to ${envName} validated successfully"`,
                 ],
                 buildEnvironment: {
-                  buildImage: codebuild.LinuxBuildImage.AMAZON_LINUX_2_5,
+                  buildImage: codebuild.LinuxArmBuildImage.AMAZON_LINUX_2_STANDARD_3_0,
                   computeType: codebuild.ComputeType.SMALL,
                 },
                 env: {

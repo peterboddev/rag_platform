@@ -203,7 +203,7 @@ export class ApplicationPipelineConstruct extends Construct {
       phases: {
         install: {
           'runtime-versions': {
-            nodejs: buildConfig.runtime || '18',
+            nodejs: buildConfig.runtime || '20',
           },
         },
         pre_build: {
@@ -251,7 +251,7 @@ export class ApplicationPipelineConstruct extends Construct {
       buildSpec: buildSpec,
       
       environment: {
-        buildImage: buildConfig.buildImage || codebuild.LinuxBuildImage.STANDARD_7_0,
+        buildImage: buildConfig.buildImage || codebuild.LinuxArmBuildImage.AMAZON_LINUX_2_STANDARD_3_0,
         computeType: buildConfig.computeType || codebuild.ComputeType.SMALL,
         environmentVariables: {
           'APPLICATION_NAME': {
