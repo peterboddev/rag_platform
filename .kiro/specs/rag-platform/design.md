@@ -162,44 +162,45 @@ export interface PlatformConfig {
 
 ### Immediate Pipeline Triggering System
 
-A critical CDK infrastructure component that eliminates the 1-5 minute polling delay inherent in CodeStar connections by deploying AWS webhook infrastructure for immediate pipeline execution.
+A critical CDK infrastructure component that eliminates the 1-5 minute polling delay inherent in CodeStar connections by deploying EventBridge rules for immediate pipeline execution.
 
 **Key Features:**
-- EventBridge webhook endpoint for GitHub integration
-- API Gateway webhook receiver with authentication
-- Lambda function for pipeline triggering
-- CloudFormation outputs with webhook URLs for GitHub configuration
+- EventBridge rules that monitor CodeStar connection events
+- Direct CodePipeline triggering without external dependencies
+- Automatic integration with existing CodeStar connections
+- No GitHub webhook configuration required
+- CloudWatch logging for monitoring and debugging
 
 **CDK Implementation:**
 ```typescript
 export class WebhookTriggerConstruct extends Construct {
-  public readonly webhookUrl: string;
+  public readonly eventRule: events.Rule;
   
   constructor(scope: Construct, id: string, props: WebhookTriggerProps) {
     super(scope, id);
     
-    // Lambda function to trigger pipeline
-    const triggerFunction = new Function(this, 'TriggerFunction', {
-      runtime: Runtime.NODEJS_18_X,
-      handler: 'index.handler',
-      code: Code.fromInline(`
-        const { CodePipelineClient, StartPipelineExecutionCommand } = require('@aws-sdk/client-codepipeline');
-        exports.handler = async (event) => {
-          const client = new CodePipelineClient();
-          await client.send(new StartPipelineExecutionCommand({
-            name: '${props.pipelineName}'
-          }));
-          return { statusCode: 200, body: 'Pipeline triggered' };
-        };
-      `),
+    // EventBridge rule to trigger CodePipeline directly on CodeStar events
+    this.eventRule = new events.Rule(this, 'CodeStarEventRule', {
+      description: `Trigger ${props.pipelineName} pipeline immediately on repository push events`,
+      eventPattern: {
+        source: ['aws.codeconnections'],
+        detailType: ['CodeStar Source Action State Change'],
+        detail: {
+          pipeline: [props.pipelineName],
+          'action-name': ['Source'],
+          state: ['SUCCEEDED']
+        }
+      },
+      targets: [
+        new targets.CodePipelineTarget(
+          codepipeline.Pipeline.fromPipelineArn(
+            this, 
+            'Pipeline', 
+            `arn:aws:codepipeline:${cdk.Aws.REGION}:${cdk.Aws.ACCOUNT_ID}:pipeline/${props.pipelineName}`
+          )
+        )
+      ]
     });
-    
-    // API Gateway for webhook endpoint
-    const api = new RestApi(this, 'WebhookApi');
-    const webhook = api.root.addResource('webhook');
-    webhook.addMethod('POST', new LambdaIntegration(triggerFunction));
-    
-    this.webhookUrl = api.url + 'webhook';
   }
 }
 ```
@@ -355,13 +356,13 @@ After reviewing the prework analysis, I'll consolidate redundant properties and 
 *For any* pipeline failure, notifications should be sent to platform engineers.
 **Validates: Requirements 8.2**
 
-**Property 15: Webhook infrastructure deployment**
-*For any* platform pipeline deployment, the system should create API Gateway webhook endpoint, Lambda trigger function, and output webhook URL for GitHub configuration.
+**Property 15: EventBridge infrastructure deployment**
+*For any* platform pipeline deployment, the system should create EventBridge rules that monitor CodeStar connection events and trigger the pipeline directly.
 **Validates: Requirements 7.1, 7.2**
 
-**Property 16: Webhook authentication and security**
-*For any* webhook request, the system should validate authentication and only trigger pipeline for authorized requests.
-**Validates: Requirements 7.4**
+**Property 16: Immediate triggering functionality**
+*For any* CodeStar connection event indicating a successful source action, the EventBridge rule should trigger the corresponding pipeline immediately.
+**Validates: Requirements 7.3, 7.4**
 
 ## Error Handling
 

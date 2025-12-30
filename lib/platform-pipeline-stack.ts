@@ -9,7 +9,7 @@ import { ApplicationPipelineStage } from './constructs/application-pipeline-stag
 import { SecurityStack } from './security-stack';
 import { MonitoringConstruct } from './constructs/monitoring-construct';
 import { CodeBuildCredentialsManager } from './config/codebuild-credentials';
-// import { WebhookTriggerConstruct } from './constructs/webhook-trigger-construct';
+import { WebhookTriggerConstruct } from './constructs/webhook-trigger-construct';
 
 export interface PlatformPipelineStackProps extends cdk.StackProps {
   readonly githubOrg?: string;
@@ -25,7 +25,7 @@ export class PlatformPipelineStack extends cdk.Stack {
   public readonly applicationPipelineStage: ApplicationPipelineStage;
   public readonly monitoring: MonitoringConstruct;
   public readonly credentialsManager: CodeBuildCredentialsManager;
-  // public readonly webhookTrigger?: WebhookTriggerConstruct;
+  public readonly webhookTrigger: WebhookTriggerConstruct;
 
   constructor(scope: Construct, id: string, props?: PlatformPipelineStackProps) {
     super(scope, id, props);
@@ -260,11 +260,10 @@ export class PlatformPipelineStack extends cdk.Stack {
     this.monitoring.createSuccessRateMetricFilter();
 
     // Create EventBridge integration for immediate pipeline triggering
-    // TODO: Implement EventBridge trigger after pipeline is stable
-    // this.webhookTrigger = new WebhookTriggerConstruct(this, 'EventBridgeTrigger', {
-    //   pipelineName: 'PlatformPipeline',
-    //   logRetentionDays: logs.RetentionDays.ONE_MONTH,
-    // });
+    this.webhookTrigger = new WebhookTriggerConstruct(this, 'EventBridgeTrigger', {
+      pipelineName: 'PlatformPipeline',
+      logRetentionDays: logs.RetentionDays.ONE_MONTH,
+    });
 
     // Output webhook setup instructions for GitHub configuration
     this.outputWebhookSetupInstructions(githubOrg, githubRepo, branch);
@@ -386,18 +385,17 @@ export class PlatformPipelineStack extends cdk.Stack {
     });
 
     // Output infrastructure details
-    // TODO: Re-enable after EventBridge integration is implemented
-    // new cdk.CfnOutput(this, 'ImmediateTriggerInfrastructure', {
-    //   value: JSON.stringify({
-    //     eventRuleArn: this.webhookTrigger?.getEventRuleArn() || 'Not implemented yet',
-    //     triggerMechanism: 'EventBridge → CodePipeline (direct)',
-    //     authentication: 'AWS IAM (no external configuration needed)',
-    //     monitoring: 'EventBridge metrics and CloudTrail logs',
-    //     lambdaFunction: 'Not needed - EventBridge triggers CodePipeline directly',
-    //   }, null, 2),
-    //   description: 'Immediate trigger infrastructure details for monitoring',
-    //   exportName: 'PlatformPipeline-ImmediateTriggerInfrastructure',
-    // });
+    new cdk.CfnOutput(this, 'ImmediateTriggerInfrastructure', {
+      value: JSON.stringify({
+        eventRuleArn: this.webhookTrigger.getEventRuleArn(),
+        triggerMechanism: 'EventBridge → CodePipeline (direct)',
+        authentication: 'AWS IAM (no external configuration needed)',
+        monitoring: 'EventBridge metrics and CloudTrail logs',
+        lambdaFunction: 'Not needed - EventBridge triggers CodePipeline directly',
+      }, null, 2),
+      description: 'Immediate trigger infrastructure details for monitoring',
+      exportName: 'PlatformPipeline-ImmediateTriggerInfrastructure',
+    });
 
     // Output pipeline monitoring URLs
     new cdk.CfnOutput(this, 'PipelineMonitoringUrls', {

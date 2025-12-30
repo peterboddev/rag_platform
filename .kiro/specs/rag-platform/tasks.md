@@ -103,32 +103,32 @@ This implementation plan breaks down the platform pipeline CDK system into discr
     - Test parameter substitution and validation
     - _Requirements: 2.2, 2.5_
 
-- [x] 7. Implement webhook infrastructure for immediate pipeline triggering
-  - [x] 7.1 Create WebhookTriggerConstruct for CDK-based webhook infrastructure
-    - Implement API Gateway webhook endpoint with authentication
-    - Create Lambda function for pipeline triggering using AWS SDK
-    - Add IAM roles and permissions for Lambda to trigger CodePipeline
-    - _Requirements: 7.1, 7.2, 7.4_
+- [x] 7. Implement EventBridge infrastructure for immediate pipeline triggering
+  - [x] 7.1 Create WebhookTriggerConstruct for EventBridge-based immediate triggering
+    - Implement EventBridge rules that monitor CodeStar connection events
+    - Configure direct CodePipeline triggering without external dependencies
+    - Add IAM roles and permissions for EventBridge to trigger CodePipeline
+    - _Requirements: 7.1, 7.2_
 
-  - [x] 7.2 Integrate webhook construct into PlatformPipelineStack
+  - [x] 7.2 Integrate EventBridge construct into PlatformPipelineStack
     - Add WebhookTriggerConstruct to main platform pipeline stack
-    - Configure webhook URL output for GitHub configuration
-    - Set up EventBridge integration for advanced webhook processing
+    - Configure automatic integration with existing CodeStar connections
+    - Set up CloudWatch logging for EventBridge rule executions
     - _Requirements: 7.1, 7.3, 7.5_
 
-  - [x] 7.3 Add webhook authentication and security
-    - Implement GitHub webhook signature validation
-    - Add rate limiting and DDoS protection
-    - Configure CloudWatch logging for webhook requests
-    - _Requirements: 7.4_
+  - [x] 7.3 Configure EventBridge rule targeting and monitoring
+    - Implement proper EventBridge target configuration for CodePipeline
+    - Add CloudWatch logging for rule execution monitoring
+    - Configure rule patterns to match CodeStar connection events
+    - _Requirements: 7.4, 7.5_
 
-  - [ ]* 7.4 Write property test for webhook infrastructure deployment
-    - **Property 15: Webhook infrastructure deployment**
+  - [ ]* 7.4 Write property test for EventBridge infrastructure deployment
+    - **Property 15: EventBridge infrastructure deployment**
     - **Validates: Requirements 7.1, 7.2**
 
-  - [ ]* 7.5 Write property test for webhook authentication and security
-    - **Property 16: Webhook authentication and security**
-    - **Validates: Requirements 7.4**
+  - [ ]* 7.5 Write property test for immediate triggering functionality
+    - **Property 16: Immediate triggering functionality**
+    - **Validates: Requirements 7.3, 7.4**
 
 - [ ] 8. Implement monitoring, logging, and notification system
 - [ ] 8. Implement monitoring, logging, and notification system

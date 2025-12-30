@@ -94,11 +94,11 @@ This document defines the requirements for a platform-owned CI/CD pipeline syste
 
 #### Acceptance Criteria
 
-1. WHEN the platform pipeline is deployed, THE System SHALL create webhook infrastructure for immediate pipeline triggering
-2. THE System SHALL deploy API Gateway endpoint and Lambda function for webhook processing
-3. THE System SHALL output webhook URL for GitHub configuration via CloudFormation outputs
-4. THE System SHALL authenticate webhook requests to prevent unauthorized triggering
-5. THE System SHALL provide EventBridge integration for advanced webhook processing
+1. WHEN the platform pipeline is deployed, THE System SHALL create EventBridge infrastructure for immediate pipeline triggering
+2. THE System SHALL deploy EventBridge rules that trigger CodePipeline directly on CodeStar connection events
+3. THE System SHALL eliminate the 1-5 minute polling delay inherent in CodeStar connections
+4. THE System SHALL work automatically with existing CodeStar connections without requiring GitHub configuration
+5. THE System SHALL provide CloudWatch logging for EventBridge rule executions
 
 ### Requirement 8: Monitoring and Observability
 
