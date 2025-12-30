@@ -23,9 +23,9 @@ export class WebhookTriggerConstruct extends Construct {
   constructor(scope: Construct, id: string, props: WebhookTriggerConstructProps) {
     super(scope, id);
 
-    // EventBridge rule to trigger CodePipeline directly on CodeStar connection events
+    // EventBridge rule to trigger CodePipeline directly on push events
     this.eventRule = new events.Rule(this, 'CodeStarEventRule', {
-      description: `Trigger ${props.pipelineName} pipeline immediately on CodeStar connection events`,
+      description: `Trigger ${props.pipelineName} pipeline immediately on repository push events`,
       eventPattern: {
         source: ['aws.codeconnections'],
         detailType: ['CodeStar Source Action State Change'],
@@ -36,11 +36,11 @@ export class WebhookTriggerConstruct extends Construct {
         }
       },
       targets: [
-        new targets.CodePipeline(codepipeline.Pipeline.fromPipelineArn(
-          this, 
-          'TargetPipeline', 
-          `arn:aws:codepipeline:${cdk.Aws.REGION}:${cdk.Aws.ACCOUNT_ID}:pipeline/${props.pipelineName}`
-        ))
+        {
+          arn: `arn:aws:codepipeline:${cdk.Aws.REGION}:${cdk.Aws.ACCOUNT_ID}:pipeline/${props.pipelineName}`,
+          id: 'PipelineTarget',
+          roleArn: `arn:aws:iam::${cdk.Aws.ACCOUNT_ID}:role/service-role/AmazonEventBridgeCodePipelineRole`,
+        }
       ],
     });
 
