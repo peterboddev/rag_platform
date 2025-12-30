@@ -75,6 +75,10 @@ export class PlatformPipelineStack extends cdk.Stack {
           'echo "Checking environment and working directory..."',
           'pwd',
           'ls -la',
+          'echo "Node.js version:"',
+          'node --version',
+          'echo "npm version:"',
+          'npm --version',
           'echo "Checking if package.json exists..."',
           'test -f package.json && echo "✅ package.json found" || echo "❌ package.json not found"',
           
@@ -100,7 +104,7 @@ export class PlatformPipelineStack extends cdk.Stack {
         
         // Enhanced CodeBuild configuration with secure credential access
         buildEnvironment: {
-          // Use Amazon Linux 2023 with Node.js 18 support - better npm compatibility
+          // Use Amazon Linux 2023 with explicit Node.js 20 runtime
           buildImage: codebuild.LinuxBuildImage.AMAZON_LINUX_2_5,
           computeType: codebuild.ComputeType.SMALL,
           

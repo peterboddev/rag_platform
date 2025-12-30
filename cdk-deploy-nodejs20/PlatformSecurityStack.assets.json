@@ -1,0 +1,20 @@
+{
+  "version": "34.0.0",
+  "files": {
+    "d332382fcabf98dab66c561e5d515d31fd824e5e4724a12589447930c0caec7d": {
+      "source": {
+        "path": "PlatformSecurityStack.template.json",
+        "packaging": "file"
+      },
+      "destinations": {
+        "450683699755-us-east-1": {
+          "bucketName": "cdk-hnb659fds-assets-450683699755-us-east-1",
+          "objectKey": "d332382fcabf98dab66c561e5d515d31fd824e5e4724a12589447930c0caec7d.json",
+          "region": "us-east-1",
+          "assumeRoleArn": "arn:${AWS::Partition}:iam::450683699755:role/cdk-hnb659fds-file-publishing-role-450683699755-us-east-1"
+        }
+      }
+    }
+  },
+  "dockerImages": {}
+}
