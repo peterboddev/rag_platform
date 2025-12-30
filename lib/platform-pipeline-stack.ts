@@ -82,9 +82,9 @@ export class PlatformPipelineStack extends cdk.Stack {
           'echo "Installing dependencies..."',
           'npm install',
           
-          // TypeScript compilation using npm script (which has proper tsc path)
+          // TypeScript compilation using local tsc directly from node_modules
           'echo "Compiling TypeScript..."',
-          'npm run build',
+          './node_modules/.bin/tsc',
           
           // Run tests to ensure code quality
           'echo "Running tests..."',
@@ -260,13 +260,15 @@ export class PlatformPipelineStack extends cdk.Stack {
     this.monitoring.createSuccessRateMetricFilter();
 
     // Create EventBridge integration for immediate pipeline triggering
-    this.webhookTrigger = new WebhookTriggerConstruct(this, 'EventBridgeTrigger', {
-      pipelineName: 'PlatformPipeline',
-      logRetentionDays: logs.RetentionDays.ONE_MONTH,
-    });
+    // This must be done after the pipeline is created
+    // TODO: Re-enable after pipeline is successfully deployed
+    // this.webhookTrigger = new WebhookTriggerConstruct(this, 'EventBridgeTrigger', {
+    //   pipeline: this.pipeline.pipeline,
+    //   logRetentionDays: logs.RetentionDays.ONE_MONTH,
+    // });
 
     // Output webhook setup instructions for GitHub configuration
-    this.outputWebhookSetupInstructions(githubOrg, githubRepo, branch);
+    this.outputWebhookSetupInstructions();
 
     // Output configuration summary with cross-stack integration details
     const configSummary = this.applicationPipelineStage.getConfigurationSummary();
@@ -370,7 +372,7 @@ export class PlatformPipelineStack extends cdk.Stack {
    * Outputs information about the EventBridge integration for immediate pipeline triggering
    * This eliminates the 1-5 minute polling delay from CodeStar connections automatically
    */
-  private outputWebhookSetupInstructions(githubOrg: string, githubRepo: string, branch: string): void {
+  private outputWebhookSetupInstructions(): void {
     // Output EventBridge integration status
     new cdk.CfnOutput(this, 'EventBridgeIntegrationStatus', {
       value: JSON.stringify({
@@ -385,17 +387,18 @@ export class PlatformPipelineStack extends cdk.Stack {
     });
 
     // Output infrastructure details
-    new cdk.CfnOutput(this, 'ImmediateTriggerInfrastructure', {
-      value: JSON.stringify({
-        eventRuleArn: this.webhookTrigger.getEventRuleArn(),
-        triggerMechanism: 'EventBridge → CodePipeline (direct)',
-        authentication: 'AWS IAM (no external configuration needed)',
-        monitoring: 'EventBridge metrics and CloudTrail logs',
-        lambdaFunction: 'Not needed - EventBridge triggers CodePipeline directly',
-      }, null, 2),
-      description: 'Immediate trigger infrastructure details for monitoring',
-      exportName: 'PlatformPipeline-ImmediateTriggerInfrastructure',
-    });
+    // TODO: Re-enable after EventBridge trigger is deployed
+    // new cdk.CfnOutput(this, 'ImmediateTriggerInfrastructure', {
+    //   value: JSON.stringify({
+    //     eventRuleArn: this.webhookTrigger.getEventRuleArn(),
+    //     triggerMechanism: 'EventBridge → CodePipeline (direct)',
+    //     authentication: 'AWS IAM (no external configuration needed)',
+    //     monitoring: 'EventBridge metrics and CloudTrail logs',
+    //     lambdaFunction: 'Not needed - EventBridge triggers CodePipeline directly',
+    //   }, null, 2),
+    //   description: 'Immediate trigger infrastructure details for monitoring',
+    //   exportName: 'PlatformPipeline-ImmediateTriggerInfrastructure',
+    // });
 
     // Output pipeline monitoring URLs
     new cdk.CfnOutput(this, 'PipelineMonitoringUrls', {

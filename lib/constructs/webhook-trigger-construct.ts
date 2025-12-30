@@ -6,7 +6,7 @@ import * as logs from 'aws-cdk-lib/aws-logs';
 import * as codepipeline from 'aws-cdk-lib/aws-codepipeline';
 
 export interface WebhookTriggerConstructProps {
-  readonly pipelineName: string;
+  readonly pipeline: codepipeline.Pipeline;
   readonly logRetentionDays?: logs.RetentionDays;
 }
 
@@ -23,33 +23,26 @@ export class WebhookTriggerConstruct extends Construct {
   constructor(scope: Construct, id: string, props: WebhookTriggerConstructProps) {
     super(scope, id);
 
-    // Reference to the existing pipeline
-    const pipeline = codepipeline.Pipeline.fromPipelineArn(
-      this,
-      'Pipeline',
-      `arn:aws:codepipeline:${cdk.Aws.REGION}:${cdk.Aws.ACCOUNT_ID}:pipeline/${props.pipelineName}`
-    );
-
     // EventBridge rule to trigger CodePipeline directly on push events
     this.eventRule = new events.Rule(this, 'CodeStarEventRule', {
-      description: `Trigger ${props.pipelineName} pipeline immediately on repository push events`,
+      description: `Trigger ${props.pipeline.pipelineName} pipeline immediately on repository push events`,
       eventPattern: {
         source: ['aws.codeconnections'],
         detailType: ['CodeStar Source Action State Change'],
         detail: {
-          pipeline: [props.pipelineName],
+          pipeline: [props.pipeline.pipelineName],
           'action-name': ['Source'],
           state: ['SUCCEEDED']
         }
       },
       targets: [
-        new targets.CodePipeline(pipeline)
+        new targets.CodePipeline(props.pipeline)
       ],
     });
 
     // Add tags for resource management
     cdk.Tags.of(this).add('Component', 'EventBridgeTrigger');
-    cdk.Tags.of(this).add('Pipeline', props.pipelineName);
+    cdk.Tags.of(this).add('Pipeline', props.pipeline.pipelineName);
   }
 
   /**
