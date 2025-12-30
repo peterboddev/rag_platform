@@ -3,11 +3,25 @@ import { Construct } from 'constructs';
 import * as events from 'aws-cdk-lib/aws-events';
 import * as targets from 'aws-cdk-lib/aws-events-targets';
 import * as logs from 'aws-cdk-lib/aws-logs';
-import * as codepipeline from 'aws-cdk-lib/aws-codepipeline';
+import * as iam from 'aws-cdk-lib/aws-iam';
 
 export interface WebhookTriggerConstructProps {
-  readonly pipeline: codepipeline.Pipeline;
+  readonly pipelineName: string;
   readonly logRetentionDays?: logs.RetentionDays;
+}
+
+/**
+ * Custom EventBridge target for CodePipeline
+ */
+class CodePipelineTarget implements events.IRuleTarget {
+  constructor(private readonly pipelineArn: string, private readonly role: iam.IRole) {}
+
+  bind(rule: events.IRule, id?: string): events.RuleTargetConfig {
+    return {
+      arn: this.pipelineArn,
+      role: this.role,
+    };
+  }
 }
 
 /**
@@ -23,26 +37,43 @@ export class WebhookTriggerConstruct extends Construct {
   constructor(scope: Construct, id: string, props: WebhookTriggerConstructProps) {
     super(scope, id);
 
+    // Create IAM role for EventBridge to trigger CodePipeline
+    const pipelineArn = `arn:aws:codepipeline:${cdk.Aws.REGION}:${cdk.Aws.ACCOUNT_ID}:${props.pipelineName}`;
+    
+    const eventBridgeRole = new iam.Role(this, 'EventBridgeRole', {
+      assumedBy: new iam.ServicePrincipal('events.amazonaws.com'),
+      inlinePolicies: {
+        CodePipelineStartExecution: new iam.PolicyDocument({
+          statements: [
+            new iam.PolicyStatement({
+              actions: ['codepipeline:StartPipelineExecution'],
+              resources: [pipelineArn],
+            }),
+          ],
+        }),
+      },
+    });
+
     // EventBridge rule to trigger CodePipeline directly on push events
     this.eventRule = new events.Rule(this, 'CodeStarEventRule', {
-      description: `Trigger ${props.pipeline.pipelineName} pipeline immediately on repository push events`,
+      description: `Trigger ${props.pipelineName} pipeline immediately on repository push events`,
       eventPattern: {
         source: ['aws.codeconnections'],
         detailType: ['CodeStar Source Action State Change'],
         detail: {
-          pipeline: [props.pipeline.pipelineName],
+          pipeline: [props.pipelineName],
           'action-name': ['Source'],
           state: ['SUCCEEDED']
         }
       },
       targets: [
-        new targets.CodePipeline(props.pipeline)
+        new CodePipelineTarget(pipelineArn, eventBridgeRole)
       ],
     });
 
     // Add tags for resource management
     cdk.Tags.of(this).add('Component', 'EventBridgeTrigger');
-    cdk.Tags.of(this).add('Pipeline', props.pipeline.pipelineName);
+    cdk.Tags.of(this).add('Pipeline', props.pipelineName);
   }
 
   /**

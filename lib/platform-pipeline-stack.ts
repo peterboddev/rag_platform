@@ -259,17 +259,6 @@ export class PlatformPipelineStack extends cdk.Stack {
     this.monitoring.createExecutionTimeMetricFilter();
     this.monitoring.createSuccessRateMetricFilter();
 
-    // Create EventBridge integration for immediate pipeline triggering
-    // This must be done after the pipeline is created
-    // TODO: Re-enable after pipeline is successfully deployed
-    // this.webhookTrigger = new WebhookTriggerConstruct(this, 'EventBridgeTrigger', {
-    //   pipeline: this.pipeline.pipeline,
-    //   logRetentionDays: logs.RetentionDays.ONE_MONTH,
-    // });
-
-    // Output webhook setup instructions for GitHub configuration
-    this.outputWebhookSetupInstructions();
-
     // Output configuration summary with cross-stack integration details
     const configSummary = this.applicationPipelineStage.getConfigurationSummary();
     new cdk.CfnOutput(this, 'ConfigurationSummary', {
@@ -332,6 +321,16 @@ export class PlatformPipelineStack extends cdk.Stack {
       description: 'ARN of the failure notification SNS topic',
       exportName: 'PlatformFailureNotificationTopicArn',
     });
+
+    // Create EventBridge integration for immediate pipeline triggering
+    // This must be done after the pipeline is fully created and all stages are added
+    this.webhookTrigger = new WebhookTriggerConstruct(this, 'EventBridgeTrigger', {
+      pipelineName: 'PlatformPipeline',
+      logRetentionDays: logs.RetentionDays.ONE_MONTH,
+    });
+
+    // Output webhook setup instructions for GitHub configuration
+    this.outputWebhookSetupInstructions();
   }
 
   /**
@@ -387,18 +386,17 @@ export class PlatformPipelineStack extends cdk.Stack {
     });
 
     // Output infrastructure details
-    // TODO: Re-enable after EventBridge trigger is deployed
-    // new cdk.CfnOutput(this, 'ImmediateTriggerInfrastructure', {
-    //   value: JSON.stringify({
-    //     eventRuleArn: this.webhookTrigger.getEventRuleArn(),
-    //     triggerMechanism: 'EventBridge → CodePipeline (direct)',
-    //     authentication: 'AWS IAM (no external configuration needed)',
-    //     monitoring: 'EventBridge metrics and CloudTrail logs',
-    //     lambdaFunction: 'Not needed - EventBridge triggers CodePipeline directly',
-    //   }, null, 2),
-    //   description: 'Immediate trigger infrastructure details for monitoring',
-    //   exportName: 'PlatformPipeline-ImmediateTriggerInfrastructure',
-    // });
+    new cdk.CfnOutput(this, 'ImmediateTriggerInfrastructure', {
+      value: JSON.stringify({
+        eventRuleArn: this.webhookTrigger.getEventRuleArn(),
+        triggerMechanism: 'EventBridge → CodePipeline (direct)',
+        authentication: 'AWS IAM (no external configuration needed)',
+        monitoring: 'EventBridge metrics and CloudTrail logs',
+        lambdaFunction: 'Not needed - EventBridge triggers CodePipeline directly',
+      }, null, 2),
+      description: 'Immediate trigger infrastructure details for monitoring',
+      exportName: 'PlatformPipeline-ImmediateTriggerInfrastructure',
+    });
 
     // Output pipeline monitoring URLs
     new cdk.CfnOutput(this, 'PipelineMonitoringUrls', {

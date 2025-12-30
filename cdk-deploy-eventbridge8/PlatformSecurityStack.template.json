@@ -1,0 +1,652 @@
+{
+ "Description": "Security and IAM infrastructure for platform pipeline system",
+ "Resources": {
+  "PlatformPipelineRoleDAC17252": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "codepipeline.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "Description": "IAM role for platform pipeline execution with least-privilege access",
+    "Policies": [
+     {
+      "PolicyDocument": {
+       "Statement": [
+        {
+         "Action": [
+          "codepipeline:GetPipeline",
+          "codepipeline:GetPipelineExecution",
+          "codepipeline:GetPipelineState",
+          "codepipeline:ListPipelineExecutions",
+          "codepipeline:PutActionRevision",
+          "codepipeline:PutApprovalResult",
+          "codepipeline:PutJobFailureResult",
+          "codepipeline:PutJobSuccessResult",
+          "codepipeline:PutThirdPartyJobFailureResult",
+          "codepipeline:PutThirdPartyJobSuccessResult",
+          "codepipeline:RetryStageExecution",
+          "codepipeline:StartPipelineExecution",
+          "codepipeline:StopPipelineExecution"
+         ],
+         "Effect": "Allow",
+         "Resource": "arn:aws:codepipeline:us-east-1:450683699755:pipeline/PlatformPipeline*"
+        },
+        {
+         "Action": "codestar-connections:UseConnection",
+         "Effect": "Allow",
+         "Resource": "arn:aws:codestar-connections:us-east-1:450683699755:connection/*"
+        },
+        {
+         "Action": [
+          "s3:GetBucketVersioning",
+          "s3:GetObject",
+          "s3:GetObjectVersion",
+          "s3:PutObject",
+          "s3:PutObjectAcl"
+         ],
+         "Effect": "Allow",
+         "Resource": [
+          "arn:aws:s3:::cdk-*-assets-450683699755-us-east-1",
+          "arn:aws:s3:::cdk-*-assets-450683699755-us-east-1/*"
+         ]
+        },
+        {
+         "Action": [
+          "codebuild:BatchGetBuilds",
+          "codebuild:StartBuild"
+         ],
+         "Effect": "Allow",
+         "Resource": "arn:aws:codebuild:us-east-1:450683699755:project/PlatformPipeline*"
+        },
+        {
+         "Action": [
+          "cloudwatch:GetMetricStatistics",
+          "cloudwatch:ListMetrics",
+          "cloudwatch:PutMetricData",
+          "events:PutEvents",
+          "logs:CreateLogGroup",
+          "logs:CreateLogStream",
+          "logs:DescribeLogGroups",
+          "logs:DescribeLogStreams",
+          "logs:PutLogEvents"
+         ],
+         "Effect": "Allow",
+         "Resource": [
+          "*",
+          "arn:aws:logs:us-east-1:450683699755:log-group:/aws/codebuild/*",
+          "arn:aws:logs:us-east-1:450683699755:log-group:/aws/codepipeline/*",
+          "arn:aws:logs:us-east-1:450683699755:log-group:/aws/platform-pipeline/*"
+         ]
+        },
+        {
+         "Action": [
+          "cloudformation:CreateStack",
+          "cloudformation:DeleteStack",
+          "cloudformation:DescribeStackEvents",
+          "cloudformation:DescribeStackResources",
+          "cloudformation:DescribeStacks",
+          "cloudformation:GetTemplate",
+          "cloudformation:UpdateStack"
+         ],
+         "Effect": "Allow",
+         "Resource": [
+          "arn:aws:cloudformation:us-east-1:450683699755:stack/*ApplicationPipeline*",
+          "arn:aws:cloudformation:us-east-1:450683699755:stack/*PlatformPipeline*",
+          "arn:aws:cloudformation:us-east-1:450683699755:stack/CDKToolkit/*"
+         ]
+        }
+       ],
+       "Version": "2012-10-17"
+      },
+      "PolicyName": "PlatformPipelinePolicy"
+     }
+    ],
+    "RoleName": "PlatformPipelineExecutionRole",
+    "Tags": [
+     {
+      "Key": "Component",
+      "Value": "PlatformPipeline"
+     },
+     {
+      "Key": "DeployedBy",
+      "Value": "CDK"
+     },
+     {
+      "Key": "DeploymentTimestamp",
+      "Value": "2025-12-30T16:07:30.149Z"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "PlatformTeam"
+     },
+     {
+      "Key": "Project",
+      "Value": "PlatformPipeline"
+     },
+     {
+      "Key": "Purpose",
+      "Value": "Security"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "PlatformSecurityStack/PlatformPipelineRole/Resource"
+   }
+  },
+  "ApplicationPipelineRole53A5F195": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "codepipeline.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "Description": "IAM role for application pipeline execution",
+    "Policies": [
+     {
+      "PolicyDocument": {
+       "Statement": [
+        {
+         "Action": [
+          "codepipeline:GetPipeline",
+          "codepipeline:GetPipelineExecution",
+          "codepipeline:GetPipelineState",
+          "codepipeline:ListPipelineExecutions",
+          "codepipeline:PutActionRevision",
+          "codepipeline:PutApprovalResult",
+          "codepipeline:PutJobFailureResult",
+          "codepipeline:PutJobSuccessResult",
+          "codepipeline:PutThirdPartyJobFailureResult",
+          "codepipeline:PutThirdPartyJobSuccessResult",
+          "codepipeline:RetryStageExecution",
+          "codepipeline:StartPipelineExecution",
+          "codepipeline:StopPipelineExecution"
+         ],
+         "Effect": "Allow",
+         "Resource": "arn:aws:codepipeline:us-east-1:450683699755:pipeline/ApplicationPipeline*"
+        },
+        {
+         "Action": "codestar-connections:UseConnection",
+         "Effect": "Allow",
+         "Resource": "arn:aws:codestar-connections:us-east-1:450683699755:connection/*"
+        },
+        {
+         "Action": [
+          "s3:GetBucketVersioning",
+          "s3:GetObject",
+          "s3:GetObjectVersion",
+          "s3:PutObject"
+         ],
+         "Effect": "Allow",
+         "Resource": [
+          "arn:aws:s3:::cdk-*-assets-450683699755-us-east-1",
+          "arn:aws:s3:::cdk-*-assets-450683699755-us-east-1/*"
+         ]
+        },
+        {
+         "Action": [
+          "codebuild:BatchGetBuilds",
+          "codebuild:StartBuild"
+         ],
+         "Effect": "Allow",
+         "Resource": "arn:aws:codebuild:us-east-1:450683699755:project/ApplicationPipeline*"
+        }
+       ],
+       "Version": "2012-10-17"
+      },
+      "PolicyName": "ApplicationPipelinePolicy"
+     }
+    ],
+    "RoleName": "ApplicationPipelineExecutionRole",
+    "Tags": [
+     {
+      "Key": "Component",
+      "Value": "PlatformPipeline"
+     },
+     {
+      "Key": "DeployedBy",
+      "Value": "CDK"
+     },
+     {
+      "Key": "DeploymentTimestamp",
+      "Value": "2025-12-30T16:07:30.149Z"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "PlatformTeam"
+     },
+     {
+      "Key": "Project",
+      "Value": "PlatformPipeline"
+     },
+     {
+      "Key": "Purpose",
+      "Value": "Security"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "PlatformSecurityStack/ApplicationPipelineRole/Resource"
+   }
+  },
+  "CodeBuildServiceRoleA9C1F6A8": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "codebuild.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "Description": "IAM role for CodeBuild projects with CDK deployment permissions",
+    "ManagedPolicyArns": [
+     {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":iam::aws:policy/CloudWatchLogsFullAccess"
+       ]
+      ]
+     }
+    ],
+    "Policies": [
+     {
+      "PolicyDocument": {
+       "Statement": [
+        {
+         "Action": [
+          "cloudwatch:DeleteDashboard",
+          "cloudwatch:GetDashboard",
+          "cloudwatch:GetMetricStatistics",
+          "cloudwatch:ListMetrics",
+          "cloudwatch:PutDashboard",
+          "cloudwatch:PutMetricData",
+          "events:DeleteRule",
+          "events:DescribeRule",
+          "events:ListTargetsByRule",
+          "events:PutRule",
+          "events:PutTargets",
+          "events:RemoveTargets",
+          "logs:CreateLogGroup",
+          "logs:CreateLogStream",
+          "logs:DeleteMetricFilter",
+          "logs:DescribeLogGroups",
+          "logs:DescribeLogStreams",
+          "logs:PutLogEvents",
+          "logs:PutMetricFilter"
+         ],
+         "Effect": "Allow",
+         "Resource": [
+          "*",
+          "arn:aws:events:us-east-1:450683699755:rule/*",
+          "arn:aws:logs:us-east-1:450683699755:log-group:/aws/codebuild/*",
+          "arn:aws:logs:us-east-1:450683699755:log-group:/aws/platform-pipeline/*"
+         ]
+        },
+        {
+         "Action": [
+          "s3:GetBucketVersioning",
+          "s3:GetObject",
+          "s3:GetObjectVersion",
+          "s3:ListBucket",
+          "s3:PutObject"
+         ],
+         "Effect": "Allow",
+         "Resource": [
+          "arn:aws:s3:::cdk-*-assets-450683699755-us-east-1",
+          "arn:aws:s3:::cdk-*-assets-450683699755-us-east-1/*"
+         ]
+        },
+        {
+         "Action": [
+          "cloudformation:*",
+          "codebuild:*",
+          "codepipeline:*",
+          "codestar-connections:*",
+          "events:*",
+          "iam:*",
+          "sns:*"
+         ],
+         "Condition": {
+          "StringEquals": {
+           "aws:RequestedRegion": "us-east-1"
+          }
+         },
+         "Effect": "Allow",
+         "Resource": "*"
+        },
+        {
+         "Action": [
+          "secretsmanager:DescribeSecret",
+          "secretsmanager:GetSecretValue"
+         ],
+         "Effect": "Allow",
+         "Resource": "arn:aws:secretsmanager:us-east-1:450683699755:secret:platform-pipeline/*"
+        },
+        {
+         "Action": [
+          "ssm:GetParameter",
+          "ssm:GetParameters",
+          "ssm:GetParametersByPath"
+         ],
+         "Effect": "Allow",
+         "Resource": "arn:aws:ssm:us-east-1:450683699755:parameter/platform-pipeline/*"
+        },
+        {
+         "Action": [
+          "kms:Decrypt",
+          "kms:DescribeKey"
+         ],
+         "Condition": {
+          "StringEquals": {
+           "kms:ViaService": [
+            "secretsmanager.us-east-1.amazonaws.com",
+            "ssm.us-east-1.amazonaws.com"
+           ]
+          }
+         },
+         "Effect": "Allow",
+         "Resource": "arn:aws:kms:us-east-1:450683699755:key/*"
+        }
+       ],
+       "Version": "2012-10-17"
+      },
+      "PolicyName": "CodeBuildPolicy"
+     }
+    ],
+    "RoleName": "PlatformCodeBuildServiceRole",
+    "Tags": [
+     {
+      "Key": "Component",
+      "Value": "PlatformPipeline"
+     },
+     {
+      "Key": "DeployedBy",
+      "Value": "CDK"
+     },
+     {
+      "Key": "DeploymentTimestamp",
+      "Value": "2025-12-30T16:07:30.149Z"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "PlatformTeam"
+     },
+     {
+      "Key": "Project",
+      "Value": "PlatformPipeline"
+     },
+     {
+      "Key": "Purpose",
+      "Value": "Security"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "PlatformSecurityStack/CodeBuildServiceRole/Resource"
+   }
+  },
+  "CrossAccountDeploymentRole29F4E6FD": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "AWS": [
+         {
+          "Fn::GetAtt": [
+           "CodeBuildServiceRoleA9C1F6A8",
+           "Arn"
+          ]
+         },
+         {
+          "Fn::GetAtt": [
+           "PlatformPipelineRoleDAC17252",
+           "Arn"
+          ]
+         }
+        ],
+        "Service": [
+         "codebuild.amazonaws.com",
+         "codepipeline.amazonaws.com"
+        ]
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "Description": "IAM role for cross-account deployments from platform pipeline",
+    "Policies": [
+     {
+      "PolicyDocument": {
+       "Statement": [
+        {
+         "Action": [
+          "cloudformation:CreateStack",
+          "cloudformation:DeleteStack",
+          "cloudformation:DescribeStackEvents",
+          "cloudformation:DescribeStackResources",
+          "cloudformation:DescribeStacks",
+          "cloudformation:GetTemplate",
+          "cloudformation:UpdateStack"
+         ],
+         "Effect": "Allow",
+         "Resource": [
+          "arn:aws:cloudformation:*:*:stack/*ApplicationPipeline*",
+          "arn:aws:cloudformation:*:*:stack/CDKToolkit/*"
+         ]
+        }
+       ],
+       "Version": "2012-10-17"
+      },
+      "PolicyName": "CrossAccountDeploymentPolicy"
+     }
+    ],
+    "RoleName": "PlatformCrossAccountDeploymentRole",
+    "Tags": [
+     {
+      "Key": "Component",
+      "Value": "PlatformPipeline"
+     },
+     {
+      "Key": "DeployedBy",
+      "Value": "CDK"
+     },
+     {
+      "Key": "DeploymentTimestamp",
+      "Value": "2025-12-30T16:07:30.149Z"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "PlatformTeam"
+     },
+     {
+      "Key": "Project",
+      "Value": "PlatformPipeline"
+     },
+     {
+      "Key": "Purpose",
+      "Value": "Security"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "PlatformSecurityStack/CrossAccountDeploymentRole/Resource"
+   }
+  },
+  "CDKMetadata": {
+   "Type": "AWS::CDK::Metadata",
+   "Properties": {
+    "Analytics": "v2:deflate64:H4sIAAAAAAAA/y3JyQ2AIBBA0Vq8wzhysQALMMECDCIm4wLGAT0Yezcup5+8r6BABMzMwdL2k5ypg7OJxk7CHNySWeDUYXaiGvzTS2jHIW32lTrFNcX3/XoJH3oHI+e7QihKwGxkIrklH2lxoL/eozh3K3cAAAA="
+   },
+   "Metadata": {
+    "aws:cdk:path": "PlatformSecurityStack/CDKMetadata/Default"
+   }
+  }
+ },
+ "Outputs": {
+  "PlatformPipelineRoleArn": {
+   "Description": "ARN of the platform pipeline execution role",
+   "Value": {
+    "Fn::GetAtt": [
+     "PlatformPipelineRoleDAC17252",
+     "Arn"
+    ]
+   },
+   "Export": {
+    "Name": "PlatformPipelineRoleArn"
+   }
+  },
+  "ApplicationPipelineRoleArn": {
+   "Description": "ARN of the application pipeline execution role",
+   "Value": {
+    "Fn::GetAtt": [
+     "ApplicationPipelineRole53A5F195",
+     "Arn"
+    ]
+   },
+   "Export": {
+    "Name": "ApplicationPipelineRoleArn"
+   }
+  },
+  "CodeBuildServiceRoleArn": {
+   "Description": "ARN of the CodeBuild service role",
+   "Value": {
+    "Fn::GetAtt": [
+     "CodeBuildServiceRoleA9C1F6A8",
+     "Arn"
+    ]
+   },
+   "Export": {
+    "Name": "CodeBuildServiceRoleArn"
+   }
+  },
+  "CrossAccountDeploymentRoleArn": {
+   "Description": "ARN of the cross-account deployment role",
+   "Value": {
+    "Fn::GetAtt": [
+     "CrossAccountDeploymentRole29F4E6FD",
+     "Arn"
+    ]
+   },
+   "Export": {
+    "Name": "CrossAccountDeploymentRoleArn"
+   }
+  },
+  "ExportsOutputRefAWSStackIdB2DD5BAA": {
+   "Value": {
+    "Ref": "AWS::StackId"
+   },
+   "Export": {
+    "Name": "PlatformSecurityStack:ExportsOutputRefAWSStackIdB2DD5BAA"
+   }
+  },
+  "ExportsOutputFnGetAttPlatformPipelineRoleDAC17252Arn019A57F0": {
+   "Value": {
+    "Fn::GetAtt": [
+     "PlatformPipelineRoleDAC17252",
+     "Arn"
+    ]
+   },
+   "Export": {
+    "Name": "PlatformSecurityStack:ExportsOutputFnGetAttPlatformPipelineRoleDAC17252Arn019A57F0"
+   }
+  },
+  "ExportsOutputFnGetAttApplicationPipelineRole53A5F195ArnDE7DC05C": {
+   "Value": {
+    "Fn::GetAtt": [
+     "ApplicationPipelineRole53A5F195",
+     "Arn"
+    ]
+   },
+   "Export": {
+    "Name": "PlatformSecurityStack:ExportsOutputFnGetAttApplicationPipelineRole53A5F195ArnDE7DC05C"
+   }
+  },
+  "ExportsOutputFnGetAttCodeBuildServiceRoleA9C1F6A8ArnCEB57AE8": {
+   "Value": {
+    "Fn::GetAtt": [
+     "CodeBuildServiceRoleA9C1F6A8",
+     "Arn"
+    ]
+   },
+   "Export": {
+    "Name": "PlatformSecurityStack:ExportsOutputFnGetAttCodeBuildServiceRoleA9C1F6A8ArnCEB57AE8"
+   }
+  },
+  "ExportsOutputFnGetAttCrossAccountDeploymentRole29F4E6FDArn85980CB8": {
+   "Value": {
+    "Fn::GetAtt": [
+     "CrossAccountDeploymentRole29F4E6FD",
+     "Arn"
+    ]
+   },
+   "Export": {
+    "Name": "PlatformSecurityStack:ExportsOutputFnGetAttCrossAccountDeploymentRole29F4E6FDArn85980CB8"
+   }
+  }
+ },
+ "Parameters": {
+  "BootstrapVersion": {
+   "Type": "AWS::SSM::Parameter::Value<String>",
+   "Default": "/cdk-bootstrap/hnb659fds/version",
+   "Description": "Version of the CDK Bootstrap resources in this environment, automatically retrieved from SSM Parameter Store. [cdk:skip]"
+  }
+ },
+ "Rules": {
+  "CheckBootstrapVersion": {
+   "Assertions": [
+    {
+     "Assert": {
+      "Fn::Not": [
+       {
+        "Fn::Contains": [
+         [
+          "1",
+          "2",
+          "3",
+          "4",
+          "5"
+         ],
+         {
+          "Ref": "BootstrapVersion"
+         }
+        ]
+       }
+      ]
+     },
+     "AssertDescription": "CDK bootstrap stack version 6 required. Please run 'cdk bootstrap' with a recent version of the CDK CLI."
+    }
+   ]
+  }
+ }
+}

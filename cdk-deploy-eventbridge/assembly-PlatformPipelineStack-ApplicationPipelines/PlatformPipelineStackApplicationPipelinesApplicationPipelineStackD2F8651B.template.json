@@ -1,0 +1,4806 @@
+{
+ "Resources": {
+  "sampleappPipelineArtifactBucket0C7E05F9": {
+   "Type": "AWS::S3::Bucket",
+   "Properties": {
+    "BucketEncryption": {
+     "ServerSideEncryptionConfiguration": [
+      {
+       "ServerSideEncryptionByDefault": {
+        "SSEAlgorithm": "AES256"
+       }
+      }
+     ]
+    },
+    "BucketName": {
+     "Fn::Join": [
+      "",
+      [
+       "sample-app-pipeline-artifacts-",
+       {
+        "Ref": "AWS::AccountId"
+       },
+       "-",
+       {
+        "Ref": "AWS::Region"
+       }
+      ]
+     ]
+    },
+    "LifecycleConfiguration": {
+     "Rules": [
+      {
+       "ExpirationInDays": 30,
+       "Id": "DeleteOldArtifacts",
+       "NoncurrentVersionExpiration": {
+        "NoncurrentDays": 7
+       },
+       "Status": "Enabled"
+      }
+     ]
+    },
+    "PublicAccessBlockConfiguration": {
+     "BlockPublicAcls": true,
+     "BlockPublicPolicy": true,
+     "IgnorePublicAcls": true,
+     "RestrictPublicBuckets": true
+    },
+    "Tags": [
+     {
+      "Key": "Application",
+      "Value": "sample-app"
+     },
+     {
+      "Key": "aws-cdk:auto-delete-objects",
+      "Value": "true"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "PlatformPipeline"
+     },
+     {
+      "Key": "PipelineType",
+      "Value": "Application"
+     }
+    ],
+    "VersioningConfiguration": {
+     "Status": "Enabled"
+    }
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/sample-app-Pipeline/ArtifactBucket/Resource"
+   }
+  },
+  "sampleappPipelineArtifactBucketPolicy7C5974AA": {
+   "Type": "AWS::S3::BucketPolicy",
+   "Properties": {
+    "Bucket": {
+     "Ref": "sampleappPipelineArtifactBucket0C7E05F9"
+    },
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": [
+        "s3:DeleteObject*",
+        "s3:GetBucket*",
+        "s3:List*",
+        "s3:PutBucketPolicy"
+       ],
+       "Effect": "Allow",
+       "Principal": {
+        "AWS": {
+         "Fn::GetAtt": [
+          "CustomS3AutoDeleteObjectsCustomResourceProviderRole3B1BD092",
+          "Arn"
+         ]
+        }
+       },
+       "Resource": [
+        {
+         "Fn::GetAtt": [
+          "sampleappPipelineArtifactBucket0C7E05F9",
+          "Arn"
+         ]
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Fn::GetAtt": [
+             "sampleappPipelineArtifactBucket0C7E05F9",
+             "Arn"
+            ]
+           },
+           "/*"
+          ]
+         ]
+        }
+       ]
+      }
+     ],
+     "Version": "2012-10-17"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/sample-app-Pipeline/ArtifactBucket/Policy/Resource"
+   }
+  },
+  "sampleappPipelineArtifactBucketAutoDeleteObjectsCustomResourceC2B5511B": {
+   "Type": "Custom::S3AutoDeleteObjects",
+   "Properties": {
+    "ServiceToken": {
+     "Fn::GetAtt": [
+      "CustomS3AutoDeleteObjectsCustomResourceProviderHandler9D90184F",
+      "Arn"
+     ]
+    },
+    "BucketName": {
+     "Ref": "sampleappPipelineArtifactBucket0C7E05F9"
+    }
+   },
+   "DependsOn": [
+    "sampleappPipelineArtifactBucketPolicy7C5974AA"
+   ],
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/sample-app-Pipeline/ArtifactBucket/AutoDeleteObjectsCustomResource/Default"
+   }
+  },
+  "sampleappPipelineBuildLogGroupC30D7638": {
+   "Type": "AWS::Logs::LogGroup",
+   "Properties": {
+    "LogGroupName": "/aws/codebuild/sample-app-build",
+    "RetentionInDays": 14,
+    "Tags": [
+     {
+      "Key": "Application",
+      "Value": "sample-app"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "PlatformPipeline"
+     },
+     {
+      "Key": "PipelineType",
+      "Value": "Application"
+     }
+    ]
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/sample-app-Pipeline/BuildLogGroup/Resource"
+   }
+  },
+  "sampleappPipelineBuildProjectRoleD4DD019E": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "codebuild.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "Tags": [
+     {
+      "Key": "Application",
+      "Value": "sample-app"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "PlatformPipeline"
+     },
+     {
+      "Key": "PipelineType",
+      "Value": "Application"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/sample-app-Pipeline/BuildProject/Role/Resource"
+   }
+  },
+  "sampleappPipelineBuildProjectRoleDefaultPolicy8975DB8B": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": [
+        "logs:CreateLogStream",
+        "logs:PutLogEvents"
+       ],
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::GetAtt": [
+         "sampleappPipelineBuildLogGroupC30D7638",
+         "Arn"
+        ]
+       }
+      },
+      {
+       "Action": [
+        "logs:CreateLogGroup",
+        "logs:CreateLogStream",
+        "logs:PutLogEvents"
+       ],
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::Join": [
+          "",
+          [
+           "arn:aws:logs:us-east-1:450683699755:log-group:/aws/codebuild/",
+           {
+            "Ref": "sampleappPipelineBuildProjectB797B903"
+           },
+           ":*"
+          ]
+         ]
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           "arn:aws:logs:us-east-1:450683699755:log-group:/aws/codebuild/",
+           {
+            "Ref": "sampleappPipelineBuildProjectB797B903"
+           }
+          ]
+         ]
+        }
+       ]
+      },
+      {
+       "Action": [
+        "codebuild:BatchPutCodeCoverages",
+        "codebuild:BatchPutTestCases",
+        "codebuild:CreateReport",
+        "codebuild:CreateReportGroup",
+        "codebuild:UpdateReport"
+       ],
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::Join": [
+         "",
+         [
+          "arn:aws:codebuild:us-east-1:450683699755:report-group/",
+          {
+           "Ref": "sampleappPipelineBuildProjectB797B903"
+          },
+          "-*"
+         ]
+        ]
+       }
+      },
+      {
+       "Action": [
+        "s3:Abort*",
+        "s3:DeleteObject*",
+        "s3:GetBucket*",
+        "s3:GetObject*",
+        "s3:List*",
+        "s3:PutObject",
+        "s3:PutObjectLegalHold",
+        "s3:PutObjectRetention",
+        "s3:PutObjectTagging",
+        "s3:PutObjectVersionTagging"
+       ],
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::GetAtt": [
+          "sampleappPipelineArtifactBucket0C7E05F9",
+          "Arn"
+         ]
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Fn::GetAtt": [
+             "sampleappPipelineArtifactBucket0C7E05F9",
+             "Arn"
+            ]
+           },
+           "/*"
+          ]
+         ]
+        }
+       ]
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "sampleappPipelineBuildProjectRoleDefaultPolicy8975DB8B",
+    "Roles": [
+     {
+      "Ref": "sampleappPipelineBuildProjectRoleD4DD019E"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/sample-app-Pipeline/BuildProject/Role/DefaultPolicy/Resource"
+   }
+  },
+  "sampleappPipelineBuildProjectB797B903": {
+   "Type": "AWS::CodeBuild::Project",
+   "Properties": {
+    "Artifacts": {
+     "Type": "NO_ARTIFACTS"
+    },
+    "Cache": {
+     "Modes": [
+      "LOCAL_SOURCE_CACHE",
+      "LOCAL_DOCKER_LAYER_CACHE",
+      "LOCAL_CUSTOM_CACHE"
+     ],
+     "Type": "LOCAL"
+    },
+    "Description": "Build project for sample-app application",
+    "EncryptionKey": "alias/aws/s3",
+    "Environment": {
+     "ComputeType": "BUILD_GENERAL1_SMALL",
+     "EnvironmentVariables": [
+      {
+       "Name": "APPLICATION_NAME",
+       "Type": "PLAINTEXT",
+       "Value": "sample-app"
+      },
+      {
+       "Name": "AWS_DEFAULT_REGION",
+       "Type": "PLAINTEXT",
+       "Value": {
+        "Ref": "AWS::Region"
+       }
+      },
+      {
+       "Name": "AWS_ACCOUNT_ID",
+       "Type": "PLAINTEXT",
+       "Value": {
+        "Ref": "AWS::AccountId"
+       }
+      }
+     ],
+     "Image": "aws/codebuild/standard:7.0",
+     "ImagePullCredentialsType": "CODEBUILD",
+     "PrivilegedMode": false,
+     "Type": "LINUX_CONTAINER"
+    },
+    "LogsConfig": {
+     "CloudWatchLogs": {
+      "GroupName": {
+       "Ref": "sampleappPipelineBuildLogGroupC30D7638"
+      },
+      "Status": "ENABLED"
+     }
+    },
+    "Name": "sample-app-build",
+    "ServiceRole": {
+     "Fn::GetAtt": [
+      "sampleappPipelineBuildProjectRoleD4DD019E",
+      "Arn"
+     ]
+    },
+    "Source": {
+     "BuildSpec": "{\n  \"version\": \"0.2\",\n  \"phases\": {\n    \"install\": {\n      \"runtime-versions\": {\n        \"nodejs\": \"18\"\n      }\n    },\n    \"pre_build\": {\n      \"commands\": [\n        \"echo \\\"Pre-build phase started on `date`\\\"\",\n        \"echo \\\"Node.js version: $(node --version)\\\"\",\n        \"echo \\\"NPM version: $(npm --version)\\\"\"\n      ]\n    },\n    \"build\": {\n      \"commands\": [\n        \"echo \\\"Build started on `date`\\\"\",\n        \"echo \\\"Installing dependencies...\\\"\",\n        \"npm ci\",\n        \"echo \\\"Running tests...\\\"\",\n        \"npm run test\",\n        \"echo \\\"Building application...\\\"\",\n        \"npm run build\",\n        \"echo \\\"Build completed on `date`\\\"\"\n      ]\n    },\n    \"post_build\": {\n      \"commands\": [\n        \"echo \\\"Post-build phase completed on `date`\\\"\"\n      ]\n    }\n  },\n  \"artifacts\": {\n    \"files\": [\n      \"**/*\"\n    ],\n    \"exclude-paths\": [\n      \"node_modules/**/*\",\n      \".git/**/*\"\n    ]\n  },\n  \"cache\": {\n    \"paths\": [\n      \"node_modules/**/*\"\n    ]\n  }\n}",
+     "Location": "https://github.com/platform-team/sample-application.git",
+     "ReportBuildStatus": true,
+     "Type": "GITHUB"
+    },
+    "Tags": [
+     {
+      "Key": "Application",
+      "Value": "sample-app"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "PlatformPipeline"
+     },
+     {
+      "Key": "PipelineType",
+      "Value": "Application"
+     }
+    ],
+    "TimeoutInMinutes": 30,
+    "Triggers": {
+     "Webhook": false
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/sample-app-Pipeline/BuildProject/Resource"
+   }
+  },
+  "sampleappPipelineRole5F57D5A7": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "codepipeline.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "Tags": [
+     {
+      "Key": "Application",
+      "Value": "sample-app"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "PlatformPipeline"
+     },
+     {
+      "Key": "PipelineType",
+      "Value": "Application"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/sample-app-Pipeline/Pipeline/Role/Resource"
+   }
+  },
+  "sampleappPipelineRoleDefaultPolicy99DA8CBE": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": [
+        "s3:Abort*",
+        "s3:DeleteObject*",
+        "s3:GetBucket*",
+        "s3:GetObject*",
+        "s3:List*",
+        "s3:PutObject",
+        "s3:PutObjectLegalHold",
+        "s3:PutObjectRetention",
+        "s3:PutObjectTagging",
+        "s3:PutObjectVersionTagging"
+       ],
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::GetAtt": [
+          "sampleappPipelineArtifactBucket0C7E05F9",
+          "Arn"
+         ]
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Fn::GetAtt": [
+             "sampleappPipelineArtifactBucket0C7E05F9",
+             "Arn"
+            ]
+           },
+           "/*"
+          ]
+         ]
+        }
+       ]
+      },
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::GetAtt": [
+          "sampleappPipelineBuildCodePipelineActionRole495F3FC3",
+          "Arn"
+         ]
+        },
+        {
+         "Fn::GetAtt": [
+          "sampleappPipelineDeployDevelopmentCodePipelineActionRole1AB78911",
+          "Arn"
+         ]
+        },
+        {
+         "Fn::GetAtt": [
+          "sampleappPipelineDeployProductionApproveProductionCodePipelineActionRoleB7699E2C",
+          "Arn"
+         ]
+        },
+        {
+         "Fn::GetAtt": [
+          "sampleappPipelineDeployProductionCodePipelineActionRoleA44AC0CA",
+          "Arn"
+         ]
+        },
+        {
+         "Fn::GetAtt": [
+          "sampleappPipelineDeployStagingApproveStagingCodePipelineActionRoleC1B4B03F",
+          "Arn"
+         ]
+        },
+        {
+         "Fn::GetAtt": [
+          "sampleappPipelineDeployStagingCodePipelineActionRoleA2A6A24C",
+          "Arn"
+         ]
+        },
+        {
+         "Fn::GetAtt": [
+          "sampleappPipelineSourceGitHubSourceCodePipelineActionRole548BAC5F",
+          "Arn"
+         ]
+        }
+       ]
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "sampleappPipelineRoleDefaultPolicy99DA8CBE",
+    "Roles": [
+     {
+      "Ref": "sampleappPipelineRole5F57D5A7"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/sample-app-Pipeline/Pipeline/Role/DefaultPolicy/Resource"
+   }
+  },
+  "sampleappPipelineD902C51C": {
+   "Type": "AWS::CodePipeline::Pipeline",
+   "Properties": {
+    "ArtifactStores": [
+     {
+      "ArtifactStore": {
+       "Location": {
+        "Ref": "sampleappPipelineArtifactBucket0C7E05F9"
+       },
+       "Type": "S3"
+      },
+      "Region": "us-east-1"
+     }
+    ],
+    "Name": "sample-app-pipeline",
+    "RestartExecutionOnUpdate": true,
+    "RoleArn": {
+     "Fn::GetAtt": [
+      "sampleappPipelineRole5F57D5A7",
+      "Arn"
+     ]
+    },
+    "Stages": [
+     {
+      "Actions": [
+       {
+        "ActionTypeId": {
+         "Category": "Source",
+         "Owner": "AWS",
+         "Provider": "CodeStarSourceConnection",
+         "Version": "1"
+        },
+        "Configuration": {
+         "ConnectionArn": "arn:aws:codestar-connections:us-east-1:450683699755:connection/a1e6eb5d-e680-40e2-8176-b3f35b7292fc",
+         "FullRepositoryId": "platform-team/sample-application",
+         "BranchName": "main"
+        },
+        "Name": "GitHub_Source",
+        "OutputArtifacts": [
+         {
+          "Name": "SourceOutput"
+         }
+        ],
+        "RoleArn": {
+         "Fn::GetAtt": [
+          "sampleappPipelineSourceGitHubSourceCodePipelineActionRole548BAC5F",
+          "Arn"
+         ]
+        },
+        "RunOrder": 1
+       }
+      ],
+      "Name": "Source"
+     },
+     {
+      "Actions": [
+       {
+        "ActionTypeId": {
+         "Category": "Build",
+         "Owner": "AWS",
+         "Provider": "CodeBuild",
+         "Version": "1"
+        },
+        "Configuration": {
+         "ProjectName": {
+          "Ref": "sampleappPipelineBuildProjectB797B903"
+         }
+        },
+        "InputArtifacts": [
+         {
+          "Name": "SourceOutput"
+         }
+        ],
+        "Name": "Build",
+        "OutputArtifacts": [
+         {
+          "Name": "BuildOutput"
+         }
+        ],
+        "RoleArn": {
+         "Fn::GetAtt": [
+          "sampleappPipelineBuildCodePipelineActionRole495F3FC3",
+          "Arn"
+         ]
+        },
+        "RunOrder": 1
+       }
+      ],
+      "Name": "Build"
+     },
+     {
+      "Actions": [
+       {
+        "ActionTypeId": {
+         "Category": "Deploy",
+         "Owner": "AWS",
+         "Provider": "CloudFormation",
+         "Version": "1"
+        },
+        "Configuration": {
+         "StackName": "sample-app-development",
+         "Capabilities": "CAPABILITY_NAMED_IAM",
+         "RoleArn": {
+          "Fn::GetAtt": [
+           "sampleappPipelineDeployDevelopmentRole25E70DAE",
+           "Arn"
+          ]
+         },
+         "ParameterOverrides": "{}",
+         "ActionMode": "CREATE_UPDATE",
+         "TemplatePath": "BuildOutput::template.yaml"
+        },
+        "InputArtifacts": [
+         {
+          "Name": "BuildOutput"
+         }
+        ],
+        "Name": "Deploy_Development",
+        "Region": "us-east-1",
+        "RoleArn": {
+         "Fn::GetAtt": [
+          "sampleappPipelineDeployDevelopmentCodePipelineActionRole1AB78911",
+          "Arn"
+         ]
+        },
+        "RunOrder": 1
+       }
+      ],
+      "Name": "Deploy_Development"
+     },
+     {
+      "Actions": [
+       {
+        "ActionTypeId": {
+         "Category": "Approval",
+         "Owner": "AWS",
+         "Provider": "Manual",
+         "Version": "1"
+        },
+        "Configuration": {
+         "CustomData": "Please review and approve deployment to Staging environment"
+        },
+        "Name": "Approve_Staging",
+        "RoleArn": {
+         "Fn::GetAtt": [
+          "sampleappPipelineDeployStagingApproveStagingCodePipelineActionRoleC1B4B03F",
+          "Arn"
+         ]
+        },
+        "RunOrder": 1
+       },
+       {
+        "ActionTypeId": {
+         "Category": "Deploy",
+         "Owner": "AWS",
+         "Provider": "CloudFormation",
+         "Version": "1"
+        },
+        "Configuration": {
+         "StackName": "sample-app-staging",
+         "Capabilities": "CAPABILITY_NAMED_IAM",
+         "RoleArn": {
+          "Fn::GetAtt": [
+           "sampleappPipelineDeployStagingRole270D92D7",
+           "Arn"
+          ]
+         },
+         "ParameterOverrides": "{}",
+         "ActionMode": "CREATE_UPDATE",
+         "TemplatePath": "BuildOutput::template.yaml"
+        },
+        "InputArtifacts": [
+         {
+          "Name": "BuildOutput"
+         }
+        ],
+        "Name": "Deploy_Staging",
+        "Region": "us-east-1",
+        "RoleArn": {
+         "Fn::GetAtt": [
+          "sampleappPipelineDeployStagingCodePipelineActionRoleA2A6A24C",
+          "Arn"
+         ]
+        },
+        "RunOrder": 1
+       }
+      ],
+      "Name": "Deploy_Staging"
+     },
+     {
+      "Actions": [
+       {
+        "ActionTypeId": {
+         "Category": "Approval",
+         "Owner": "AWS",
+         "Provider": "Manual",
+         "Version": "1"
+        },
+        "Configuration": {
+         "CustomData": "Please review and approve deployment to Production environment"
+        },
+        "Name": "Approve_Production",
+        "RoleArn": {
+         "Fn::GetAtt": [
+          "sampleappPipelineDeployProductionApproveProductionCodePipelineActionRoleB7699E2C",
+          "Arn"
+         ]
+        },
+        "RunOrder": 1
+       },
+       {
+        "ActionTypeId": {
+         "Category": "Deploy",
+         "Owner": "AWS",
+         "Provider": "CloudFormation",
+         "Version": "1"
+        },
+        "Configuration": {
+         "StackName": "sample-app-production",
+         "Capabilities": "CAPABILITY_NAMED_IAM",
+         "RoleArn": {
+          "Fn::GetAtt": [
+           "sampleappPipelineDeployProductionRole109B4848",
+           "Arn"
+          ]
+         },
+         "ParameterOverrides": "{}",
+         "ActionMode": "CREATE_UPDATE",
+         "TemplatePath": "BuildOutput::template.yaml"
+        },
+        "InputArtifacts": [
+         {
+          "Name": "BuildOutput"
+         }
+        ],
+        "Name": "Deploy_Production",
+        "Region": "us-east-1",
+        "RoleArn": {
+         "Fn::GetAtt": [
+          "sampleappPipelineDeployProductionCodePipelineActionRoleA44AC0CA",
+          "Arn"
+         ]
+        },
+        "RunOrder": 1
+       }
+      ],
+      "Name": "Deploy_Production"
+     }
+    ],
+    "Tags": [
+     {
+      "Key": "Application",
+      "Value": "sample-app"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "PlatformPipeline"
+     },
+     {
+      "Key": "PipelineType",
+      "Value": "Application"
+     }
+    ]
+   },
+   "DependsOn": [
+    "sampleappPipelineRoleDefaultPolicy99DA8CBE",
+    "sampleappPipelineRole5F57D5A7"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/sample-app-Pipeline/Pipeline/Resource"
+   }
+  },
+  "sampleappPipelineSourceGitHubSourceCodePipelineActionRole548BAC5F": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "AWS": "arn:aws:iam::450683699755:root"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "Tags": [
+     {
+      "Key": "Application",
+      "Value": "sample-app"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "PlatformPipeline"
+     },
+     {
+      "Key": "PipelineType",
+      "Value": "Application"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/sample-app-Pipeline/Pipeline/Source/GitHub_Source/CodePipelineActionRole/Resource"
+   }
+  },
+  "sampleappPipelineSourceGitHubSourceCodePipelineActionRoleDefaultPolicy39A39EB9": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": "codestar-connections:UseConnection",
+       "Effect": "Allow",
+       "Resource": "arn:aws:codestar-connections:us-east-1:450683699755:connection/a1e6eb5d-e680-40e2-8176-b3f35b7292fc"
+      },
+      {
+       "Action": [
+        "s3:Abort*",
+        "s3:DeleteObject*",
+        "s3:GetBucket*",
+        "s3:GetObject*",
+        "s3:List*",
+        "s3:PutObject",
+        "s3:PutObjectLegalHold",
+        "s3:PutObjectRetention",
+        "s3:PutObjectTagging",
+        "s3:PutObjectVersionTagging"
+       ],
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::GetAtt": [
+          "sampleappPipelineArtifactBucket0C7E05F9",
+          "Arn"
+         ]
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Fn::GetAtt": [
+             "sampleappPipelineArtifactBucket0C7E05F9",
+             "Arn"
+            ]
+           },
+           "/*"
+          ]
+         ]
+        }
+       ]
+      },
+      {
+       "Action": [
+        "s3:PutObjectAcl",
+        "s3:PutObjectVersionAcl"
+       ],
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::Join": [
+         "",
+         [
+          {
+           "Fn::GetAtt": [
+            "sampleappPipelineArtifactBucket0C7E05F9",
+            "Arn"
+           ]
+          },
+          "/*"
+         ]
+        ]
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "sampleappPipelineSourceGitHubSourceCodePipelineActionRoleDefaultPolicy39A39EB9",
+    "Roles": [
+     {
+      "Ref": "sampleappPipelineSourceGitHubSourceCodePipelineActionRole548BAC5F"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/sample-app-Pipeline/Pipeline/Source/GitHub_Source/CodePipelineActionRole/DefaultPolicy/Resource"
+   }
+  },
+  "sampleappPipelineBuildCodePipelineActionRole495F3FC3": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "AWS": "arn:aws:iam::450683699755:root"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "Tags": [
+     {
+      "Key": "Application",
+      "Value": "sample-app"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "PlatformPipeline"
+     },
+     {
+      "Key": "PipelineType",
+      "Value": "Application"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/sample-app-Pipeline/Pipeline/Build/Build/CodePipelineActionRole/Resource"
+   }
+  },
+  "sampleappPipelineBuildCodePipelineActionRoleDefaultPolicyA8F5AA9B": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": [
+        "codebuild:BatchGetBuilds",
+        "codebuild:StartBuild",
+        "codebuild:StopBuild"
+       ],
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::GetAtt": [
+         "sampleappPipelineBuildProjectB797B903",
+         "Arn"
+        ]
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "sampleappPipelineBuildCodePipelineActionRoleDefaultPolicyA8F5AA9B",
+    "Roles": [
+     {
+      "Ref": "sampleappPipelineBuildCodePipelineActionRole495F3FC3"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/sample-app-Pipeline/Pipeline/Build/Build/CodePipelineActionRole/DefaultPolicy/Resource"
+   }
+  },
+  "sampleappPipelineDeployDevelopmentCodePipelineActionRole1AB78911": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "AWS": "arn:aws:iam::450683699755:root"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "Tags": [
+     {
+      "Key": "Application",
+      "Value": "sample-app"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "PlatformPipeline"
+     },
+     {
+      "Key": "PipelineType",
+      "Value": "Application"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/sample-app-Pipeline/Pipeline/Deploy_Development/Deploy_Development/CodePipelineActionRole/Resource"
+   }
+  },
+  "sampleappPipelineDeployDevelopmentCodePipelineActionRoleDefaultPolicy718D7C50": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": "iam:PassRole",
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::GetAtt": [
+         "sampleappPipelineDeployDevelopmentRole25E70DAE",
+         "Arn"
+        ]
+       }
+      },
+      {
+       "Action": [
+        "s3:GetBucket*",
+        "s3:GetObject*",
+        "s3:List*"
+       ],
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::GetAtt": [
+          "sampleappPipelineArtifactBucket0C7E05F9",
+          "Arn"
+         ]
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Fn::GetAtt": [
+             "sampleappPipelineArtifactBucket0C7E05F9",
+             "Arn"
+            ]
+           },
+           "/*"
+          ]
+         ]
+        }
+       ]
+      },
+      {
+       "Action": [
+        "cloudformation:CreateStack",
+        "cloudformation:DescribeStack*",
+        "cloudformation:GetStackPolicy",
+        "cloudformation:GetTemplate*",
+        "cloudformation:SetStackPolicy",
+        "cloudformation:UpdateStack",
+        "cloudformation:ValidateTemplate"
+       ],
+       "Effect": "Allow",
+       "Resource": "arn:aws:cloudformation:us-east-1:450683699755:stack/sample-app-development/*"
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "sampleappPipelineDeployDevelopmentCodePipelineActionRoleDefaultPolicy718D7C50",
+    "Roles": [
+     {
+      "Ref": "sampleappPipelineDeployDevelopmentCodePipelineActionRole1AB78911"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/sample-app-Pipeline/Pipeline/Deploy_Development/Deploy_Development/CodePipelineActionRole/DefaultPolicy/Resource"
+   }
+  },
+  "sampleappPipelineDeployDevelopmentRole25E70DAE": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "cloudformation.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "Tags": [
+     {
+      "Key": "Application",
+      "Value": "sample-app"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "PlatformPipeline"
+     },
+     {
+      "Key": "PipelineType",
+      "Value": "Application"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/sample-app-Pipeline/Pipeline/Deploy_Development/Deploy_Development/Role/Resource"
+   }
+  },
+  "sampleappPipelineDeployDevelopmentRoleDefaultPolicy74E5EDC6": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": [
+        "s3:GetBucket*",
+        "s3:GetObject*",
+        "s3:List*"
+       ],
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::GetAtt": [
+          "sampleappPipelineArtifactBucket0C7E05F9",
+          "Arn"
+         ]
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Fn::GetAtt": [
+             "sampleappPipelineArtifactBucket0C7E05F9",
+             "Arn"
+            ]
+           },
+           "/*"
+          ]
+         ]
+        }
+       ]
+      },
+      {
+       "Action": "*",
+       "Effect": "Allow",
+       "Resource": "*"
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "sampleappPipelineDeployDevelopmentRoleDefaultPolicy74E5EDC6",
+    "Roles": [
+     {
+      "Ref": "sampleappPipelineDeployDevelopmentRole25E70DAE"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/sample-app-Pipeline/Pipeline/Deploy_Development/Deploy_Development/Role/DefaultPolicy/Resource"
+   }
+  },
+  "sampleappPipelineDeployStagingApproveStagingCodePipelineActionRoleC1B4B03F": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "AWS": "arn:aws:iam::450683699755:root"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "Tags": [
+     {
+      "Key": "Application",
+      "Value": "sample-app"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "PlatformPipeline"
+     },
+     {
+      "Key": "PipelineType",
+      "Value": "Application"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/sample-app-Pipeline/Pipeline/Deploy_Staging/Approve_Staging/CodePipelineActionRole/Resource"
+   }
+  },
+  "sampleappPipelineDeployStagingCodePipelineActionRoleA2A6A24C": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "AWS": "arn:aws:iam::450683699755:root"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "Tags": [
+     {
+      "Key": "Application",
+      "Value": "sample-app"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "PlatformPipeline"
+     },
+     {
+      "Key": "PipelineType",
+      "Value": "Application"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/sample-app-Pipeline/Pipeline/Deploy_Staging/Deploy_Staging/CodePipelineActionRole/Resource"
+   }
+  },
+  "sampleappPipelineDeployStagingCodePipelineActionRoleDefaultPolicy47A24275": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": "iam:PassRole",
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::GetAtt": [
+         "sampleappPipelineDeployStagingRole270D92D7",
+         "Arn"
+        ]
+       }
+      },
+      {
+       "Action": [
+        "s3:GetBucket*",
+        "s3:GetObject*",
+        "s3:List*"
+       ],
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::GetAtt": [
+          "sampleappPipelineArtifactBucket0C7E05F9",
+          "Arn"
+         ]
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Fn::GetAtt": [
+             "sampleappPipelineArtifactBucket0C7E05F9",
+             "Arn"
+            ]
+           },
+           "/*"
+          ]
+         ]
+        }
+       ]
+      },
+      {
+       "Action": [
+        "cloudformation:CreateStack",
+        "cloudformation:DescribeStack*",
+        "cloudformation:GetStackPolicy",
+        "cloudformation:GetTemplate*",
+        "cloudformation:SetStackPolicy",
+        "cloudformation:UpdateStack",
+        "cloudformation:ValidateTemplate"
+       ],
+       "Effect": "Allow",
+       "Resource": "arn:aws:cloudformation:us-east-1:450683699755:stack/sample-app-staging/*"
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "sampleappPipelineDeployStagingCodePipelineActionRoleDefaultPolicy47A24275",
+    "Roles": [
+     {
+      "Ref": "sampleappPipelineDeployStagingCodePipelineActionRoleA2A6A24C"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/sample-app-Pipeline/Pipeline/Deploy_Staging/Deploy_Staging/CodePipelineActionRole/DefaultPolicy/Resource"
+   }
+  },
+  "sampleappPipelineDeployStagingRole270D92D7": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "cloudformation.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "Tags": [
+     {
+      "Key": "Application",
+      "Value": "sample-app"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "PlatformPipeline"
+     },
+     {
+      "Key": "PipelineType",
+      "Value": "Application"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/sample-app-Pipeline/Pipeline/Deploy_Staging/Deploy_Staging/Role/Resource"
+   }
+  },
+  "sampleappPipelineDeployStagingRoleDefaultPolicyCC3CFDA4": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": [
+        "s3:GetBucket*",
+        "s3:GetObject*",
+        "s3:List*"
+       ],
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::GetAtt": [
+          "sampleappPipelineArtifactBucket0C7E05F9",
+          "Arn"
+         ]
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Fn::GetAtt": [
+             "sampleappPipelineArtifactBucket0C7E05F9",
+             "Arn"
+            ]
+           },
+           "/*"
+          ]
+         ]
+        }
+       ]
+      },
+      {
+       "Action": "*",
+       "Effect": "Allow",
+       "Resource": "*"
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "sampleappPipelineDeployStagingRoleDefaultPolicyCC3CFDA4",
+    "Roles": [
+     {
+      "Ref": "sampleappPipelineDeployStagingRole270D92D7"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/sample-app-Pipeline/Pipeline/Deploy_Staging/Deploy_Staging/Role/DefaultPolicy/Resource"
+   }
+  },
+  "sampleappPipelineDeployProductionApproveProductionCodePipelineActionRoleB7699E2C": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "AWS": "arn:aws:iam::450683699755:root"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "Tags": [
+     {
+      "Key": "Application",
+      "Value": "sample-app"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "PlatformPipeline"
+     },
+     {
+      "Key": "PipelineType",
+      "Value": "Application"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/sample-app-Pipeline/Pipeline/Deploy_Production/Approve_Production/CodePipelineActionRole/Resource"
+   }
+  },
+  "sampleappPipelineDeployProductionCodePipelineActionRoleA44AC0CA": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "AWS": "arn:aws:iam::450683699755:root"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "Tags": [
+     {
+      "Key": "Application",
+      "Value": "sample-app"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "PlatformPipeline"
+     },
+     {
+      "Key": "PipelineType",
+      "Value": "Application"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/sample-app-Pipeline/Pipeline/Deploy_Production/Deploy_Production/CodePipelineActionRole/Resource"
+   }
+  },
+  "sampleappPipelineDeployProductionCodePipelineActionRoleDefaultPolicy5F7D31D2": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": "iam:PassRole",
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::GetAtt": [
+         "sampleappPipelineDeployProductionRole109B4848",
+         "Arn"
+        ]
+       }
+      },
+      {
+       "Action": [
+        "s3:GetBucket*",
+        "s3:GetObject*",
+        "s3:List*"
+       ],
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::GetAtt": [
+          "sampleappPipelineArtifactBucket0C7E05F9",
+          "Arn"
+         ]
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Fn::GetAtt": [
+             "sampleappPipelineArtifactBucket0C7E05F9",
+             "Arn"
+            ]
+           },
+           "/*"
+          ]
+         ]
+        }
+       ]
+      },
+      {
+       "Action": [
+        "cloudformation:CreateStack",
+        "cloudformation:DescribeStack*",
+        "cloudformation:GetStackPolicy",
+        "cloudformation:GetTemplate*",
+        "cloudformation:SetStackPolicy",
+        "cloudformation:UpdateStack",
+        "cloudformation:ValidateTemplate"
+       ],
+       "Effect": "Allow",
+       "Resource": "arn:aws:cloudformation:us-east-1:450683699755:stack/sample-app-production/*"
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "sampleappPipelineDeployProductionCodePipelineActionRoleDefaultPolicy5F7D31D2",
+    "Roles": [
+     {
+      "Ref": "sampleappPipelineDeployProductionCodePipelineActionRoleA44AC0CA"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/sample-app-Pipeline/Pipeline/Deploy_Production/Deploy_Production/CodePipelineActionRole/DefaultPolicy/Resource"
+   }
+  },
+  "sampleappPipelineDeployProductionRole109B4848": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "cloudformation.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "Tags": [
+     {
+      "Key": "Application",
+      "Value": "sample-app"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "PlatformPipeline"
+     },
+     {
+      "Key": "PipelineType",
+      "Value": "Application"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/sample-app-Pipeline/Pipeline/Deploy_Production/Deploy_Production/Role/Resource"
+   }
+  },
+  "sampleappPipelineDeployProductionRoleDefaultPolicy2037969B": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": [
+        "s3:GetBucket*",
+        "s3:GetObject*",
+        "s3:List*"
+       ],
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::GetAtt": [
+          "sampleappPipelineArtifactBucket0C7E05F9",
+          "Arn"
+         ]
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Fn::GetAtt": [
+             "sampleappPipelineArtifactBucket0C7E05F9",
+             "Arn"
+            ]
+           },
+           "/*"
+          ]
+         ]
+        }
+       ]
+      },
+      {
+       "Action": "*",
+       "Effect": "Allow",
+       "Resource": "*"
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "sampleappPipelineDeployProductionRoleDefaultPolicy2037969B",
+    "Roles": [
+     {
+      "Ref": "sampleappPipelineDeployProductionRole109B4848"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/sample-app-Pipeline/Pipeline/Deploy_Production/Deploy_Production/Role/DefaultPolicy/Resource"
+   }
+  },
+  "sampleappPipelineApplicationMonitoringPipelineLogGroupBAB99E55": {
+   "Type": "AWS::Logs::LogGroup",
+   "Properties": {
+    "LogGroupName": "/aws/platform-pipeline/sample-app/execution",
+    "RetentionInDays": 14,
+    "Tags": [
+     {
+      "Key": "Application",
+      "Value": "sample-app"
+     },
+     {
+      "Key": "Component",
+      "Value": "Monitoring"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "PlatformPipeline"
+     },
+     {
+      "Key": "Pipeline",
+      "Value": "sample-app"
+     },
+     {
+      "Key": "PipelineType",
+      "Value": "Application"
+     }
+    ]
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/sample-app-Pipeline/ApplicationMonitoring/PipelineLogGroup/Resource"
+   }
+  },
+  "sampleappPipelineApplicationMonitoringAuditLogGroup64D2BA80": {
+   "Type": "AWS::Logs::LogGroup",
+   "Properties": {
+    "LogGroupName": "/aws/platform-pipeline/sample-app/audit",
+    "RetentionInDays": 14,
+    "Tags": [
+     {
+      "Key": "Application",
+      "Value": "sample-app"
+     },
+     {
+      "Key": "Component",
+      "Value": "Monitoring"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "PlatformPipeline"
+     },
+     {
+      "Key": "Pipeline",
+      "Value": "sample-app"
+     },
+     {
+      "Key": "PipelineType",
+      "Value": "Application"
+     }
+    ]
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/sample-app-Pipeline/ApplicationMonitoring/AuditLogGroup/Resource"
+   }
+  },
+  "sampleappPipelineApplicationMonitoringPipelineStateRule8FE6B5FB": {
+   "Type": "AWS::Events::Rule",
+   "Properties": {
+    "Description": "Captures state changes for sample-app pipeline",
+    "EventPattern": {
+     "source": [
+      "aws.codepipeline"
+     ],
+     "detail-type": [
+      "CodePipeline Pipeline Execution State Change"
+     ],
+     "detail": {
+      "pipeline": [
+       {
+        "Ref": "sampleappPipelineD902C51C"
+       }
+      ]
+     }
+    },
+    "Name": "sample-app-pipeline-state-changes",
+    "State": "ENABLED",
+    "Targets": [
+     {
+      "Arn": {
+       "Fn::Join": [
+        "",
+        [
+         "arn:aws:logs:us-east-1:450683699755:log-group:",
+         {
+          "Ref": "sampleappPipelineApplicationMonitoringPipelineLogGroupBAB99E55"
+         }
+        ]
+       ]
+      },
+      "Id": "Target0"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/sample-app-Pipeline/ApplicationMonitoring/PipelineStateRule/Resource"
+   }
+  },
+  "sampleappPipelineApplicationMonitoringBuildStateRuleA2128C63": {
+   "Type": "AWS::Events::Rule",
+   "Properties": {
+    "Description": "Captures state changes for sample-app build project",
+    "EventPattern": {
+     "source": [
+      "aws.codebuild"
+     ],
+     "detail-type": [
+      "CodeBuild Build State Change"
+     ],
+     "detail": {
+      "project-name": [
+       {
+        "Ref": "sampleappPipelineBuildProjectB797B903"
+       }
+      ]
+     }
+    },
+    "Name": "sample-app-build-state-changes",
+    "State": "ENABLED",
+    "Targets": [
+     {
+      "Arn": {
+       "Fn::Join": [
+        "",
+        [
+         "arn:aws:logs:us-east-1:450683699755:log-group:",
+         {
+          "Ref": "sampleappPipelineApplicationMonitoringPipelineLogGroupBAB99E55"
+         }
+        ]
+       ]
+      },
+      "Id": "Target0"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/sample-app-Pipeline/ApplicationMonitoring/BuildStateRule/Resource"
+   }
+  },
+  "sampleappPipelineApplicationMonitoringMonitoringDashboard39F0B641": {
+   "Type": "AWS::CloudWatch::Dashboard",
+   "Properties": {
+    "DashboardBody": {
+     "Fn::Join": [
+      "",
+      [
+       "{\"widgets\":[{\"type\":\"metric\",\"width\":12,\"height\":6,\"x\":0,\"y\":0,\"properties\":{\"view\":\"timeSeries\",\"title\":\"Pipeline Execution Time\",\"region\":\"",
+       {
+        "Ref": "AWS::Region"
+       },
+       "\",\"metrics\":[[\"ApplicationPipeline/sample-app\",\"PipelineExecutionTime\",\"PipelineName\",\"sample-app\"]],\"yAxis\":{}}},{\"type\":\"metric\",\"width\":12,\"height\":6,\"x\":12,\"y\":0,\"properties\":{\"view\":\"timeSeries\",\"title\":\"Pipeline Success Rate\",\"region\":\"",
+       {
+        "Ref": "AWS::Region"
+       },
+       "\",\"metrics\":[[\"ApplicationPipeline/sample-app\",\"PipelineSuccessRate\",\"PipelineName\",\"sample-app\"]],\"yAxis\":{}}}]}"
+      ]
+     ]
+    },
+    "DashboardName": "sample-app-monitoring"
+   },
+   "Metadata": {
+    "aws:cdk:path": "PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/sample-app-Pipeline/ApplicationMonitoring/MonitoringDashboard/Resource"
+   }
+  },
+  "sampleappPipelineApplicationMonitoringFailureNotificationTopic21943DB3": {
+   "Type": "AWS::SNS::Topic",
+   "Properties": {
+    "DisplayName": "sample-app Pipeline Failure Notifications",
+    "Tags": [
+     {
+      "Key": "Application",
+      "Value": "sample-app"
+     },
+     {
+      "Key": "Component",
+      "Value": "Monitoring"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "PlatformPipeline"
+     },
+     {
+      "Key": "Pipeline",
+      "Value": "sample-app"
+     },
+     {
+      "Key": "PipelineType",
+      "Value": "Application"
+     }
+    ],
+    "TopicName": "sample-app-failure-notifications"
+   },
+   "Metadata": {
+    "aws:cdk:path": "PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/sample-app-Pipeline/ApplicationMonitoring/FailureNotificationTopic/Resource"
+   }
+  },
+  "sampleappPipelineApplicationMonitoringFailureNotificationTopicPolicy69F7A759": {
+   "Type": "AWS::SNS::TopicPolicy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sns:Publish",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "events.amazonaws.com"
+       },
+       "Resource": {
+        "Ref": "sampleappPipelineApplicationMonitoringFailureNotificationTopic21943DB3"
+       },
+       "Sid": "0"
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "Topics": [
+     {
+      "Ref": "sampleappPipelineApplicationMonitoringFailureNotificationTopic21943DB3"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/sample-app-Pipeline/ApplicationMonitoring/FailureNotificationTopic/Policy/Resource"
+   }
+  },
+  "sampleappPipelineApplicationMonitoringPipelineFailureRuleF4249D10": {
+   "Type": "AWS::Events::Rule",
+   "Properties": {
+    "Description": "Captures pipeline failure events for sample-app",
+    "EventPattern": {
+     "source": [
+      "aws.codepipeline"
+     ],
+     "detail-type": [
+      "CodePipeline Pipeline Execution State Change"
+     ],
+     "detail": {
+      "state": [
+       "FAILED"
+      ],
+      "pipeline": [
+       "sample-app"
+      ]
+     }
+    },
+    "Name": "sample-app-pipeline-failures",
+    "State": "ENABLED",
+    "Targets": [
+     {
+      "Arn": {
+       "Ref": "sampleappPipelineApplicationMonitoringFailureNotificationTopic21943DB3"
+      },
+      "Id": "Target0",
+      "Input": {
+       "Fn::Join": [
+        "",
+        [
+         "\"🚨 PIPELINE FAILURE ALERT 🚨\\n\\nPipeline: sample-app\\nStatus: FAILED\\nExecution ID: ${detail.execution-id}\\nTime: ${time}\\nRegion: ${region}\\nAccount: ${account}\\n\\nPipeline Details:\\n- Pipeline Name: ${detail.pipeline}\\n- State: ${detail.state}\\n- Version: ${detail.version}\\n\\nPlease check the AWS Console for detailed error information:\\nhttps://console.aws.amazon.com/codesuite/codepipeline/pipelines/${detail.pipeline}/view\\n\\nCloudWatch Logs: ",
+         {
+          "Ref": "sampleappPipelineApplicationMonitoringPipelineLogGroupBAB99E55"
+         },
+         "\\n\\nThis is an automated notification from the Platform Pipeline monitoring system.\""
+        ]
+       ]
+      }
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/sample-app-Pipeline/ApplicationMonitoring/PipelineFailureRule/Resource"
+   }
+  },
+  "sampleappPipelineApplicationMonitoringBuildFailureRule85830885": {
+   "Type": "AWS::Events::Rule",
+   "Properties": {
+    "Description": "Captures build failure events for sample-app",
+    "EventPattern": {
+     "source": [
+      "aws.codebuild"
+     ],
+     "detail-type": [
+      "CodeBuild Build State Change"
+     ],
+     "detail": {
+      "build-status": [
+       "FAILED",
+       "FAULT",
+       "STOPPED",
+       "TIMED_OUT"
+      ],
+      "project-name": [
+       {
+        "Ref": "sampleappPipelineBuildProjectB797B903"
+       }
+      ]
+     }
+    },
+    "Name": "sample-app-build-failures",
+    "State": "ENABLED",
+    "Targets": [
+     {
+      "Arn": {
+       "Ref": "sampleappPipelineApplicationMonitoringFailureNotificationTopic21943DB3"
+      },
+      "Id": "Target0",
+      "Input": {
+       "Fn::Join": [
+        "",
+        [
+         "\"🔨 BUILD FAILURE ALERT 🔨\\n\\nProject: ${detail.project-name}\\nStatus: ${detail.build-status}\\nBuild ID: ${detail.build-id}\\nTime: ${time}\\nRegion: ${region}\\nAccount: ${account}\\n\\nBuild Details:\\n- Project Name: ${detail.project-name}\\n- Build Status: ${detail.build-status}\\n- Build Phase: ${detail.current-phase}\\n- Build Phase Status: ${detail.current-phase-context}\\n\\nPlease check the AWS Console for detailed build logs:\\nhttps://console.aws.amazon.com/codesuite/codebuild/projects/${detail.project-name}/build/${detail.build-id}\\n\\nCloudWatch Logs: ",
+         {
+          "Ref": "sampleappPipelineApplicationMonitoringPipelineLogGroupBAB99E55"
+         },
+         "\\n\\nThis is an automated notification from the Platform Pipeline monitoring system.\""
+        ]
+       ]
+      }
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/sample-app-Pipeline/ApplicationMonitoring/BuildFailureRule/Resource"
+   }
+  },
+  "sampleappPipelineApplicationMonitoringApplicationPipelineFailureRule3AB0F312": {
+   "Type": "AWS::Events::Rule",
+   "Properties": {
+    "Description": "Captures failure events for application pipelines managed by sample-app",
+    "EventPattern": {
+     "source": [
+      "aws.codepipeline"
+     ],
+     "detail-type": [
+      "CodePipeline Pipeline Execution State Change"
+     ],
+     "detail": {
+      "state": [
+       "FAILED"
+      ]
+     }
+    },
+    "Name": "sample-app-app-pipeline-failures",
+    "State": "ENABLED",
+    "Targets": [
+     {
+      "Arn": {
+       "Ref": "sampleappPipelineApplicationMonitoringFailureNotificationTopic21943DB3"
+      },
+      "Id": "Target0",
+      "Input": {
+       "Fn::Join": [
+        "",
+        [
+         "\"⚠️ APPLICATION PIPELINE FAILURE ⚠️\\n\\nApplication Pipeline: ${detail.pipeline}\\nStatus: FAILED\\nExecution ID: ${detail.execution-id}\\nTime: ${time}\\nRegion: ${region}\\nAccount: ${account}\\n\\nPipeline Details:\\n- Pipeline Name: ${detail.pipeline}\\n- State: ${detail.state}\\n- Version: ${detail.version}\\n\\nThis application pipeline is managed by the sample-app platform pipeline.\\n\\nPlease check the AWS Console for detailed error information:\\nhttps://console.aws.amazon.com/codesuite/codepipeline/pipelines/${detail.pipeline}/view\\n\\nPlatform Pipeline Logs: ",
+         {
+          "Ref": "sampleappPipelineApplicationMonitoringPipelineLogGroupBAB99E55"
+         },
+         "\\n\\nThis is an automated notification from the Platform Pipeline monitoring system.\""
+        ]
+       ]
+      }
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/sample-app-Pipeline/ApplicationMonitoring/ApplicationPipelineFailureRule/Resource"
+   }
+  },
+  "sampleappPipelineApplicationMonitoringRepeatedFailuresAlarm98A41C30": {
+   "Type": "AWS::CloudWatch::Alarm",
+   "Properties": {
+    "AlarmActions": [
+     {
+      "Ref": "sampleappPipelineApplicationMonitoringFailureNotificationTopic21943DB3"
+     }
+    ],
+    "AlarmDescription": "Alarm for repeated failures in sample-app pipeline",
+    "AlarmName": "sample-app-repeated-failures",
+    "ComparisonOperator": "GreaterThanOrEqualToThreshold",
+    "Dimensions": [
+     {
+      "Name": "RuleName",
+      "Value": {
+       "Ref": "sampleappPipelineApplicationMonitoringPipelineFailureRuleF4249D10"
+      }
+     }
+    ],
+    "EvaluationPeriods": 1,
+    "MetricName": "MatchedEvents",
+    "Namespace": "AWS/Events",
+    "Period": 900,
+    "Statistic": "Sum",
+    "Threshold": 3,
+    "TreatMissingData": "notBreaching"
+   },
+   "Metadata": {
+    "aws:cdk:path": "PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/sample-app-Pipeline/ApplicationMonitoring/RepeatedFailuresAlarm/Resource"
+   }
+  },
+  "sampleappPipelineApplicationMonitoringExecutionTimeMetricFilterA887C0A7": {
+   "Type": "AWS::Logs::MetricFilter",
+   "Properties": {
+    "FilterPattern": "{ $.detail.execution-id = \"*\" }",
+    "LogGroupName": {
+     "Ref": "sampleappPipelineApplicationMonitoringPipelineLogGroupBAB99E55"
+    },
+    "MetricTransformations": [
+     {
+      "DefaultValue": 0,
+      "MetricName": "PipelineExecutionTime",
+      "MetricNamespace": "ApplicationPipeline/sample-app",
+      "MetricValue": "1"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/sample-app-Pipeline/ApplicationMonitoring/ExecutionTimeMetricFilter/Resource"
+   }
+  },
+  "sampleappPipelineApplicationMonitoringSuccessRateMetricFilter3A02DEA7": {
+   "Type": "AWS::Logs::MetricFilter",
+   "Properties": {
+    "FilterPattern": "{ $.state = \"SUCCEEDED\" }",
+    "LogGroupName": {
+     "Ref": "sampleappPipelineApplicationMonitoringPipelineLogGroupBAB99E55"
+    },
+    "MetricTransformations": [
+     {
+      "DefaultValue": 0,
+      "MetricName": "PipelineSuccessRate",
+      "MetricNamespace": "ApplicationPipeline/sample-app",
+      "MetricValue": "100"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/sample-app-Pipeline/ApplicationMonitoring/SuccessRateMetricFilter/Resource"
+   }
+  },
+  "CustomS3AutoDeleteObjectsCustomResourceProviderRole3B1BD092": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Version": "2012-10-17",
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "lambda.amazonaws.com"
+       }
+      }
+     ]
+    },
+    "ManagedPolicyArns": [
+     {
+      "Fn::Sub": "arn:${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/Custom::S3AutoDeleteObjectsCustomResourceProvider/Role"
+   }
+  },
+  "CustomS3AutoDeleteObjectsCustomResourceProviderHandler9D90184F": {
+   "Type": "AWS::Lambda::Function",
+   "Properties": {
+    "Code": {
+     "S3Bucket": "cdk-hnb659fds-assets-450683699755-us-east-1",
+     "S3Key": "b7f33614a69548d6bafe224d751a7ef238cde19097415e553fe8b63a4c8fd8a6.zip"
+    },
+    "Timeout": 900,
+    "MemorySize": 128,
+    "Handler": "index.handler",
+    "Role": {
+     "Fn::GetAtt": [
+      "CustomS3AutoDeleteObjectsCustomResourceProviderRole3B1BD092",
+      "Arn"
+     ]
+    },
+    "Runtime": "nodejs18.x",
+    "Description": {
+     "Fn::Join": [
+      "",
+      [
+       "Lambda function for auto-deleting objects in ",
+       {
+        "Ref": "sampleappPipelineArtifactBucket0C7E05F9"
+       },
+       " S3 bucket."
+      ]
+     ]
+    }
+   },
+   "DependsOn": [
+    "CustomS3AutoDeleteObjectsCustomResourceProviderRole3B1BD092"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/Custom::S3AutoDeleteObjectsCustomResourceProvider/Handler",
+    "aws:asset:path": "..\\asset.b7f33614a69548d6bafe224d751a7ef238cde19097415e553fe8b63a4c8fd8a6",
+    "aws:asset:property": "Code"
+   }
+  },
+  "EventsLogGroupPolicyPlatformPipelineStackApplicationPipelinesApplicationPipelineStacksampleappPipelineApplicationMonitoringPipelineStateRuleA4757C4E61C86B3D": {
+   "Type": "Custom::CloudwatchLogResourcePolicy",
+   "Properties": {
+    "ServiceToken": {
+     "Fn::GetAtt": [
+      "AWS679f53fac002430cb0da5b7982bd22872D164C4C",
+      "Arn"
+     ]
+    },
+    "Create": {
+     "Fn::Join": [
+      "",
+      [
+       "{\"service\":\"CloudWatchLogs\",\"action\":\"putResourcePolicy\",\"parameters\":{\"policyName\":\"PlatformPipelineStackApplicationPipelinesApplicationPipelineStackEventsLogGroupPolicyPlatformPipelineStackApplicationPipelinesApplicationPipelineStacksampleappPipelineApplicationMonitoringPipelineStateRuleA4757C4E643BBD78\",\"policyDocument\":\"{\\\"Statement\\\":[{\\\"Action\\\":[\\\"logs:PutLogEvents\\\",\\\"logs:CreateLogStream\\\"],\\\"Effect\\\":\\\"Allow\\\",\\\"Principal\\\":{\\\"Service\\\":\\\"events.amazonaws.com\\\"},\\\"Resource\\\":\\\"",
+       {
+        "Fn::GetAtt": [
+         "sampleappPipelineApplicationMonitoringPipelineLogGroupBAB99E55",
+         "Arn"
+        ]
+       },
+       "\\\"}],\\\"Version\\\":\\\"2012-10-17\\\"}\"},\"physicalResourceId\":{\"id\":\"EventsLogGroupPolicyPlatformPipelineStackApplicationPipelinesApplicationPipelineStacksampleappPipelineApplicationMonitoringPipelineStateRuleA4757C4E\"}}"
+      ]
+     ]
+    },
+    "Update": {
+     "Fn::Join": [
+      "",
+      [
+       "{\"service\":\"CloudWatchLogs\",\"action\":\"putResourcePolicy\",\"parameters\":{\"policyName\":\"PlatformPipelineStackApplicationPipelinesApplicationPipelineStackEventsLogGroupPolicyPlatformPipelineStackApplicationPipelinesApplicationPipelineStacksampleappPipelineApplicationMonitoringPipelineStateRuleA4757C4E643BBD78\",\"policyDocument\":\"{\\\"Statement\\\":[{\\\"Action\\\":[\\\"logs:PutLogEvents\\\",\\\"logs:CreateLogStream\\\"],\\\"Effect\\\":\\\"Allow\\\",\\\"Principal\\\":{\\\"Service\\\":\\\"events.amazonaws.com\\\"},\\\"Resource\\\":\\\"",
+       {
+        "Fn::GetAtt": [
+         "sampleappPipelineApplicationMonitoringPipelineLogGroupBAB99E55",
+         "Arn"
+        ]
+       },
+       "\\\"}],\\\"Version\\\":\\\"2012-10-17\\\"}\"},\"physicalResourceId\":{\"id\":\"EventsLogGroupPolicyPlatformPipelineStackApplicationPipelinesApplicationPipelineStacksampleappPipelineApplicationMonitoringPipelineStateRuleA4757C4E\"}}"
+      ]
+     ]
+    },
+    "Delete": "{\"service\":\"CloudWatchLogs\",\"action\":\"deleteResourcePolicy\",\"parameters\":{\"policyName\":\"PlatformPipelineStackApplicationPipelinesApplicationPipelineStackEventsLogGroupPolicyPlatformPipelineStackApplicationPipelinesApplicationPipelineStacksampleappPipelineApplicationMonitoringPipelineStateRuleA4757C4E643BBD78\"},\"ignoreErrorCodesMatching\":\"ResourceNotFoundException\"}",
+    "InstallLatestAwsSdk": false
+   },
+   "DependsOn": [
+    "EventsLogGroupPolicyPlatformPipelineStackApplicationPipelinesApplicationPipelineStacksampleappPipelineApplicationMonitoringPipelineStateRuleA4757C4ECustomResourcePolicy06B78D8A"
+   ],
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/EventsLogGroupPolicyPlatformPipelineStackApplicationPipelinesApplicationPipelineStacksampleappPipelineApplicationMonitoringPipelineStateRuleA4757C4E/Resource/Default"
+   }
+  },
+  "EventsLogGroupPolicyPlatformPipelineStackApplicationPipelinesApplicationPipelineStacksampleappPipelineApplicationMonitoringPipelineStateRuleA4757C4ECustomResourcePolicy06B78D8A": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": [
+        "logs:DeleteResourcePolicy",
+        "logs:PutResourcePolicy"
+       ],
+       "Effect": "Allow",
+       "Resource": "*"
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "tionPipelinesApplicationPipelineStacksampleappPipelineApplicationMonitoringPipelineStateRuleA4757C4ECustomResourcePolicy06B78D8A",
+    "Roles": [
+     {
+      "Ref": "AWS679f53fac002430cb0da5b7982bd2287ServiceRoleC1EA0FF2"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/EventsLogGroupPolicyPlatformPipelineStackApplicationPipelinesApplicationPipelineStacksampleappPipelineApplicationMonitoringPipelineStateRuleA4757C4E/CustomResourcePolicy/Resource"
+   }
+  },
+  "AWS679f53fac002430cb0da5b7982bd2287ServiceRoleC1EA0FF2": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "lambda.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "ManagedPolicyArns": [
+     {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+       ]
+      ]
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/AWS679f53fac002430cb0da5b7982bd2287/ServiceRole/Resource"
+   }
+  },
+  "AWS679f53fac002430cb0da5b7982bd22872D164C4C": {
+   "Type": "AWS::Lambda::Function",
+   "Properties": {
+    "Code": {
+     "S3Bucket": "cdk-hnb659fds-assets-450683699755-us-east-1",
+     "S3Key": "17c16a3854838fd3ff4bda08146122a6701f33b9c86ae17f415ad0dc47a97544.zip"
+    },
+    "Handler": "index.handler",
+    "Role": {
+     "Fn::GetAtt": [
+      "AWS679f53fac002430cb0da5b7982bd2287ServiceRoleC1EA0FF2",
+      "Arn"
+     ]
+    },
+    "Runtime": "nodejs18.x",
+    "Timeout": 120
+   },
+   "DependsOn": [
+    "AWS679f53fac002430cb0da5b7982bd2287ServiceRoleC1EA0FF2"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/AWS679f53fac002430cb0da5b7982bd2287/Resource",
+    "aws:asset:path": "..\\asset.17c16a3854838fd3ff4bda08146122a6701f33b9c86ae17f415ad0dc47a97544",
+    "aws:asset:is-bundled": false,
+    "aws:asset:property": "Code"
+   }
+  },
+  "EventsLogGroupPolicyPlatformPipelineStackApplicationPipelinesApplicationPipelineStacksampleappPipelineApplicationMonitoringBuildStateRuleD9BEF9F4CC96A7B5": {
+   "Type": "Custom::CloudwatchLogResourcePolicy",
+   "Properties": {
+    "ServiceToken": {
+     "Fn::GetAtt": [
+      "AWS679f53fac002430cb0da5b7982bd22872D164C4C",
+      "Arn"
+     ]
+    },
+    "Create": {
+     "Fn::Join": [
+      "",
+      [
+       "{\"service\":\"CloudWatchLogs\",\"action\":\"putResourcePolicy\",\"parameters\":{\"policyName\":\"PlatformPipelineStackApplicationPipelinesApplicationPipelineStackEventsLogGroupPolicyPlatformPipelineStackApplicationPipelinesApplicationPipelineStacksampleappPipelineApplicationMonitoringBuildStateRuleD9BEF9F41162DE0C\",\"policyDocument\":\"{\\\"Statement\\\":[{\\\"Action\\\":[\\\"logs:PutLogEvents\\\",\\\"logs:CreateLogStream\\\"],\\\"Effect\\\":\\\"Allow\\\",\\\"Principal\\\":{\\\"Service\\\":\\\"events.amazonaws.com\\\"},\\\"Resource\\\":\\\"",
+       {
+        "Fn::GetAtt": [
+         "sampleappPipelineApplicationMonitoringPipelineLogGroupBAB99E55",
+         "Arn"
+        ]
+       },
+       "\\\"}],\\\"Version\\\":\\\"2012-10-17\\\"}\"},\"physicalResourceId\":{\"id\":\"EventsLogGroupPolicyPlatformPipelineStackApplicationPipelinesApplicationPipelineStacksampleappPipelineApplicationMonitoringBuildStateRuleD9BEF9F4\"}}"
+      ]
+     ]
+    },
+    "Update": {
+     "Fn::Join": [
+      "",
+      [
+       "{\"service\":\"CloudWatchLogs\",\"action\":\"putResourcePolicy\",\"parameters\":{\"policyName\":\"PlatformPipelineStackApplicationPipelinesApplicationPipelineStackEventsLogGroupPolicyPlatformPipelineStackApplicationPipelinesApplicationPipelineStacksampleappPipelineApplicationMonitoringBuildStateRuleD9BEF9F41162DE0C\",\"policyDocument\":\"{\\\"Statement\\\":[{\\\"Action\\\":[\\\"logs:PutLogEvents\\\",\\\"logs:CreateLogStream\\\"],\\\"Effect\\\":\\\"Allow\\\",\\\"Principal\\\":{\\\"Service\\\":\\\"events.amazonaws.com\\\"},\\\"Resource\\\":\\\"",
+       {
+        "Fn::GetAtt": [
+         "sampleappPipelineApplicationMonitoringPipelineLogGroupBAB99E55",
+         "Arn"
+        ]
+       },
+       "\\\"}],\\\"Version\\\":\\\"2012-10-17\\\"}\"},\"physicalResourceId\":{\"id\":\"EventsLogGroupPolicyPlatformPipelineStackApplicationPipelinesApplicationPipelineStacksampleappPipelineApplicationMonitoringBuildStateRuleD9BEF9F4\"}}"
+      ]
+     ]
+    },
+    "Delete": "{\"service\":\"CloudWatchLogs\",\"action\":\"deleteResourcePolicy\",\"parameters\":{\"policyName\":\"PlatformPipelineStackApplicationPipelinesApplicationPipelineStackEventsLogGroupPolicyPlatformPipelineStackApplicationPipelinesApplicationPipelineStacksampleappPipelineApplicationMonitoringBuildStateRuleD9BEF9F41162DE0C\"},\"ignoreErrorCodesMatching\":\"ResourceNotFoundException\"}",
+    "InstallLatestAwsSdk": false
+   },
+   "DependsOn": [
+    "EventsLogGroupPolicyPlatformPipelineStackApplicationPipelinesApplicationPipelineStacksampleappPipelineApplicationMonitoringBuildStateRuleD9BEF9F4CustomResourcePolicy77481991"
+   ],
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/EventsLogGroupPolicyPlatformPipelineStackApplicationPipelinesApplicationPipelineStacksampleappPipelineApplicationMonitoringBuildStateRuleD9BEF9F4/Resource/Default"
+   }
+  },
+  "EventsLogGroupPolicyPlatformPipelineStackApplicationPipelinesApplicationPipelineStacksampleappPipelineApplicationMonitoringBuildStateRuleD9BEF9F4CustomResourcePolicy77481991": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": [
+        "logs:DeleteResourcePolicy",
+        "logs:PutResourcePolicy"
+       ],
+       "Effect": "Allow",
+       "Resource": "*"
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "icationPipelinesApplicationPipelineStacksampleappPipelineApplicationMonitoringBuildStateRuleD9BEF9F4CustomResourcePolicy77481991",
+    "Roles": [
+     {
+      "Ref": "AWS679f53fac002430cb0da5b7982bd2287ServiceRoleC1EA0FF2"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/EventsLogGroupPolicyPlatformPipelineStackApplicationPipelinesApplicationPipelineStacksampleappPipelineApplicationMonitoringBuildStateRuleD9BEF9F4/CustomResourcePolicy/Resource"
+   }
+  },
+  "ragappPipelineArtifactBucket9CEB180D": {
+   "Type": "AWS::S3::Bucket",
+   "Properties": {
+    "BucketEncryption": {
+     "ServerSideEncryptionConfiguration": [
+      {
+       "ServerSideEncryptionByDefault": {
+        "SSEAlgorithm": "AES256"
+       }
+      }
+     ]
+    },
+    "BucketName": {
+     "Fn::Join": [
+      "",
+      [
+       "rag-app-pipeline-artifacts-",
+       {
+        "Ref": "AWS::AccountId"
+       },
+       "-",
+       {
+        "Ref": "AWS::Region"
+       }
+      ]
+     ]
+    },
+    "LifecycleConfiguration": {
+     "Rules": [
+      {
+       "ExpirationInDays": 30,
+       "Id": "DeleteOldArtifacts",
+       "NoncurrentVersionExpiration": {
+        "NoncurrentDays": 7
+       },
+       "Status": "Enabled"
+      }
+     ]
+    },
+    "PublicAccessBlockConfiguration": {
+     "BlockPublicAcls": true,
+     "BlockPublicPolicy": true,
+     "IgnorePublicAcls": true,
+     "RestrictPublicBuckets": true
+    },
+    "Tags": [
+     {
+      "Key": "Application",
+      "Value": "rag-app"
+     },
+     {
+      "Key": "aws-cdk:auto-delete-objects",
+      "Value": "true"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "PlatformPipeline"
+     },
+     {
+      "Key": "PipelineType",
+      "Value": "Application"
+     }
+    ],
+    "VersioningConfiguration": {
+     "Status": "Enabled"
+    }
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/rag-app-Pipeline/ArtifactBucket/Resource"
+   }
+  },
+  "ragappPipelineArtifactBucketPolicyA2764482": {
+   "Type": "AWS::S3::BucketPolicy",
+   "Properties": {
+    "Bucket": {
+     "Ref": "ragappPipelineArtifactBucket9CEB180D"
+    },
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": [
+        "s3:DeleteObject*",
+        "s3:GetBucket*",
+        "s3:List*",
+        "s3:PutBucketPolicy"
+       ],
+       "Effect": "Allow",
+       "Principal": {
+        "AWS": {
+         "Fn::GetAtt": [
+          "CustomS3AutoDeleteObjectsCustomResourceProviderRole3B1BD092",
+          "Arn"
+         ]
+        }
+       },
+       "Resource": [
+        {
+         "Fn::GetAtt": [
+          "ragappPipelineArtifactBucket9CEB180D",
+          "Arn"
+         ]
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Fn::GetAtt": [
+             "ragappPipelineArtifactBucket9CEB180D",
+             "Arn"
+            ]
+           },
+           "/*"
+          ]
+         ]
+        }
+       ]
+      }
+     ],
+     "Version": "2012-10-17"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/rag-app-Pipeline/ArtifactBucket/Policy/Resource"
+   }
+  },
+  "ragappPipelineArtifactBucketAutoDeleteObjectsCustomResource3C4855F9": {
+   "Type": "Custom::S3AutoDeleteObjects",
+   "Properties": {
+    "ServiceToken": {
+     "Fn::GetAtt": [
+      "CustomS3AutoDeleteObjectsCustomResourceProviderHandler9D90184F",
+      "Arn"
+     ]
+    },
+    "BucketName": {
+     "Ref": "ragappPipelineArtifactBucket9CEB180D"
+    }
+   },
+   "DependsOn": [
+    "ragappPipelineArtifactBucketPolicyA2764482"
+   ],
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/rag-app-Pipeline/ArtifactBucket/AutoDeleteObjectsCustomResource/Default"
+   }
+  },
+  "ragappPipelineBuildLogGroupD28411C5": {
+   "Type": "AWS::Logs::LogGroup",
+   "Properties": {
+    "LogGroupName": "/aws/codebuild/rag-app-build",
+    "RetentionInDays": 14,
+    "Tags": [
+     {
+      "Key": "Application",
+      "Value": "rag-app"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "PlatformPipeline"
+     },
+     {
+      "Key": "PipelineType",
+      "Value": "Application"
+     }
+    ]
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/rag-app-Pipeline/BuildLogGroup/Resource"
+   }
+  },
+  "ragappPipelineBuildProjectRole54EC81B7": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "codebuild.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "Tags": [
+     {
+      "Key": "Application",
+      "Value": "rag-app"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "PlatformPipeline"
+     },
+     {
+      "Key": "PipelineType",
+      "Value": "Application"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/rag-app-Pipeline/BuildProject/Role/Resource"
+   }
+  },
+  "ragappPipelineBuildProjectRoleDefaultPolicy73102215": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": [
+        "logs:CreateLogStream",
+        "logs:PutLogEvents"
+       ],
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::GetAtt": [
+         "ragappPipelineBuildLogGroupD28411C5",
+         "Arn"
+        ]
+       }
+      },
+      {
+       "Action": [
+        "logs:CreateLogGroup",
+        "logs:CreateLogStream",
+        "logs:PutLogEvents"
+       ],
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::Join": [
+          "",
+          [
+           "arn:aws:logs:us-east-1:450683699755:log-group:/aws/codebuild/",
+           {
+            "Ref": "ragappPipelineBuildProjectE84CB79D"
+           },
+           ":*"
+          ]
+         ]
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           "arn:aws:logs:us-east-1:450683699755:log-group:/aws/codebuild/",
+           {
+            "Ref": "ragappPipelineBuildProjectE84CB79D"
+           }
+          ]
+         ]
+        }
+       ]
+      },
+      {
+       "Action": [
+        "codebuild:BatchPutCodeCoverages",
+        "codebuild:BatchPutTestCases",
+        "codebuild:CreateReport",
+        "codebuild:CreateReportGroup",
+        "codebuild:UpdateReport"
+       ],
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::Join": [
+         "",
+         [
+          "arn:aws:codebuild:us-east-1:450683699755:report-group/",
+          {
+           "Ref": "ragappPipelineBuildProjectE84CB79D"
+          },
+          "-*"
+         ]
+        ]
+       }
+      },
+      {
+       "Action": [
+        "s3:Abort*",
+        "s3:DeleteObject*",
+        "s3:GetBucket*",
+        "s3:GetObject*",
+        "s3:List*",
+        "s3:PutObject",
+        "s3:PutObjectLegalHold",
+        "s3:PutObjectRetention",
+        "s3:PutObjectTagging",
+        "s3:PutObjectVersionTagging"
+       ],
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::GetAtt": [
+          "ragappPipelineArtifactBucket9CEB180D",
+          "Arn"
+         ]
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Fn::GetAtt": [
+             "ragappPipelineArtifactBucket9CEB180D",
+             "Arn"
+            ]
+           },
+           "/*"
+          ]
+         ]
+        }
+       ]
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "ragappPipelineBuildProjectRoleDefaultPolicy73102215",
+    "Roles": [
+     {
+      "Ref": "ragappPipelineBuildProjectRole54EC81B7"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/rag-app-Pipeline/BuildProject/Role/DefaultPolicy/Resource"
+   }
+  },
+  "ragappPipelineBuildProjectE84CB79D": {
+   "Type": "AWS::CodeBuild::Project",
+   "Properties": {
+    "Artifacts": {
+     "Type": "NO_ARTIFACTS"
+    },
+    "Cache": {
+     "Modes": [
+      "LOCAL_SOURCE_CACHE",
+      "LOCAL_DOCKER_LAYER_CACHE",
+      "LOCAL_CUSTOM_CACHE"
+     ],
+     "Type": "LOCAL"
+    },
+    "Description": "Build project for rag-app application",
+    "EncryptionKey": "alias/aws/s3",
+    "Environment": {
+     "ComputeType": "BUILD_GENERAL1_SMALL",
+     "EnvironmentVariables": [
+      {
+       "Name": "APPLICATION_NAME",
+       "Type": "PLAINTEXT",
+       "Value": "rag-app"
+      },
+      {
+       "Name": "AWS_DEFAULT_REGION",
+       "Type": "PLAINTEXT",
+       "Value": {
+        "Ref": "AWS::Region"
+       }
+      },
+      {
+       "Name": "AWS_ACCOUNT_ID",
+       "Type": "PLAINTEXT",
+       "Value": {
+        "Ref": "AWS::AccountId"
+       }
+      }
+     ],
+     "Image": "aws/codebuild/standard:7.0",
+     "ImagePullCredentialsType": "CODEBUILD",
+     "PrivilegedMode": false,
+     "Type": "LINUX_CONTAINER"
+    },
+    "LogsConfig": {
+     "CloudWatchLogs": {
+      "GroupName": {
+       "Ref": "ragappPipelineBuildLogGroupD28411C5"
+      },
+      "Status": "ENABLED"
+     }
+    },
+    "Name": "rag-app-build",
+    "ServiceRole": {
+     "Fn::GetAtt": [
+      "ragappPipelineBuildProjectRole54EC81B7",
+      "Arn"
+     ]
+    },
+    "Source": {
+     "BuildSpec": "{\n  \"version\": \"0.2\",\n  \"phases\": {\n    \"install\": {\n      \"runtime-versions\": {\n        \"nodejs\": \"18\"\n      }\n    },\n    \"pre_build\": {\n      \"commands\": [\n        \"echo \\\"Pre-build phase started on `date`\\\"\",\n        \"echo \\\"Node.js version: $(node --version)\\\"\",\n        \"echo \\\"NPM version: $(npm --version)\\\"\"\n      ]\n    },\n    \"build\": {\n      \"commands\": [\n        \"echo \\\"Build started on `date`\\\"\",\n        \"echo \\\"Installing dependencies...\\\"\",\n        \"npm ci\",\n        \"echo \\\"Running tests...\\\"\",\n        \"npm run test\",\n        \"echo \\\"Building application...\\\"\",\n        \"npm run build\",\n        \"echo \\\"Build completed on `date`\\\"\"\n      ]\n    },\n    \"post_build\": {\n      \"commands\": [\n        \"echo \\\"Post-build phase completed on `date`\\\"\"\n      ]\n    }\n  },\n  \"artifacts\": {\n    \"files\": [\n      \"**/*\"\n    ],\n    \"exclude-paths\": [\n      \"node_modules/**/*\",\n      \".git/**/*\"\n    ]\n  },\n  \"cache\": {\n    \"paths\": [\n      \"node_modules/**/*\"\n    ]\n  }\n}",
+     "Location": "https://github.com/peterboddev/rag.git",
+     "ReportBuildStatus": true,
+     "Type": "GITHUB"
+    },
+    "Tags": [
+     {
+      "Key": "Application",
+      "Value": "rag-app"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "PlatformPipeline"
+     },
+     {
+      "Key": "PipelineType",
+      "Value": "Application"
+     }
+    ],
+    "TimeoutInMinutes": 30,
+    "Triggers": {
+     "Webhook": false
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/rag-app-Pipeline/BuildProject/Resource"
+   }
+  },
+  "ragappPipelineRoleDE74C479": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "codepipeline.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "Tags": [
+     {
+      "Key": "Application",
+      "Value": "rag-app"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "PlatformPipeline"
+     },
+     {
+      "Key": "PipelineType",
+      "Value": "Application"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/rag-app-Pipeline/Pipeline/Role/Resource"
+   }
+  },
+  "ragappPipelineRoleDefaultPolicy98AE6A82": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": [
+        "s3:Abort*",
+        "s3:DeleteObject*",
+        "s3:GetBucket*",
+        "s3:GetObject*",
+        "s3:List*",
+        "s3:PutObject",
+        "s3:PutObjectLegalHold",
+        "s3:PutObjectRetention",
+        "s3:PutObjectTagging",
+        "s3:PutObjectVersionTagging"
+       ],
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::GetAtt": [
+          "ragappPipelineArtifactBucket9CEB180D",
+          "Arn"
+         ]
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Fn::GetAtt": [
+             "ragappPipelineArtifactBucket9CEB180D",
+             "Arn"
+            ]
+           },
+           "/*"
+          ]
+         ]
+        }
+       ]
+      },
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::GetAtt": [
+          "ragappPipelineBuildCodePipelineActionRole939C11A6",
+          "Arn"
+         ]
+        },
+        {
+         "Fn::GetAtt": [
+          "ragappPipelineDeployDevelopmentCodePipelineActionRoleF740264A",
+          "Arn"
+         ]
+        },
+        {
+         "Fn::GetAtt": [
+          "ragappPipelineDeployProductionApproveProductionCodePipelineActionRole4D56AD4C",
+          "Arn"
+         ]
+        },
+        {
+         "Fn::GetAtt": [
+          "ragappPipelineDeployProductionCodePipelineActionRoleD64C0DB9",
+          "Arn"
+         ]
+        },
+        {
+         "Fn::GetAtt": [
+          "ragappPipelineDeployStagingApproveStagingCodePipelineActionRole0850968E",
+          "Arn"
+         ]
+        },
+        {
+         "Fn::GetAtt": [
+          "ragappPipelineDeployStagingCodePipelineActionRoleAA89B3C2",
+          "Arn"
+         ]
+        },
+        {
+         "Fn::GetAtt": [
+          "ragappPipelineSourceGitHubSourceCodePipelineActionRole5EC8AFBB",
+          "Arn"
+         ]
+        }
+       ]
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "ragappPipelineRoleDefaultPolicy98AE6A82",
+    "Roles": [
+     {
+      "Ref": "ragappPipelineRoleDE74C479"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/rag-app-Pipeline/Pipeline/Role/DefaultPolicy/Resource"
+   }
+  },
+  "ragappPipelineED7DEFBF": {
+   "Type": "AWS::CodePipeline::Pipeline",
+   "Properties": {
+    "ArtifactStores": [
+     {
+      "ArtifactStore": {
+       "Location": {
+        "Ref": "ragappPipelineArtifactBucket9CEB180D"
+       },
+       "Type": "S3"
+      },
+      "Region": "us-east-1"
+     }
+    ],
+    "Name": "rag-app-pipeline",
+    "RestartExecutionOnUpdate": true,
+    "RoleArn": {
+     "Fn::GetAtt": [
+      "ragappPipelineRoleDE74C479",
+      "Arn"
+     ]
+    },
+    "Stages": [
+     {
+      "Actions": [
+       {
+        "ActionTypeId": {
+         "Category": "Source",
+         "Owner": "AWS",
+         "Provider": "CodeStarSourceConnection",
+         "Version": "1"
+        },
+        "Configuration": {
+         "ConnectionArn": "arn:aws:codestar-connections:us-east-1:450683699755:connection/a1e6eb5d-e680-40e2-8176-b3f35b7292fc",
+         "FullRepositoryId": "peterboddev/rag",
+         "BranchName": "main"
+        },
+        "Name": "GitHub_Source",
+        "OutputArtifacts": [
+         {
+          "Name": "SourceOutput"
+         }
+        ],
+        "RoleArn": {
+         "Fn::GetAtt": [
+          "ragappPipelineSourceGitHubSourceCodePipelineActionRole5EC8AFBB",
+          "Arn"
+         ]
+        },
+        "RunOrder": 1
+       }
+      ],
+      "Name": "Source"
+     },
+     {
+      "Actions": [
+       {
+        "ActionTypeId": {
+         "Category": "Build",
+         "Owner": "AWS",
+         "Provider": "CodeBuild",
+         "Version": "1"
+        },
+        "Configuration": {
+         "ProjectName": {
+          "Ref": "ragappPipelineBuildProjectE84CB79D"
+         }
+        },
+        "InputArtifacts": [
+         {
+          "Name": "SourceOutput"
+         }
+        ],
+        "Name": "Build",
+        "OutputArtifacts": [
+         {
+          "Name": "BuildOutput"
+         }
+        ],
+        "RoleArn": {
+         "Fn::GetAtt": [
+          "ragappPipelineBuildCodePipelineActionRole939C11A6",
+          "Arn"
+         ]
+        },
+        "RunOrder": 1
+       }
+      ],
+      "Name": "Build"
+     },
+     {
+      "Actions": [
+       {
+        "ActionTypeId": {
+         "Category": "Deploy",
+         "Owner": "AWS",
+         "Provider": "CloudFormation",
+         "Version": "1"
+        },
+        "Configuration": {
+         "StackName": "rag-app-development",
+         "Capabilities": "CAPABILITY_NAMED_IAM",
+         "RoleArn": {
+          "Fn::GetAtt": [
+           "ragappPipelineDeployDevelopmentRoleEA5E5033",
+           "Arn"
+          ]
+         },
+         "ParameterOverrides": "{}",
+         "ActionMode": "CREATE_UPDATE",
+         "TemplatePath": "BuildOutput::template.yaml"
+        },
+        "InputArtifacts": [
+         {
+          "Name": "BuildOutput"
+         }
+        ],
+        "Name": "Deploy_Development",
+        "Region": "us-east-1",
+        "RoleArn": {
+         "Fn::GetAtt": [
+          "ragappPipelineDeployDevelopmentCodePipelineActionRoleF740264A",
+          "Arn"
+         ]
+        },
+        "RunOrder": 1
+       }
+      ],
+      "Name": "Deploy_Development"
+     },
+     {
+      "Actions": [
+       {
+        "ActionTypeId": {
+         "Category": "Approval",
+         "Owner": "AWS",
+         "Provider": "Manual",
+         "Version": "1"
+        },
+        "Configuration": {
+         "CustomData": "Please review and approve deployment to Staging environment"
+        },
+        "Name": "Approve_Staging",
+        "RoleArn": {
+         "Fn::GetAtt": [
+          "ragappPipelineDeployStagingApproveStagingCodePipelineActionRole0850968E",
+          "Arn"
+         ]
+        },
+        "RunOrder": 1
+       },
+       {
+        "ActionTypeId": {
+         "Category": "Deploy",
+         "Owner": "AWS",
+         "Provider": "CloudFormation",
+         "Version": "1"
+        },
+        "Configuration": {
+         "StackName": "rag-app-staging",
+         "Capabilities": "CAPABILITY_NAMED_IAM",
+         "RoleArn": {
+          "Fn::GetAtt": [
+           "ragappPipelineDeployStagingRole899D51CD",
+           "Arn"
+          ]
+         },
+         "ParameterOverrides": "{}",
+         "ActionMode": "CREATE_UPDATE",
+         "TemplatePath": "BuildOutput::template.yaml"
+        },
+        "InputArtifacts": [
+         {
+          "Name": "BuildOutput"
+         }
+        ],
+        "Name": "Deploy_Staging",
+        "Region": "us-east-1",
+        "RoleArn": {
+         "Fn::GetAtt": [
+          "ragappPipelineDeployStagingCodePipelineActionRoleAA89B3C2",
+          "Arn"
+         ]
+        },
+        "RunOrder": 1
+       }
+      ],
+      "Name": "Deploy_Staging"
+     },
+     {
+      "Actions": [
+       {
+        "ActionTypeId": {
+         "Category": "Approval",
+         "Owner": "AWS",
+         "Provider": "Manual",
+         "Version": "1"
+        },
+        "Configuration": {
+         "CustomData": "Please review and approve deployment to Production environment"
+        },
+        "Name": "Approve_Production",
+        "RoleArn": {
+         "Fn::GetAtt": [
+          "ragappPipelineDeployProductionApproveProductionCodePipelineActionRole4D56AD4C",
+          "Arn"
+         ]
+        },
+        "RunOrder": 1
+       },
+       {
+        "ActionTypeId": {
+         "Category": "Deploy",
+         "Owner": "AWS",
+         "Provider": "CloudFormation",
+         "Version": "1"
+        },
+        "Configuration": {
+         "StackName": "rag-app-production",
+         "Capabilities": "CAPABILITY_NAMED_IAM",
+         "RoleArn": {
+          "Fn::GetAtt": [
+           "ragappPipelineDeployProductionRoleE0BB04C7",
+           "Arn"
+          ]
+         },
+         "ParameterOverrides": "{}",
+         "ActionMode": "CREATE_UPDATE",
+         "TemplatePath": "BuildOutput::template.yaml"
+        },
+        "InputArtifacts": [
+         {
+          "Name": "BuildOutput"
+         }
+        ],
+        "Name": "Deploy_Production",
+        "Region": "us-east-1",
+        "RoleArn": {
+         "Fn::GetAtt": [
+          "ragappPipelineDeployProductionCodePipelineActionRoleD64C0DB9",
+          "Arn"
+         ]
+        },
+        "RunOrder": 1
+       }
+      ],
+      "Name": "Deploy_Production"
+     }
+    ],
+    "Tags": [
+     {
+      "Key": "Application",
+      "Value": "rag-app"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "PlatformPipeline"
+     },
+     {
+      "Key": "PipelineType",
+      "Value": "Application"
+     }
+    ]
+   },
+   "DependsOn": [
+    "ragappPipelineRoleDefaultPolicy98AE6A82",
+    "ragappPipelineRoleDE74C479"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/rag-app-Pipeline/Pipeline/Resource"
+   }
+  },
+  "ragappPipelineSourceGitHubSourceCodePipelineActionRole5EC8AFBB": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "AWS": "arn:aws:iam::450683699755:root"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "Tags": [
+     {
+      "Key": "Application",
+      "Value": "rag-app"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "PlatformPipeline"
+     },
+     {
+      "Key": "PipelineType",
+      "Value": "Application"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/rag-app-Pipeline/Pipeline/Source/GitHub_Source/CodePipelineActionRole/Resource"
+   }
+  },
+  "ragappPipelineSourceGitHubSourceCodePipelineActionRoleDefaultPolicy52BF784D": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": "codestar-connections:UseConnection",
+       "Effect": "Allow",
+       "Resource": "arn:aws:codestar-connections:us-east-1:450683699755:connection/a1e6eb5d-e680-40e2-8176-b3f35b7292fc"
+      },
+      {
+       "Action": [
+        "s3:Abort*",
+        "s3:DeleteObject*",
+        "s3:GetBucket*",
+        "s3:GetObject*",
+        "s3:List*",
+        "s3:PutObject",
+        "s3:PutObjectLegalHold",
+        "s3:PutObjectRetention",
+        "s3:PutObjectTagging",
+        "s3:PutObjectVersionTagging"
+       ],
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::GetAtt": [
+          "ragappPipelineArtifactBucket9CEB180D",
+          "Arn"
+         ]
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Fn::GetAtt": [
+             "ragappPipelineArtifactBucket9CEB180D",
+             "Arn"
+            ]
+           },
+           "/*"
+          ]
+         ]
+        }
+       ]
+      },
+      {
+       "Action": [
+        "s3:PutObjectAcl",
+        "s3:PutObjectVersionAcl"
+       ],
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::Join": [
+         "",
+         [
+          {
+           "Fn::GetAtt": [
+            "ragappPipelineArtifactBucket9CEB180D",
+            "Arn"
+           ]
+          },
+          "/*"
+         ]
+        ]
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "ragappPipelineSourceGitHubSourceCodePipelineActionRoleDefaultPolicy52BF784D",
+    "Roles": [
+     {
+      "Ref": "ragappPipelineSourceGitHubSourceCodePipelineActionRole5EC8AFBB"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/rag-app-Pipeline/Pipeline/Source/GitHub_Source/CodePipelineActionRole/DefaultPolicy/Resource"
+   }
+  },
+  "ragappPipelineBuildCodePipelineActionRole939C11A6": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "AWS": "arn:aws:iam::450683699755:root"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "Tags": [
+     {
+      "Key": "Application",
+      "Value": "rag-app"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "PlatformPipeline"
+     },
+     {
+      "Key": "PipelineType",
+      "Value": "Application"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/rag-app-Pipeline/Pipeline/Build/Build/CodePipelineActionRole/Resource"
+   }
+  },
+  "ragappPipelineBuildCodePipelineActionRoleDefaultPolicyE4C0FCC7": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": [
+        "codebuild:BatchGetBuilds",
+        "codebuild:StartBuild",
+        "codebuild:StopBuild"
+       ],
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::GetAtt": [
+         "ragappPipelineBuildProjectE84CB79D",
+         "Arn"
+        ]
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "ragappPipelineBuildCodePipelineActionRoleDefaultPolicyE4C0FCC7",
+    "Roles": [
+     {
+      "Ref": "ragappPipelineBuildCodePipelineActionRole939C11A6"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/rag-app-Pipeline/Pipeline/Build/Build/CodePipelineActionRole/DefaultPolicy/Resource"
+   }
+  },
+  "ragappPipelineDeployDevelopmentCodePipelineActionRoleF740264A": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "AWS": "arn:aws:iam::450683699755:root"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "Tags": [
+     {
+      "Key": "Application",
+      "Value": "rag-app"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "PlatformPipeline"
+     },
+     {
+      "Key": "PipelineType",
+      "Value": "Application"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/rag-app-Pipeline/Pipeline/Deploy_Development/Deploy_Development/CodePipelineActionRole/Resource"
+   }
+  },
+  "ragappPipelineDeployDevelopmentCodePipelineActionRoleDefaultPolicy73D2F09D": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": "iam:PassRole",
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::GetAtt": [
+         "ragappPipelineDeployDevelopmentRoleEA5E5033",
+         "Arn"
+        ]
+       }
+      },
+      {
+       "Action": [
+        "s3:GetBucket*",
+        "s3:GetObject*",
+        "s3:List*"
+       ],
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::GetAtt": [
+          "ragappPipelineArtifactBucket9CEB180D",
+          "Arn"
+         ]
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Fn::GetAtt": [
+             "ragappPipelineArtifactBucket9CEB180D",
+             "Arn"
+            ]
+           },
+           "/*"
+          ]
+         ]
+        }
+       ]
+      },
+      {
+       "Action": [
+        "cloudformation:CreateStack",
+        "cloudformation:DescribeStack*",
+        "cloudformation:GetStackPolicy",
+        "cloudformation:GetTemplate*",
+        "cloudformation:SetStackPolicy",
+        "cloudformation:UpdateStack",
+        "cloudformation:ValidateTemplate"
+       ],
+       "Effect": "Allow",
+       "Resource": "arn:aws:cloudformation:us-east-1:450683699755:stack/rag-app-development/*"
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "ragappPipelineDeployDevelopmentCodePipelineActionRoleDefaultPolicy73D2F09D",
+    "Roles": [
+     {
+      "Ref": "ragappPipelineDeployDevelopmentCodePipelineActionRoleF740264A"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/rag-app-Pipeline/Pipeline/Deploy_Development/Deploy_Development/CodePipelineActionRole/DefaultPolicy/Resource"
+   }
+  },
+  "ragappPipelineDeployDevelopmentRoleEA5E5033": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "cloudformation.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "Tags": [
+     {
+      "Key": "Application",
+      "Value": "rag-app"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "PlatformPipeline"
+     },
+     {
+      "Key": "PipelineType",
+      "Value": "Application"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/rag-app-Pipeline/Pipeline/Deploy_Development/Deploy_Development/Role/Resource"
+   }
+  },
+  "ragappPipelineDeployDevelopmentRoleDefaultPolicyFFA8F97B": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": [
+        "s3:GetBucket*",
+        "s3:GetObject*",
+        "s3:List*"
+       ],
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::GetAtt": [
+          "ragappPipelineArtifactBucket9CEB180D",
+          "Arn"
+         ]
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Fn::GetAtt": [
+             "ragappPipelineArtifactBucket9CEB180D",
+             "Arn"
+            ]
+           },
+           "/*"
+          ]
+         ]
+        }
+       ]
+      },
+      {
+       "Action": "*",
+       "Effect": "Allow",
+       "Resource": "*"
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "ragappPipelineDeployDevelopmentRoleDefaultPolicyFFA8F97B",
+    "Roles": [
+     {
+      "Ref": "ragappPipelineDeployDevelopmentRoleEA5E5033"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/rag-app-Pipeline/Pipeline/Deploy_Development/Deploy_Development/Role/DefaultPolicy/Resource"
+   }
+  },
+  "ragappPipelineDeployStagingApproveStagingCodePipelineActionRole0850968E": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "AWS": "arn:aws:iam::450683699755:root"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "Tags": [
+     {
+      "Key": "Application",
+      "Value": "rag-app"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "PlatformPipeline"
+     },
+     {
+      "Key": "PipelineType",
+      "Value": "Application"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/rag-app-Pipeline/Pipeline/Deploy_Staging/Approve_Staging/CodePipelineActionRole/Resource"
+   }
+  },
+  "ragappPipelineDeployStagingCodePipelineActionRoleAA89B3C2": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "AWS": "arn:aws:iam::450683699755:root"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "Tags": [
+     {
+      "Key": "Application",
+      "Value": "rag-app"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "PlatformPipeline"
+     },
+     {
+      "Key": "PipelineType",
+      "Value": "Application"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/rag-app-Pipeline/Pipeline/Deploy_Staging/Deploy_Staging/CodePipelineActionRole/Resource"
+   }
+  },
+  "ragappPipelineDeployStagingCodePipelineActionRoleDefaultPolicyB8952E20": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": "iam:PassRole",
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::GetAtt": [
+         "ragappPipelineDeployStagingRole899D51CD",
+         "Arn"
+        ]
+       }
+      },
+      {
+       "Action": [
+        "s3:GetBucket*",
+        "s3:GetObject*",
+        "s3:List*"
+       ],
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::GetAtt": [
+          "ragappPipelineArtifactBucket9CEB180D",
+          "Arn"
+         ]
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Fn::GetAtt": [
+             "ragappPipelineArtifactBucket9CEB180D",
+             "Arn"
+            ]
+           },
+           "/*"
+          ]
+         ]
+        }
+       ]
+      },
+      {
+       "Action": [
+        "cloudformation:CreateStack",
+        "cloudformation:DescribeStack*",
+        "cloudformation:GetStackPolicy",
+        "cloudformation:GetTemplate*",
+        "cloudformation:SetStackPolicy",
+        "cloudformation:UpdateStack",
+        "cloudformation:ValidateTemplate"
+       ],
+       "Effect": "Allow",
+       "Resource": "arn:aws:cloudformation:us-east-1:450683699755:stack/rag-app-staging/*"
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "ragappPipelineDeployStagingCodePipelineActionRoleDefaultPolicyB8952E20",
+    "Roles": [
+     {
+      "Ref": "ragappPipelineDeployStagingCodePipelineActionRoleAA89B3C2"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/rag-app-Pipeline/Pipeline/Deploy_Staging/Deploy_Staging/CodePipelineActionRole/DefaultPolicy/Resource"
+   }
+  },
+  "ragappPipelineDeployStagingRole899D51CD": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "cloudformation.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "Tags": [
+     {
+      "Key": "Application",
+      "Value": "rag-app"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "PlatformPipeline"
+     },
+     {
+      "Key": "PipelineType",
+      "Value": "Application"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/rag-app-Pipeline/Pipeline/Deploy_Staging/Deploy_Staging/Role/Resource"
+   }
+  },
+  "ragappPipelineDeployStagingRoleDefaultPolicyD7258844": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": [
+        "s3:GetBucket*",
+        "s3:GetObject*",
+        "s3:List*"
+       ],
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::GetAtt": [
+          "ragappPipelineArtifactBucket9CEB180D",
+          "Arn"
+         ]
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Fn::GetAtt": [
+             "ragappPipelineArtifactBucket9CEB180D",
+             "Arn"
+            ]
+           },
+           "/*"
+          ]
+         ]
+        }
+       ]
+      },
+      {
+       "Action": "*",
+       "Effect": "Allow",
+       "Resource": "*"
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "ragappPipelineDeployStagingRoleDefaultPolicyD7258844",
+    "Roles": [
+     {
+      "Ref": "ragappPipelineDeployStagingRole899D51CD"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/rag-app-Pipeline/Pipeline/Deploy_Staging/Deploy_Staging/Role/DefaultPolicy/Resource"
+   }
+  },
+  "ragappPipelineDeployProductionApproveProductionCodePipelineActionRole4D56AD4C": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "AWS": "arn:aws:iam::450683699755:root"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "Tags": [
+     {
+      "Key": "Application",
+      "Value": "rag-app"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "PlatformPipeline"
+     },
+     {
+      "Key": "PipelineType",
+      "Value": "Application"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/rag-app-Pipeline/Pipeline/Deploy_Production/Approve_Production/CodePipelineActionRole/Resource"
+   }
+  },
+  "ragappPipelineDeployProductionCodePipelineActionRoleD64C0DB9": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "AWS": "arn:aws:iam::450683699755:root"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "Tags": [
+     {
+      "Key": "Application",
+      "Value": "rag-app"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "PlatformPipeline"
+     },
+     {
+      "Key": "PipelineType",
+      "Value": "Application"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/rag-app-Pipeline/Pipeline/Deploy_Production/Deploy_Production/CodePipelineActionRole/Resource"
+   }
+  },
+  "ragappPipelineDeployProductionCodePipelineActionRoleDefaultPolicy60EDDD6E": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": "iam:PassRole",
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::GetAtt": [
+         "ragappPipelineDeployProductionRoleE0BB04C7",
+         "Arn"
+        ]
+       }
+      },
+      {
+       "Action": [
+        "s3:GetBucket*",
+        "s3:GetObject*",
+        "s3:List*"
+       ],
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::GetAtt": [
+          "ragappPipelineArtifactBucket9CEB180D",
+          "Arn"
+         ]
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Fn::GetAtt": [
+             "ragappPipelineArtifactBucket9CEB180D",
+             "Arn"
+            ]
+           },
+           "/*"
+          ]
+         ]
+        }
+       ]
+      },
+      {
+       "Action": [
+        "cloudformation:CreateStack",
+        "cloudformation:DescribeStack*",
+        "cloudformation:GetStackPolicy",
+        "cloudformation:GetTemplate*",
+        "cloudformation:SetStackPolicy",
+        "cloudformation:UpdateStack",
+        "cloudformation:ValidateTemplate"
+       ],
+       "Effect": "Allow",
+       "Resource": "arn:aws:cloudformation:us-east-1:450683699755:stack/rag-app-production/*"
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "ragappPipelineDeployProductionCodePipelineActionRoleDefaultPolicy60EDDD6E",
+    "Roles": [
+     {
+      "Ref": "ragappPipelineDeployProductionCodePipelineActionRoleD64C0DB9"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/rag-app-Pipeline/Pipeline/Deploy_Production/Deploy_Production/CodePipelineActionRole/DefaultPolicy/Resource"
+   }
+  },
+  "ragappPipelineDeployProductionRoleE0BB04C7": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "cloudformation.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "Tags": [
+     {
+      "Key": "Application",
+      "Value": "rag-app"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "PlatformPipeline"
+     },
+     {
+      "Key": "PipelineType",
+      "Value": "Application"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/rag-app-Pipeline/Pipeline/Deploy_Production/Deploy_Production/Role/Resource"
+   }
+  },
+  "ragappPipelineDeployProductionRoleDefaultPolicy1932ED28": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": [
+        "s3:GetBucket*",
+        "s3:GetObject*",
+        "s3:List*"
+       ],
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::GetAtt": [
+          "ragappPipelineArtifactBucket9CEB180D",
+          "Arn"
+         ]
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Fn::GetAtt": [
+             "ragappPipelineArtifactBucket9CEB180D",
+             "Arn"
+            ]
+           },
+           "/*"
+          ]
+         ]
+        }
+       ]
+      },
+      {
+       "Action": "*",
+       "Effect": "Allow",
+       "Resource": "*"
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "ragappPipelineDeployProductionRoleDefaultPolicy1932ED28",
+    "Roles": [
+     {
+      "Ref": "ragappPipelineDeployProductionRoleE0BB04C7"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/rag-app-Pipeline/Pipeline/Deploy_Production/Deploy_Production/Role/DefaultPolicy/Resource"
+   }
+  },
+  "ragappPipelineApplicationMonitoringPipelineLogGroup00E43B1E": {
+   "Type": "AWS::Logs::LogGroup",
+   "Properties": {
+    "LogGroupName": "/aws/platform-pipeline/rag-app/execution",
+    "RetentionInDays": 14,
+    "Tags": [
+     {
+      "Key": "Application",
+      "Value": "rag-app"
+     },
+     {
+      "Key": "Component",
+      "Value": "Monitoring"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "PlatformPipeline"
+     },
+     {
+      "Key": "Pipeline",
+      "Value": "rag-app"
+     },
+     {
+      "Key": "PipelineType",
+      "Value": "Application"
+     }
+    ]
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/rag-app-Pipeline/ApplicationMonitoring/PipelineLogGroup/Resource"
+   }
+  },
+  "ragappPipelineApplicationMonitoringAuditLogGroup0C4AC774": {
+   "Type": "AWS::Logs::LogGroup",
+   "Properties": {
+    "LogGroupName": "/aws/platform-pipeline/rag-app/audit",
+    "RetentionInDays": 14,
+    "Tags": [
+     {
+      "Key": "Application",
+      "Value": "rag-app"
+     },
+     {
+      "Key": "Component",
+      "Value": "Monitoring"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "PlatformPipeline"
+     },
+     {
+      "Key": "Pipeline",
+      "Value": "rag-app"
+     },
+     {
+      "Key": "PipelineType",
+      "Value": "Application"
+     }
+    ]
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/rag-app-Pipeline/ApplicationMonitoring/AuditLogGroup/Resource"
+   }
+  },
+  "ragappPipelineApplicationMonitoringPipelineStateRuleA5A22DB8": {
+   "Type": "AWS::Events::Rule",
+   "Properties": {
+    "Description": "Captures state changes for rag-app pipeline",
+    "EventPattern": {
+     "source": [
+      "aws.codepipeline"
+     ],
+     "detail-type": [
+      "CodePipeline Pipeline Execution State Change"
+     ],
+     "detail": {
+      "pipeline": [
+       {
+        "Ref": "ragappPipelineED7DEFBF"
+       }
+      ]
+     }
+    },
+    "Name": "rag-app-pipeline-state-changes",
+    "State": "ENABLED",
+    "Targets": [
+     {
+      "Arn": {
+       "Fn::Join": [
+        "",
+        [
+         "arn:aws:logs:us-east-1:450683699755:log-group:",
+         {
+          "Ref": "ragappPipelineApplicationMonitoringPipelineLogGroup00E43B1E"
+         }
+        ]
+       ]
+      },
+      "Id": "Target0"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/rag-app-Pipeline/ApplicationMonitoring/PipelineStateRule/Resource"
+   }
+  },
+  "ragappPipelineApplicationMonitoringBuildStateRule1A651E83": {
+   "Type": "AWS::Events::Rule",
+   "Properties": {
+    "Description": "Captures state changes for rag-app build project",
+    "EventPattern": {
+     "source": [
+      "aws.codebuild"
+     ],
+     "detail-type": [
+      "CodeBuild Build State Change"
+     ],
+     "detail": {
+      "project-name": [
+       {
+        "Ref": "ragappPipelineBuildProjectE84CB79D"
+       }
+      ]
+     }
+    },
+    "Name": "rag-app-build-state-changes",
+    "State": "ENABLED",
+    "Targets": [
+     {
+      "Arn": {
+       "Fn::Join": [
+        "",
+        [
+         "arn:aws:logs:us-east-1:450683699755:log-group:",
+         {
+          "Ref": "ragappPipelineApplicationMonitoringPipelineLogGroup00E43B1E"
+         }
+        ]
+       ]
+      },
+      "Id": "Target0"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/rag-app-Pipeline/ApplicationMonitoring/BuildStateRule/Resource"
+   }
+  },
+  "ragappPipelineApplicationMonitoringMonitoringDashboardCB5B0EDE": {
+   "Type": "AWS::CloudWatch::Dashboard",
+   "Properties": {
+    "DashboardBody": {
+     "Fn::Join": [
+      "",
+      [
+       "{\"widgets\":[{\"type\":\"metric\",\"width\":12,\"height\":6,\"x\":0,\"y\":0,\"properties\":{\"view\":\"timeSeries\",\"title\":\"Pipeline Execution Time\",\"region\":\"",
+       {
+        "Ref": "AWS::Region"
+       },
+       "\",\"metrics\":[[\"ApplicationPipeline/rag-app\",\"PipelineExecutionTime\",\"PipelineName\",\"rag-app\"]],\"yAxis\":{}}},{\"type\":\"metric\",\"width\":12,\"height\":6,\"x\":12,\"y\":0,\"properties\":{\"view\":\"timeSeries\",\"title\":\"Pipeline Success Rate\",\"region\":\"",
+       {
+        "Ref": "AWS::Region"
+       },
+       "\",\"metrics\":[[\"ApplicationPipeline/rag-app\",\"PipelineSuccessRate\",\"PipelineName\",\"rag-app\"]],\"yAxis\":{}}}]}"
+      ]
+     ]
+    },
+    "DashboardName": "rag-app-monitoring"
+   },
+   "Metadata": {
+    "aws:cdk:path": "PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/rag-app-Pipeline/ApplicationMonitoring/MonitoringDashboard/Resource"
+   }
+  },
+  "ragappPipelineApplicationMonitoringFailureNotificationTopic7AA71F7F": {
+   "Type": "AWS::SNS::Topic",
+   "Properties": {
+    "DisplayName": "rag-app Pipeline Failure Notifications",
+    "Tags": [
+     {
+      "Key": "Application",
+      "Value": "rag-app"
+     },
+     {
+      "Key": "Component",
+      "Value": "Monitoring"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "PlatformPipeline"
+     },
+     {
+      "Key": "Pipeline",
+      "Value": "rag-app"
+     },
+     {
+      "Key": "PipelineType",
+      "Value": "Application"
+     }
+    ],
+    "TopicName": "rag-app-failure-notifications"
+   },
+   "Metadata": {
+    "aws:cdk:path": "PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/rag-app-Pipeline/ApplicationMonitoring/FailureNotificationTopic/Resource"
+   }
+  },
+  "ragappPipelineApplicationMonitoringFailureNotificationTopicPolicy195AFF3B": {
+   "Type": "AWS::SNS::TopicPolicy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sns:Publish",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "events.amazonaws.com"
+       },
+       "Resource": {
+        "Ref": "ragappPipelineApplicationMonitoringFailureNotificationTopic7AA71F7F"
+       },
+       "Sid": "0"
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "Topics": [
+     {
+      "Ref": "ragappPipelineApplicationMonitoringFailureNotificationTopic7AA71F7F"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/rag-app-Pipeline/ApplicationMonitoring/FailureNotificationTopic/Policy/Resource"
+   }
+  },
+  "ragappPipelineApplicationMonitoringPipelineFailureRuleCFF77C28": {
+   "Type": "AWS::Events::Rule",
+   "Properties": {
+    "Description": "Captures pipeline failure events for rag-app",
+    "EventPattern": {
+     "source": [
+      "aws.codepipeline"
+     ],
+     "detail-type": [
+      "CodePipeline Pipeline Execution State Change"
+     ],
+     "detail": {
+      "state": [
+       "FAILED"
+      ],
+      "pipeline": [
+       "rag-app"
+      ]
+     }
+    },
+    "Name": "rag-app-pipeline-failures",
+    "State": "ENABLED",
+    "Targets": [
+     {
+      "Arn": {
+       "Ref": "ragappPipelineApplicationMonitoringFailureNotificationTopic7AA71F7F"
+      },
+      "Id": "Target0",
+      "Input": {
+       "Fn::Join": [
+        "",
+        [
+         "\"🚨 PIPELINE FAILURE ALERT 🚨\\n\\nPipeline: rag-app\\nStatus: FAILED\\nExecution ID: ${detail.execution-id}\\nTime: ${time}\\nRegion: ${region}\\nAccount: ${account}\\n\\nPipeline Details:\\n- Pipeline Name: ${detail.pipeline}\\n- State: ${detail.state}\\n- Version: ${detail.version}\\n\\nPlease check the AWS Console for detailed error information:\\nhttps://console.aws.amazon.com/codesuite/codepipeline/pipelines/${detail.pipeline}/view\\n\\nCloudWatch Logs: ",
+         {
+          "Ref": "ragappPipelineApplicationMonitoringPipelineLogGroup00E43B1E"
+         },
+         "\\n\\nThis is an automated notification from the Platform Pipeline monitoring system.\""
+        ]
+       ]
+      }
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/rag-app-Pipeline/ApplicationMonitoring/PipelineFailureRule/Resource"
+   }
+  },
+  "ragappPipelineApplicationMonitoringBuildFailureRule54DEF34C": {
+   "Type": "AWS::Events::Rule",
+   "Properties": {
+    "Description": "Captures build failure events for rag-app",
+    "EventPattern": {
+     "source": [
+      "aws.codebuild"
+     ],
+     "detail-type": [
+      "CodeBuild Build State Change"
+     ],
+     "detail": {
+      "build-status": [
+       "FAILED",
+       "FAULT",
+       "STOPPED",
+       "TIMED_OUT"
+      ],
+      "project-name": [
+       {
+        "Ref": "ragappPipelineBuildProjectE84CB79D"
+       }
+      ]
+     }
+    },
+    "Name": "rag-app-build-failures",
+    "State": "ENABLED",
+    "Targets": [
+     {
+      "Arn": {
+       "Ref": "ragappPipelineApplicationMonitoringFailureNotificationTopic7AA71F7F"
+      },
+      "Id": "Target0",
+      "Input": {
+       "Fn::Join": [
+        "",
+        [
+         "\"🔨 BUILD FAILURE ALERT 🔨\\n\\nProject: ${detail.project-name}\\nStatus: ${detail.build-status}\\nBuild ID: ${detail.build-id}\\nTime: ${time}\\nRegion: ${region}\\nAccount: ${account}\\n\\nBuild Details:\\n- Project Name: ${detail.project-name}\\n- Build Status: ${detail.build-status}\\n- Build Phase: ${detail.current-phase}\\n- Build Phase Status: ${detail.current-phase-context}\\n\\nPlease check the AWS Console for detailed build logs:\\nhttps://console.aws.amazon.com/codesuite/codebuild/projects/${detail.project-name}/build/${detail.build-id}\\n\\nCloudWatch Logs: ",
+         {
+          "Ref": "ragappPipelineApplicationMonitoringPipelineLogGroup00E43B1E"
+         },
+         "\\n\\nThis is an automated notification from the Platform Pipeline monitoring system.\""
+        ]
+       ]
+      }
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/rag-app-Pipeline/ApplicationMonitoring/BuildFailureRule/Resource"
+   }
+  },
+  "ragappPipelineApplicationMonitoringApplicationPipelineFailureRule3AE33A03": {
+   "Type": "AWS::Events::Rule",
+   "Properties": {
+    "Description": "Captures failure events for application pipelines managed by rag-app",
+    "EventPattern": {
+     "source": [
+      "aws.codepipeline"
+     ],
+     "detail-type": [
+      "CodePipeline Pipeline Execution State Change"
+     ],
+     "detail": {
+      "state": [
+       "FAILED"
+      ]
+     }
+    },
+    "Name": "rag-app-app-pipeline-failures",
+    "State": "ENABLED",
+    "Targets": [
+     {
+      "Arn": {
+       "Ref": "ragappPipelineApplicationMonitoringFailureNotificationTopic7AA71F7F"
+      },
+      "Id": "Target0",
+      "Input": {
+       "Fn::Join": [
+        "",
+        [
+         "\"⚠️ APPLICATION PIPELINE FAILURE ⚠️\\n\\nApplication Pipeline: ${detail.pipeline}\\nStatus: FAILED\\nExecution ID: ${detail.execution-id}\\nTime: ${time}\\nRegion: ${region}\\nAccount: ${account}\\n\\nPipeline Details:\\n- Pipeline Name: ${detail.pipeline}\\n- State: ${detail.state}\\n- Version: ${detail.version}\\n\\nThis application pipeline is managed by the rag-app platform pipeline.\\n\\nPlease check the AWS Console for detailed error information:\\nhttps://console.aws.amazon.com/codesuite/codepipeline/pipelines/${detail.pipeline}/view\\n\\nPlatform Pipeline Logs: ",
+         {
+          "Ref": "ragappPipelineApplicationMonitoringPipelineLogGroup00E43B1E"
+         },
+         "\\n\\nThis is an automated notification from the Platform Pipeline monitoring system.\""
+        ]
+       ]
+      }
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/rag-app-Pipeline/ApplicationMonitoring/ApplicationPipelineFailureRule/Resource"
+   }
+  },
+  "ragappPipelineApplicationMonitoringRepeatedFailuresAlarmFAA979A0": {
+   "Type": "AWS::CloudWatch::Alarm",
+   "Properties": {
+    "AlarmActions": [
+     {
+      "Ref": "ragappPipelineApplicationMonitoringFailureNotificationTopic7AA71F7F"
+     }
+    ],
+    "AlarmDescription": "Alarm for repeated failures in rag-app pipeline",
+    "AlarmName": "rag-app-repeated-failures",
+    "ComparisonOperator": "GreaterThanOrEqualToThreshold",
+    "Dimensions": [
+     {
+      "Name": "RuleName",
+      "Value": {
+       "Ref": "ragappPipelineApplicationMonitoringPipelineFailureRuleCFF77C28"
+      }
+     }
+    ],
+    "EvaluationPeriods": 1,
+    "MetricName": "MatchedEvents",
+    "Namespace": "AWS/Events",
+    "Period": 900,
+    "Statistic": "Sum",
+    "Threshold": 3,
+    "TreatMissingData": "notBreaching"
+   },
+   "Metadata": {
+    "aws:cdk:path": "PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/rag-app-Pipeline/ApplicationMonitoring/RepeatedFailuresAlarm/Resource"
+   }
+  },
+  "ragappPipelineApplicationMonitoringExecutionTimeMetricFilter31616112": {
+   "Type": "AWS::Logs::MetricFilter",
+   "Properties": {
+    "FilterPattern": "{ $.detail.execution-id = \"*\" }",
+    "LogGroupName": {
+     "Ref": "ragappPipelineApplicationMonitoringPipelineLogGroup00E43B1E"
+    },
+    "MetricTransformations": [
+     {
+      "DefaultValue": 0,
+      "MetricName": "PipelineExecutionTime",
+      "MetricNamespace": "ApplicationPipeline/rag-app",
+      "MetricValue": "1"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/rag-app-Pipeline/ApplicationMonitoring/ExecutionTimeMetricFilter/Resource"
+   }
+  },
+  "ragappPipelineApplicationMonitoringSuccessRateMetricFilter76EF950D": {
+   "Type": "AWS::Logs::MetricFilter",
+   "Properties": {
+    "FilterPattern": "{ $.state = \"SUCCEEDED\" }",
+    "LogGroupName": {
+     "Ref": "ragappPipelineApplicationMonitoringPipelineLogGroup00E43B1E"
+    },
+    "MetricTransformations": [
+     {
+      "DefaultValue": 0,
+      "MetricName": "PipelineSuccessRate",
+      "MetricNamespace": "ApplicationPipeline/rag-app",
+      "MetricValue": "100"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/rag-app-Pipeline/ApplicationMonitoring/SuccessRateMetricFilter/Resource"
+   }
+  },
+  "EventsLogGroupPolicyPlatformPipelineStackApplicationPipelinesApplicationPipelineStackragappPipelineApplicationMonitoringPipelineStateRule4FA05F638B515657": {
+   "Type": "Custom::CloudwatchLogResourcePolicy",
+   "Properties": {
+    "ServiceToken": {
+     "Fn::GetAtt": [
+      "AWS679f53fac002430cb0da5b7982bd22872D164C4C",
+      "Arn"
+     ]
+    },
+    "Create": {
+     "Fn::Join": [
+      "",
+      [
+       "{\"service\":\"CloudWatchLogs\",\"action\":\"putResourcePolicy\",\"parameters\":{\"policyName\":\"PlatformPipelineStackApplicationPipelinesApplicationPipelineStackEventsLogGroupPolicyPlatformPipelineStackApplicationPipelinesApplicationPipelineStackragappPipelineApplicationMonitoringPipelineStateRule4FA05F6311A280A1\",\"policyDocument\":\"{\\\"Statement\\\":[{\\\"Action\\\":[\\\"logs:PutLogEvents\\\",\\\"logs:CreateLogStream\\\"],\\\"Effect\\\":\\\"Allow\\\",\\\"Principal\\\":{\\\"Service\\\":\\\"events.amazonaws.com\\\"},\\\"Resource\\\":\\\"",
+       {
+        "Fn::GetAtt": [
+         "ragappPipelineApplicationMonitoringPipelineLogGroup00E43B1E",
+         "Arn"
+        ]
+       },
+       "\\\"}],\\\"Version\\\":\\\"2012-10-17\\\"}\"},\"physicalResourceId\":{\"id\":\"EventsLogGroupPolicyPlatformPipelineStackApplicationPipelinesApplicationPipelineStackragappPipelineApplicationMonitoringPipelineStateRule4FA05F63\"}}"
+      ]
+     ]
+    },
+    "Update": {
+     "Fn::Join": [
+      "",
+      [
+       "{\"service\":\"CloudWatchLogs\",\"action\":\"putResourcePolicy\",\"parameters\":{\"policyName\":\"PlatformPipelineStackApplicationPipelinesApplicationPipelineStackEventsLogGroupPolicyPlatformPipelineStackApplicationPipelinesApplicationPipelineStackragappPipelineApplicationMonitoringPipelineStateRule4FA05F6311A280A1\",\"policyDocument\":\"{\\\"Statement\\\":[{\\\"Action\\\":[\\\"logs:PutLogEvents\\\",\\\"logs:CreateLogStream\\\"],\\\"Effect\\\":\\\"Allow\\\",\\\"Principal\\\":{\\\"Service\\\":\\\"events.amazonaws.com\\\"},\\\"Resource\\\":\\\"",
+       {
+        "Fn::GetAtt": [
+         "ragappPipelineApplicationMonitoringPipelineLogGroup00E43B1E",
+         "Arn"
+        ]
+       },
+       "\\\"}],\\\"Version\\\":\\\"2012-10-17\\\"}\"},\"physicalResourceId\":{\"id\":\"EventsLogGroupPolicyPlatformPipelineStackApplicationPipelinesApplicationPipelineStackragappPipelineApplicationMonitoringPipelineStateRule4FA05F63\"}}"
+      ]
+     ]
+    },
+    "Delete": "{\"service\":\"CloudWatchLogs\",\"action\":\"deleteResourcePolicy\",\"parameters\":{\"policyName\":\"PlatformPipelineStackApplicationPipelinesApplicationPipelineStackEventsLogGroupPolicyPlatformPipelineStackApplicationPipelinesApplicationPipelineStackragappPipelineApplicationMonitoringPipelineStateRule4FA05F6311A280A1\"},\"ignoreErrorCodesMatching\":\"ResourceNotFoundException\"}",
+    "InstallLatestAwsSdk": false
+   },
+   "DependsOn": [
+    "EventsLogGroupPolicyPlatformPipelineStackApplicationPipelinesApplicationPipelineStackragappPipelineApplicationMonitoringPipelineStateRule4FA05F63CustomResourcePolicyD8C0C9B1"
+   ],
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/EventsLogGroupPolicyPlatformPipelineStackApplicationPipelinesApplicationPipelineStackragappPipelineApplicationMonitoringPipelineStateRule4FA05F63/Resource/Default"
+   }
+  },
+  "EventsLogGroupPolicyPlatformPipelineStackApplicationPipelinesApplicationPipelineStackragappPipelineApplicationMonitoringPipelineStateRule4FA05F63CustomResourcePolicyD8C0C9B1": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": [
+        "logs:DeleteResourcePolicy",
+        "logs:PutResourcePolicy"
+       ],
+       "Effect": "Allow",
+       "Resource": "*"
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "icationPipelinesApplicationPipelineStackragappPipelineApplicationMonitoringPipelineStateRule4FA05F63CustomResourcePolicyD8C0C9B1",
+    "Roles": [
+     {
+      "Ref": "AWS679f53fac002430cb0da5b7982bd2287ServiceRoleC1EA0FF2"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/EventsLogGroupPolicyPlatformPipelineStackApplicationPipelinesApplicationPipelineStackragappPipelineApplicationMonitoringPipelineStateRule4FA05F63/CustomResourcePolicy/Resource"
+   }
+  },
+  "EventsLogGroupPolicyPlatformPipelineStackApplicationPipelinesApplicationPipelineStackragappPipelineApplicationMonitoringBuildStateRule636AF84D2A3011E0": {
+   "Type": "Custom::CloudwatchLogResourcePolicy",
+   "Properties": {
+    "ServiceToken": {
+     "Fn::GetAtt": [
+      "AWS679f53fac002430cb0da5b7982bd22872D164C4C",
+      "Arn"
+     ]
+    },
+    "Create": {
+     "Fn::Join": [
+      "",
+      [
+       "{\"service\":\"CloudWatchLogs\",\"action\":\"putResourcePolicy\",\"parameters\":{\"policyName\":\"PlatformPipelineStackApplicationPipelinesApplicationPipelineStackEventsLogGroupPolicyPlatformPipelineStackApplicationPipelinesApplicationPipelineStackragappPipelineApplicationMonitoringBuildStateRule636AF84DC73F3D35\",\"policyDocument\":\"{\\\"Statement\\\":[{\\\"Action\\\":[\\\"logs:PutLogEvents\\\",\\\"logs:CreateLogStream\\\"],\\\"Effect\\\":\\\"Allow\\\",\\\"Principal\\\":{\\\"Service\\\":\\\"events.amazonaws.com\\\"},\\\"Resource\\\":\\\"",
+       {
+        "Fn::GetAtt": [
+         "ragappPipelineApplicationMonitoringPipelineLogGroup00E43B1E",
+         "Arn"
+        ]
+       },
+       "\\\"}],\\\"Version\\\":\\\"2012-10-17\\\"}\"},\"physicalResourceId\":{\"id\":\"EventsLogGroupPolicyPlatformPipelineStackApplicationPipelinesApplicationPipelineStackragappPipelineApplicationMonitoringBuildStateRule636AF84D\"}}"
+      ]
+     ]
+    },
+    "Update": {
+     "Fn::Join": [
+      "",
+      [
+       "{\"service\":\"CloudWatchLogs\",\"action\":\"putResourcePolicy\",\"parameters\":{\"policyName\":\"PlatformPipelineStackApplicationPipelinesApplicationPipelineStackEventsLogGroupPolicyPlatformPipelineStackApplicationPipelinesApplicationPipelineStackragappPipelineApplicationMonitoringBuildStateRule636AF84DC73F3D35\",\"policyDocument\":\"{\\\"Statement\\\":[{\\\"Action\\\":[\\\"logs:PutLogEvents\\\",\\\"logs:CreateLogStream\\\"],\\\"Effect\\\":\\\"Allow\\\",\\\"Principal\\\":{\\\"Service\\\":\\\"events.amazonaws.com\\\"},\\\"Resource\\\":\\\"",
+       {
+        "Fn::GetAtt": [
+         "ragappPipelineApplicationMonitoringPipelineLogGroup00E43B1E",
+         "Arn"
+        ]
+       },
+       "\\\"}],\\\"Version\\\":\\\"2012-10-17\\\"}\"},\"physicalResourceId\":{\"id\":\"EventsLogGroupPolicyPlatformPipelineStackApplicationPipelinesApplicationPipelineStackragappPipelineApplicationMonitoringBuildStateRule636AF84D\"}}"
+      ]
+     ]
+    },
+    "Delete": "{\"service\":\"CloudWatchLogs\",\"action\":\"deleteResourcePolicy\",\"parameters\":{\"policyName\":\"PlatformPipelineStackApplicationPipelinesApplicationPipelineStackEventsLogGroupPolicyPlatformPipelineStackApplicationPipelinesApplicationPipelineStackragappPipelineApplicationMonitoringBuildStateRule636AF84DC73F3D35\"},\"ignoreErrorCodesMatching\":\"ResourceNotFoundException\"}",
+    "InstallLatestAwsSdk": false
+   },
+   "DependsOn": [
+    "EventsLogGroupPolicyPlatformPipelineStackApplicationPipelinesApplicationPipelineStackragappPipelineApplicationMonitoringBuildStateRule636AF84DCustomResourcePolicyB3A03EE7"
+   ],
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/EventsLogGroupPolicyPlatformPipelineStackApplicationPipelinesApplicationPipelineStackragappPipelineApplicationMonitoringBuildStateRule636AF84D/Resource/Default"
+   }
+  },
+  "EventsLogGroupPolicyPlatformPipelineStackApplicationPipelinesApplicationPipelineStackragappPipelineApplicationMonitoringBuildStateRule636AF84DCustomResourcePolicyB3A03EE7": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": [
+        "logs:DeleteResourcePolicy",
+        "logs:PutResourcePolicy"
+       ],
+       "Effect": "Allow",
+       "Resource": "*"
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "pplicationPipelinesApplicationPipelineStackragappPipelineApplicationMonitoringBuildStateRule636AF84DCustomResourcePolicyB3A03EE7",
+    "Roles": [
+     {
+      "Ref": "AWS679f53fac002430cb0da5b7982bd2287ServiceRoleC1EA0FF2"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/EventsLogGroupPolicyPlatformPipelineStackApplicationPipelinesApplicationPipelineStackragappPipelineApplicationMonitoringBuildStateRule636AF84D/CustomResourcePolicy/Resource"
+   }
+  },
+  "CDKMetadata": {
+   "Type": "AWS::CDK::Metadata",
+   "Properties": {
+    "Analytics": "v2:deflate64:H4sIAAAAAAAA/2WOzW7CMBCEn4W72QY49AxU9NKqUegdOc42LDh25LWJKsvvXuWnhKoX7zezo/GuYZVlkC1kx0tVXZeaSohHL9VVyI5PkTcQd0Fd0Yv9l5loHLnVpL5ne9Kj2EnGJLStGeKbrV+dDW0fvfM7ekfqQNqj6xePOgllKywD6Qpi7uwF1fD9hEmQbCAWVmPvDnM+ZqSxoqUWNRmEmE80JCZOAm9oPEMswlQVNCahtA1VJ706Q3yRfC6tdFW/nsVWS9f01gBJsGGIn7Yl1ZsjDO9814NMQsumrCTEI5lao7fmEIzyZI24w/7rbibBm5NkRs+w7UcS+8DeNgWyDU6Nt//ybP7J5M7eqEInhoajlzWZWqghc3JTiGHb8f/uj+Db4JMwtkK48NNtncHqGbLFhYmWLhhPDUIxzh+G2a7RUwIAAA=="
+   },
+   "Metadata": {
+    "aws:cdk:path": "PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/CDKMetadata/Default"
+   }
+  }
+ },
+ "Outputs": {
+  "sampleappPipelineArn": {
+   "Description": "ARN of the sample-app application pipeline",
+   "Value": {
+    "Fn::Join": [
+     "",
+     [
+      "arn:aws:codepipeline:us-east-1:450683699755:",
+      {
+       "Ref": "sampleappPipelineD902C51C"
+      }
+     ]
+    ]
+   },
+   "Export": {
+    "Name": "sample-app-PipelineArn"
+   }
+  },
+  "sampleappBuildProjectArn": {
+   "Description": "ARN of the sample-app build project",
+   "Value": {
+    "Fn::GetAtt": [
+     "sampleappPipelineBuildProjectB797B903",
+     "Arn"
+    ]
+   },
+   "Export": {
+    "Name": "sample-app-BuildProjectArn"
+   }
+  },
+  "ragappPipelineArn": {
+   "Description": "ARN of the rag-app application pipeline",
+   "Value": {
+    "Fn::Join": [
+     "",
+     [
+      "arn:aws:codepipeline:us-east-1:450683699755:",
+      {
+       "Ref": "ragappPipelineED7DEFBF"
+      }
+     ]
+    ]
+   },
+   "Export": {
+    "Name": "rag-app-PipelineArn"
+   }
+  },
+  "ragappBuildProjectArn": {
+   "Description": "ARN of the rag-app build project",
+   "Value": {
+    "Fn::GetAtt": [
+     "ragappPipelineBuildProjectE84CB79D",
+     "Arn"
+    ]
+   },
+   "Export": {
+    "Name": "rag-app-BuildProjectArn"
+   }
+  },
+  "ManagedApplicationPipelines": {
+   "Description": "List of application pipelines managed by this platform pipeline",
+   "Value": "[\"sample-app\",\"rag-app\"]",
+   "Export": {
+    "Name": "PlatformPipeline-ManagedApplications"
+   }
+  },
+  "PipelineConfigurationSummary": {
+   "Description": "Summary of pipeline configuration and deployment status",
+   "Value": "{\"applicationCount\":2,\"environmentCount\":3,\"applications\":[\"sample-app\",\"rag-app\"],\"environments\":[\"dev\",\"staging\",\"prod\"],\"lastUpdated\":\"2025-12-30T15:58:56.313Z\"}",
+   "Export": {
+    "Name": "PlatformPipeline-ConfigurationSummary"
+   }
+  },
+  "DeploymentMetadata": {
+   "Description": "Metadata about deployed application pipelines",
+   "Value": "{\"sample-app\":{\"applicationName\":\"sample-app\",\"team\":\"platform-team\",\"sourceRepository\":\"platform-team/sample-application\",\"branch\":\"main\",\"deploymentTargets\":[\"dev\",\"staging\",\"prod\"],\"enabled\":true,\"lastUpdated\":\"2025-12-30T15:58:56.313Z\",\"configurationHash\":\"-2a5c5ba1\"},\"rag-app\":{\"applicationName\":\"rag-app\",\"team\":\"ai-team\",\"sourceRepository\":\"peterboddev/rag\",\"branch\":\"main\",\"deploymentTargets\":[\"dev\",\"staging\",\"prod\"],\"enabled\":true,\"lastUpdated\":\"2025-12-30T15:58:56.313Z\",\"configurationHash\":\"5343c2c8\"}}",
+   "Export": {
+    "Name": "PlatformPipeline-DeploymentMetadata"
+   }
+  },
+  "PlatformConfigurationVersion": {
+   "Description": "Hash of current platform configuration for change detection",
+   "Value": "1f684391",
+   "Export": {
+    "Name": "PlatformPipeline-ConfigurationVersion"
+   }
+  }
+ },
+ "Parameters": {
+  "BootstrapVersion": {
+   "Type": "AWS::SSM::Parameter::Value<String>",
+   "Default": "/cdk-bootstrap/hnb659fds/version",
+   "Description": "Version of the CDK Bootstrap resources in this environment, automatically retrieved from SSM Parameter Store. [cdk:skip]"
+  }
+ },
+ "Rules": {
+  "CheckBootstrapVersion": {
+   "Assertions": [
+    {
+     "Assert": {
+      "Fn::Not": [
+       {
+        "Fn::Contains": [
+         [
+          "1",
+          "2",
+          "3",
+          "4",
+          "5"
+         ],
+         {
+          "Ref": "BootstrapVersion"
+         }
+        ]
+       }
+      ]
+     },
+     "AssertDescription": "CDK bootstrap stack version 6 required. Please run 'cdk bootstrap' with a recent version of the CDK CLI."
+    }
+   ]
+  }
+ }
+}

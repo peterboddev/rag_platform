@@ -1,0 +1,672 @@
+{
+  "version": "34.0.0",
+  "artifacts": {
+    "PlatformPipelineStackApplicationPipelinesApplicationPipelineStackD2F8651B.assets": {
+      "type": "cdk:asset-manifest",
+      "properties": {
+        "file": "PlatformPipelineStackApplicationPipelinesApplicationPipelineStackD2F8651B.assets.json",
+        "requiresBootstrapStackVersion": 6,
+        "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version"
+      }
+    },
+    "PlatformPipelineStackApplicationPipelinesApplicationPipelineStackD2F8651B": {
+      "type": "aws:cloudformation:stack",
+      "environment": "aws://450683699755/us-east-1",
+      "properties": {
+        "templateFile": "PlatformPipelineStackApplicationPipelinesApplicationPipelineStackD2F8651B.template.json",
+        "terminationProtection": false,
+        "validateOnSynth": true,
+        "assumeRoleArn": "arn:${AWS::Partition}:iam::450683699755:role/cdk-hnb659fds-deploy-role-450683699755-us-east-1",
+        "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::450683699755:role/cdk-hnb659fds-cfn-exec-role-450683699755-us-east-1",
+        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-450683699755-us-east-1/5d6f8bb0cbf3342f2058a5f5d6f682e8a55f24a129f2409eb1469225ef3af2c7.json",
+        "requiresBootstrapStackVersion": 6,
+        "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version",
+        "additionalDependencies": [
+          "PlatformPipelineStackApplicationPipelinesApplicationPipelineStackD2F8651B.assets"
+        ],
+        "lookupRole": {
+          "arn": "arn:${AWS::Partition}:iam::450683699755:role/cdk-hnb659fds-lookup-role-450683699755-us-east-1",
+          "requiresBootstrapStackVersion": 8,
+          "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version"
+        },
+        "stackName": "ApplicationPipelines-ApplicationPipelineStack"
+      },
+      "dependencies": [
+        "PlatformPipelineStackApplicationPipelinesApplicationPipelineStackD2F8651B.assets"
+      ],
+      "metadata": {
+        "/PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/sample-app-Pipeline/ArtifactBucket/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "sampleappPipelineArtifactBucket0C7E05F9"
+          }
+        ],
+        "/PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/sample-app-Pipeline/ArtifactBucket/Policy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "sampleappPipelineArtifactBucketPolicy7C5974AA"
+          }
+        ],
+        "/PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/sample-app-Pipeline/ArtifactBucket/AutoDeleteObjectsCustomResource/Default": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "sampleappPipelineArtifactBucketAutoDeleteObjectsCustomResourceC2B5511B"
+          }
+        ],
+        "/PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/sample-app-Pipeline/BuildLogGroup/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "sampleappPipelineBuildLogGroupC30D7638"
+          }
+        ],
+        "/PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/sample-app-Pipeline/BuildProject/Role/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "sampleappPipelineBuildProjectRoleD4DD019E"
+          }
+        ],
+        "/PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/sample-app-Pipeline/BuildProject/Role/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "sampleappPipelineBuildProjectRoleDefaultPolicy8975DB8B"
+          }
+        ],
+        "/PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/sample-app-Pipeline/BuildProject/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "sampleappPipelineBuildProjectB797B903"
+          }
+        ],
+        "/PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/sample-app-Pipeline/Pipeline/Role/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "sampleappPipelineRole5F57D5A7"
+          }
+        ],
+        "/PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/sample-app-Pipeline/Pipeline/Role/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "sampleappPipelineRoleDefaultPolicy99DA8CBE"
+          }
+        ],
+        "/PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/sample-app-Pipeline/Pipeline/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "sampleappPipelineD902C51C"
+          }
+        ],
+        "/PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/sample-app-Pipeline/Pipeline/Source/GitHub_Source/CodePipelineActionRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "sampleappPipelineSourceGitHubSourceCodePipelineActionRole548BAC5F"
+          }
+        ],
+        "/PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/sample-app-Pipeline/Pipeline/Source/GitHub_Source/CodePipelineActionRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "sampleappPipelineSourceGitHubSourceCodePipelineActionRoleDefaultPolicy39A39EB9"
+          }
+        ],
+        "/PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/sample-app-Pipeline/Pipeline/Build/Build/CodePipelineActionRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "sampleappPipelineBuildCodePipelineActionRole495F3FC3"
+          }
+        ],
+        "/PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/sample-app-Pipeline/Pipeline/Build/Build/CodePipelineActionRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "sampleappPipelineBuildCodePipelineActionRoleDefaultPolicyA8F5AA9B"
+          }
+        ],
+        "/PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/sample-app-Pipeline/Pipeline/Deploy_Development/Deploy_Development/CodePipelineActionRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "sampleappPipelineDeployDevelopmentCodePipelineActionRole1AB78911"
+          }
+        ],
+        "/PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/sample-app-Pipeline/Pipeline/Deploy_Development/Deploy_Development/CodePipelineActionRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "sampleappPipelineDeployDevelopmentCodePipelineActionRoleDefaultPolicy718D7C50"
+          }
+        ],
+        "/PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/sample-app-Pipeline/Pipeline/Deploy_Development/Deploy_Development/Role/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "sampleappPipelineDeployDevelopmentRole25E70DAE"
+          }
+        ],
+        "/PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/sample-app-Pipeline/Pipeline/Deploy_Development/Deploy_Development/Role/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "sampleappPipelineDeployDevelopmentRoleDefaultPolicy74E5EDC6"
+          }
+        ],
+        "/PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/sample-app-Pipeline/Pipeline/Deploy_Staging/Approve_Staging/CodePipelineActionRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "sampleappPipelineDeployStagingApproveStagingCodePipelineActionRoleC1B4B03F"
+          }
+        ],
+        "/PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/sample-app-Pipeline/Pipeline/Deploy_Staging/Deploy_Staging/CodePipelineActionRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "sampleappPipelineDeployStagingCodePipelineActionRoleA2A6A24C"
+          }
+        ],
+        "/PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/sample-app-Pipeline/Pipeline/Deploy_Staging/Deploy_Staging/CodePipelineActionRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "sampleappPipelineDeployStagingCodePipelineActionRoleDefaultPolicy47A24275"
+          }
+        ],
+        "/PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/sample-app-Pipeline/Pipeline/Deploy_Staging/Deploy_Staging/Role/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "sampleappPipelineDeployStagingRole270D92D7"
+          }
+        ],
+        "/PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/sample-app-Pipeline/Pipeline/Deploy_Staging/Deploy_Staging/Role/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "sampleappPipelineDeployStagingRoleDefaultPolicyCC3CFDA4"
+          }
+        ],
+        "/PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/sample-app-Pipeline/Pipeline/Deploy_Production/Approve_Production/CodePipelineActionRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "sampleappPipelineDeployProductionApproveProductionCodePipelineActionRoleB7699E2C"
+          }
+        ],
+        "/PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/sample-app-Pipeline/Pipeline/Deploy_Production/Deploy_Production/CodePipelineActionRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "sampleappPipelineDeployProductionCodePipelineActionRoleA44AC0CA"
+          }
+        ],
+        "/PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/sample-app-Pipeline/Pipeline/Deploy_Production/Deploy_Production/CodePipelineActionRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "sampleappPipelineDeployProductionCodePipelineActionRoleDefaultPolicy5F7D31D2"
+          }
+        ],
+        "/PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/sample-app-Pipeline/Pipeline/Deploy_Production/Deploy_Production/Role/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "sampleappPipelineDeployProductionRole109B4848"
+          }
+        ],
+        "/PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/sample-app-Pipeline/Pipeline/Deploy_Production/Deploy_Production/Role/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "sampleappPipelineDeployProductionRoleDefaultPolicy2037969B"
+          }
+        ],
+        "/PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/sample-app-Pipeline/ApplicationMonitoring/PipelineLogGroup/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "sampleappPipelineApplicationMonitoringPipelineLogGroupBAB99E55"
+          }
+        ],
+        "/PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/sample-app-Pipeline/ApplicationMonitoring/AuditLogGroup/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "sampleappPipelineApplicationMonitoringAuditLogGroup64D2BA80"
+          }
+        ],
+        "/PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/sample-app-Pipeline/ApplicationMonitoring/PipelineStateRule/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "sampleappPipelineApplicationMonitoringPipelineStateRule8FE6B5FB"
+          }
+        ],
+        "/PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/sample-app-Pipeline/ApplicationMonitoring/BuildStateRule/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "sampleappPipelineApplicationMonitoringBuildStateRuleA2128C63"
+          }
+        ],
+        "/PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/sample-app-Pipeline/ApplicationMonitoring/MonitoringDashboard/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "sampleappPipelineApplicationMonitoringMonitoringDashboard39F0B641"
+          }
+        ],
+        "/PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/sample-app-Pipeline/ApplicationMonitoring/FailureNotificationTopic/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "sampleappPipelineApplicationMonitoringFailureNotificationTopic21943DB3"
+          }
+        ],
+        "/PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/sample-app-Pipeline/ApplicationMonitoring/FailureNotificationTopic/Policy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "sampleappPipelineApplicationMonitoringFailureNotificationTopicPolicy69F7A759"
+          }
+        ],
+        "/PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/sample-app-Pipeline/ApplicationMonitoring/PipelineFailureRule/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "sampleappPipelineApplicationMonitoringPipelineFailureRuleF4249D10"
+          }
+        ],
+        "/PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/sample-app-Pipeline/ApplicationMonitoring/BuildFailureRule/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "sampleappPipelineApplicationMonitoringBuildFailureRule85830885"
+          }
+        ],
+        "/PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/sample-app-Pipeline/ApplicationMonitoring/ApplicationPipelineFailureRule/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "sampleappPipelineApplicationMonitoringApplicationPipelineFailureRule3AB0F312"
+          }
+        ],
+        "/PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/sample-app-Pipeline/ApplicationMonitoring/RepeatedFailuresAlarm/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "sampleappPipelineApplicationMonitoringRepeatedFailuresAlarm98A41C30"
+          }
+        ],
+        "/PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/sample-app-Pipeline/ApplicationMonitoring/ExecutionTimeMetricFilter/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "sampleappPipelineApplicationMonitoringExecutionTimeMetricFilterA887C0A7"
+          }
+        ],
+        "/PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/sample-app-Pipeline/ApplicationMonitoring/SuccessRateMetricFilter/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "sampleappPipelineApplicationMonitoringSuccessRateMetricFilter3A02DEA7"
+          }
+        ],
+        "/PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/Custom::S3AutoDeleteObjectsCustomResourceProvider/Role": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CustomS3AutoDeleteObjectsCustomResourceProviderRole3B1BD092"
+          }
+        ],
+        "/PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/Custom::S3AutoDeleteObjectsCustomResourceProvider/Handler": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CustomS3AutoDeleteObjectsCustomResourceProviderHandler9D90184F"
+          }
+        ],
+        "/PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/EventsLogGroupPolicyPlatformPipelineStackApplicationPipelinesApplicationPipelineStacksampleappPipelineApplicationMonitoringPipelineStateRuleA4757C4E/Resource/Default": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "EventsLogGroupPolicyPlatformPipelineStackApplicationPipelinesApplicationPipelineStacksampleappPipelineApplicationMonitoringPipelineStateRuleA4757C4E61C86B3D"
+          }
+        ],
+        "/PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/EventsLogGroupPolicyPlatformPipelineStackApplicationPipelinesApplicationPipelineStacksampleappPipelineApplicationMonitoringPipelineStateRuleA4757C4E/CustomResourcePolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "EventsLogGroupPolicyPlatformPipelineStackApplicationPipelinesApplicationPipelineStacksampleappPipelineApplicationMonitoringPipelineStateRuleA4757C4ECustomResourcePolicy06B78D8A"
+          }
+        ],
+        "/PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/AWS679f53fac002430cb0da5b7982bd2287/ServiceRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "AWS679f53fac002430cb0da5b7982bd2287ServiceRoleC1EA0FF2"
+          }
+        ],
+        "/PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/AWS679f53fac002430cb0da5b7982bd2287/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "AWS679f53fac002430cb0da5b7982bd22872D164C4C"
+          }
+        ],
+        "/PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/EventsLogGroupPolicyPlatformPipelineStackApplicationPipelinesApplicationPipelineStacksampleappPipelineApplicationMonitoringBuildStateRuleD9BEF9F4/Resource/Default": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "EventsLogGroupPolicyPlatformPipelineStackApplicationPipelinesApplicationPipelineStacksampleappPipelineApplicationMonitoringBuildStateRuleD9BEF9F4CC96A7B5"
+          }
+        ],
+        "/PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/EventsLogGroupPolicyPlatformPipelineStackApplicationPipelinesApplicationPipelineStacksampleappPipelineApplicationMonitoringBuildStateRuleD9BEF9F4/CustomResourcePolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "EventsLogGroupPolicyPlatformPipelineStackApplicationPipelinesApplicationPipelineStacksampleappPipelineApplicationMonitoringBuildStateRuleD9BEF9F4CustomResourcePolicy77481991"
+          }
+        ],
+        "/PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/sample-app-PipelineArn": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "sampleappPipelineArn"
+          }
+        ],
+        "/PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/sample-app-BuildProjectArn": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "sampleappBuildProjectArn"
+          }
+        ],
+        "/PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/rag-app-Pipeline/ArtifactBucket/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ragappPipelineArtifactBucket9CEB180D"
+          }
+        ],
+        "/PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/rag-app-Pipeline/ArtifactBucket/Policy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ragappPipelineArtifactBucketPolicyA2764482"
+          }
+        ],
+        "/PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/rag-app-Pipeline/ArtifactBucket/AutoDeleteObjectsCustomResource/Default": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ragappPipelineArtifactBucketAutoDeleteObjectsCustomResource3C4855F9"
+          }
+        ],
+        "/PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/rag-app-Pipeline/BuildLogGroup/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ragappPipelineBuildLogGroupD28411C5"
+          }
+        ],
+        "/PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/rag-app-Pipeline/BuildProject/Role/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ragappPipelineBuildProjectRole54EC81B7"
+          }
+        ],
+        "/PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/rag-app-Pipeline/BuildProject/Role/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ragappPipelineBuildProjectRoleDefaultPolicy73102215"
+          }
+        ],
+        "/PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/rag-app-Pipeline/BuildProject/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ragappPipelineBuildProjectE84CB79D"
+          }
+        ],
+        "/PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/rag-app-Pipeline/Pipeline/Role/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ragappPipelineRoleDE74C479"
+          }
+        ],
+        "/PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/rag-app-Pipeline/Pipeline/Role/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ragappPipelineRoleDefaultPolicy98AE6A82"
+          }
+        ],
+        "/PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/rag-app-Pipeline/Pipeline/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ragappPipelineED7DEFBF"
+          }
+        ],
+        "/PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/rag-app-Pipeline/Pipeline/Source/GitHub_Source/CodePipelineActionRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ragappPipelineSourceGitHubSourceCodePipelineActionRole5EC8AFBB"
+          }
+        ],
+        "/PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/rag-app-Pipeline/Pipeline/Source/GitHub_Source/CodePipelineActionRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ragappPipelineSourceGitHubSourceCodePipelineActionRoleDefaultPolicy52BF784D"
+          }
+        ],
+        "/PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/rag-app-Pipeline/Pipeline/Build/Build/CodePipelineActionRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ragappPipelineBuildCodePipelineActionRole939C11A6"
+          }
+        ],
+        "/PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/rag-app-Pipeline/Pipeline/Build/Build/CodePipelineActionRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ragappPipelineBuildCodePipelineActionRoleDefaultPolicyE4C0FCC7"
+          }
+        ],
+        "/PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/rag-app-Pipeline/Pipeline/Deploy_Development/Deploy_Development/CodePipelineActionRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ragappPipelineDeployDevelopmentCodePipelineActionRoleF740264A"
+          }
+        ],
+        "/PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/rag-app-Pipeline/Pipeline/Deploy_Development/Deploy_Development/CodePipelineActionRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ragappPipelineDeployDevelopmentCodePipelineActionRoleDefaultPolicy73D2F09D"
+          }
+        ],
+        "/PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/rag-app-Pipeline/Pipeline/Deploy_Development/Deploy_Development/Role/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ragappPipelineDeployDevelopmentRoleEA5E5033"
+          }
+        ],
+        "/PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/rag-app-Pipeline/Pipeline/Deploy_Development/Deploy_Development/Role/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ragappPipelineDeployDevelopmentRoleDefaultPolicyFFA8F97B"
+          }
+        ],
+        "/PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/rag-app-Pipeline/Pipeline/Deploy_Staging/Approve_Staging/CodePipelineActionRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ragappPipelineDeployStagingApproveStagingCodePipelineActionRole0850968E"
+          }
+        ],
+        "/PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/rag-app-Pipeline/Pipeline/Deploy_Staging/Deploy_Staging/CodePipelineActionRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ragappPipelineDeployStagingCodePipelineActionRoleAA89B3C2"
+          }
+        ],
+        "/PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/rag-app-Pipeline/Pipeline/Deploy_Staging/Deploy_Staging/CodePipelineActionRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ragappPipelineDeployStagingCodePipelineActionRoleDefaultPolicyB8952E20"
+          }
+        ],
+        "/PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/rag-app-Pipeline/Pipeline/Deploy_Staging/Deploy_Staging/Role/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ragappPipelineDeployStagingRole899D51CD"
+          }
+        ],
+        "/PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/rag-app-Pipeline/Pipeline/Deploy_Staging/Deploy_Staging/Role/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ragappPipelineDeployStagingRoleDefaultPolicyD7258844"
+          }
+        ],
+        "/PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/rag-app-Pipeline/Pipeline/Deploy_Production/Approve_Production/CodePipelineActionRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ragappPipelineDeployProductionApproveProductionCodePipelineActionRole4D56AD4C"
+          }
+        ],
+        "/PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/rag-app-Pipeline/Pipeline/Deploy_Production/Deploy_Production/CodePipelineActionRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ragappPipelineDeployProductionCodePipelineActionRoleD64C0DB9"
+          }
+        ],
+        "/PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/rag-app-Pipeline/Pipeline/Deploy_Production/Deploy_Production/CodePipelineActionRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ragappPipelineDeployProductionCodePipelineActionRoleDefaultPolicy60EDDD6E"
+          }
+        ],
+        "/PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/rag-app-Pipeline/Pipeline/Deploy_Production/Deploy_Production/Role/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ragappPipelineDeployProductionRoleE0BB04C7"
+          }
+        ],
+        "/PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/rag-app-Pipeline/Pipeline/Deploy_Production/Deploy_Production/Role/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ragappPipelineDeployProductionRoleDefaultPolicy1932ED28"
+          }
+        ],
+        "/PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/rag-app-Pipeline/ApplicationMonitoring/PipelineLogGroup/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ragappPipelineApplicationMonitoringPipelineLogGroup00E43B1E"
+          }
+        ],
+        "/PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/rag-app-Pipeline/ApplicationMonitoring/AuditLogGroup/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ragappPipelineApplicationMonitoringAuditLogGroup0C4AC774"
+          }
+        ],
+        "/PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/rag-app-Pipeline/ApplicationMonitoring/PipelineStateRule/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ragappPipelineApplicationMonitoringPipelineStateRuleA5A22DB8"
+          }
+        ],
+        "/PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/rag-app-Pipeline/ApplicationMonitoring/BuildStateRule/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ragappPipelineApplicationMonitoringBuildStateRule1A651E83"
+          }
+        ],
+        "/PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/rag-app-Pipeline/ApplicationMonitoring/MonitoringDashboard/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ragappPipelineApplicationMonitoringMonitoringDashboardCB5B0EDE"
+          }
+        ],
+        "/PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/rag-app-Pipeline/ApplicationMonitoring/FailureNotificationTopic/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ragappPipelineApplicationMonitoringFailureNotificationTopic7AA71F7F"
+          }
+        ],
+        "/PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/rag-app-Pipeline/ApplicationMonitoring/FailureNotificationTopic/Policy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ragappPipelineApplicationMonitoringFailureNotificationTopicPolicy195AFF3B"
+          }
+        ],
+        "/PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/rag-app-Pipeline/ApplicationMonitoring/PipelineFailureRule/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ragappPipelineApplicationMonitoringPipelineFailureRuleCFF77C28"
+          }
+        ],
+        "/PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/rag-app-Pipeline/ApplicationMonitoring/BuildFailureRule/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ragappPipelineApplicationMonitoringBuildFailureRule54DEF34C"
+          }
+        ],
+        "/PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/rag-app-Pipeline/ApplicationMonitoring/ApplicationPipelineFailureRule/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ragappPipelineApplicationMonitoringApplicationPipelineFailureRule3AE33A03"
+          }
+        ],
+        "/PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/rag-app-Pipeline/ApplicationMonitoring/RepeatedFailuresAlarm/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ragappPipelineApplicationMonitoringRepeatedFailuresAlarmFAA979A0"
+          }
+        ],
+        "/PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/rag-app-Pipeline/ApplicationMonitoring/ExecutionTimeMetricFilter/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ragappPipelineApplicationMonitoringExecutionTimeMetricFilter31616112"
+          }
+        ],
+        "/PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/rag-app-Pipeline/ApplicationMonitoring/SuccessRateMetricFilter/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ragappPipelineApplicationMonitoringSuccessRateMetricFilter76EF950D"
+          }
+        ],
+        "/PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/EventsLogGroupPolicyPlatformPipelineStackApplicationPipelinesApplicationPipelineStackragappPipelineApplicationMonitoringPipelineStateRule4FA05F63/Resource/Default": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "EventsLogGroupPolicyPlatformPipelineStackApplicationPipelinesApplicationPipelineStackragappPipelineApplicationMonitoringPipelineStateRule4FA05F638B515657"
+          }
+        ],
+        "/PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/EventsLogGroupPolicyPlatformPipelineStackApplicationPipelinesApplicationPipelineStackragappPipelineApplicationMonitoringPipelineStateRule4FA05F63/CustomResourcePolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "EventsLogGroupPolicyPlatformPipelineStackApplicationPipelinesApplicationPipelineStackragappPipelineApplicationMonitoringPipelineStateRule4FA05F63CustomResourcePolicyD8C0C9B1"
+          }
+        ],
+        "/PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/EventsLogGroupPolicyPlatformPipelineStackApplicationPipelinesApplicationPipelineStackragappPipelineApplicationMonitoringBuildStateRule636AF84D/Resource/Default": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "EventsLogGroupPolicyPlatformPipelineStackApplicationPipelinesApplicationPipelineStackragappPipelineApplicationMonitoringBuildStateRule636AF84D2A3011E0"
+          }
+        ],
+        "/PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/EventsLogGroupPolicyPlatformPipelineStackApplicationPipelinesApplicationPipelineStackragappPipelineApplicationMonitoringBuildStateRule636AF84D/CustomResourcePolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "EventsLogGroupPolicyPlatformPipelineStackApplicationPipelinesApplicationPipelineStackragappPipelineApplicationMonitoringBuildStateRule636AF84DCustomResourcePolicyB3A03EE7"
+          }
+        ],
+        "/PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/rag-app-PipelineArn": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ragappPipelineArn"
+          }
+        ],
+        "/PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/rag-app-BuildProjectArn": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ragappBuildProjectArn"
+          }
+        ],
+        "/PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/ManagedApplicationPipelines": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ManagedApplicationPipelines"
+          }
+        ],
+        "/PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/PipelineConfigurationSummary": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "PipelineConfigurationSummary"
+          }
+        ],
+        "/PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/DeploymentMetadata": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "DeploymentMetadata"
+          }
+        ],
+        "/PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/PlatformConfigurationVersion": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "PlatformConfigurationVersion"
+          }
+        ],
+        "/PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/CDKMetadata/Default": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CDKMetadata"
+          }
+        ],
+        "/PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/BootstrapVersion": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "BootstrapVersion"
+          }
+        ],
+        "/PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/CheckBootstrapVersion": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CheckBootstrapVersion"
+          }
+        ]
+      },
+      "displayName": "PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack"
+    }
+  }
+}
