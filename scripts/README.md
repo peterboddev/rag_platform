@@ -75,25 +75,22 @@ npm run validate-config:fix         # Create missing directories
 npm run validate-config:sample      # Generate sample configuration
 ```
 
-#### `credential-setup.ts`
-**Command:** `npm run credential-setup`
+#### `validate-configs.ts`
+**Command:** `npm run validate-configs`
 
-Sets up and validates secure credential handling for local development and CI/CD execution.
+Validates all platform configuration files across multiple environments and applications.
 
 **Features:**
-- .gitignore configuration validation
-- .git_credentials file setup and validation
-- AWS credential configuration checks
-- File permission validation
-- Interactive credential setup
-- Security best practices guidance
+- Multi-environment configuration validation
+- Application configuration validation
+- Cross-reference validation
+- Configuration report generation
+- Schema validation
 
 **Usage:**
 ```bash
-npm run credential-setup             # Validate all credential configurations
-npm run credential-setup setup      # Interactive setup process
-npm run credential-setup check-gitignore  # Validate .gitignore only
-npm run credential-setup help       # Show detailed help
+npm run validate-configs            # Validate all configurations
+npm run validate-configs:report     # Generate detailed report
 ```
 
 ### Environment Management
@@ -180,7 +177,8 @@ npm run test:clean                  # Clean test artifacts
 - `npm run validate-config` - Configuration validation only
 - `npm run validate-config:verbose` - Detailed configuration validation
 - `npm run validate-config:fix` - Fix configuration issues
-- `npm run credential-setup` - Credential setup and validation
+- `npm run validate-configs` - Validate all configurations
+- `npm run validate-configs:report` - Generate configuration report
 - `npm run local-dev` - Local development workflow
 - `npm run pre-commit` - Pre-commit validation
 
@@ -220,7 +218,6 @@ npm run test:clean                  # Clean test artifacts
 1. **Initial Setup**
    ```bash
    npm install               # Install dependencies
-   npm run credential-setup setup  # Set up secure credentials
    npm run validate-config   # Validate configuration
    npm run bootstrap:all-envs # Bootstrap environments
    ```
@@ -231,9 +228,9 @@ npm run test:clean                  # Clean test artifacts
    npm run synth:all               # Test synthesis
    ```
 
-3. **Credential Validation**
+3. **Configuration Validation**
    ```bash
-   npm run credential-setup validate  # Validate credential setup
+   npm run validate-config:verbose  # Validate configuration setup
    ```
 
 ### Testing Workflow

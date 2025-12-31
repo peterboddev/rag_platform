@@ -9,7 +9,6 @@ import { ConfigurationManager } from './config/platform-config';
 import { ApplicationPipelineStage } from './constructs/application-pipeline-stage';
 import { SecurityStack } from './security-stack';
 import { MonitoringConstruct } from './constructs/monitoring-construct';
-import { CodeBuildCredentialsManager } from './config/codebuild-credentials';
 import { CodeConnectionsConstruct } from './constructs/codeconnections-construct';
 
 export interface PlatformPipelineStackProps extends cdk.StackProps {
@@ -25,7 +24,6 @@ export class PlatformPipelineStack extends cdk.Stack {
   public readonly configurationManager: ConfigurationManager;
   public readonly applicationPipelineStage: ApplicationPipelineStage;
   public readonly monitoring: MonitoringConstruct;
-  public readonly credentialsManager: CodeBuildCredentialsManager;
   public readonly codeConnection: CodeConnectionsConstruct;
 
   constructor(scope: Construct, id: string, props?: PlatformPipelineStackProps) {
@@ -49,16 +47,6 @@ export class PlatformPipelineStack extends cdk.Stack {
           value: 'PlatformPipeline'
         }
       ]
-    });
-
-    // Initialize secure credential management for CodeBuild
-    // Note: Credential rotation is disabled for initial deployment to avoid conflicts
-    this.credentialsManager = new CodeBuildCredentialsManager(this, 'CredentialsManager', {
-      githubTokenSecretName: 'platform-pipeline/github-token',
-      connectionArn: this.codeConnection.getConnectionArn(),
-      enableCredentialRotation: false, // Disabled to avoid rotation schedule conflicts
-      credentialValidationEnabled: true,
-      secretsPrefix: 'platform-pipeline',
     });
 
     // Get configuration from CDK context or props with defaults
@@ -167,8 +155,6 @@ export class PlatformPipelineStack extends cdk.Stack {
               value: cdk.Aws.ACCOUNT_ID,
               type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
             },
-            // Add secure credential environment variables
-            ...this.credentialsManager.createCodeBuildEnvironmentVariables(),
           },
         },
         
@@ -208,8 +194,6 @@ export class PlatformPipelineStack extends cdk.Stack {
             ],
             resources: ['*'],
           }),
-          // Add credential access policy statements
-          ...this.credentialsManager.createCredentialAccessPolicyStatements(),
         ],
       }),
       

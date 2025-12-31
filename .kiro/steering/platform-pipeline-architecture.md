@@ -219,10 +219,10 @@ echo ".git_credentials" >> .gitignore
 - ✅ Use CodeConnections for pipeline GitHub integration
 
 #### CodeBuild Credential Access
-- CodeBuild uses AWS Secrets Manager to store GitHub tokens securely
 - CodeConnections provide secure GitHub integration for pipelines
-- Environment variables pass credentials to CodeBuild without exposing them
-- Never use local credential files for automated pipeline authentication
+- IAM roles provide secure AWS service access
+- No stored credentials or tokens required
+- Environment variables pass connection ARNs to CodeBuild without exposing secrets
 
 ### CodeConnections Integration (REQUIRED)
 

@@ -272,17 +272,6 @@ export class SecurityStack extends cdk.Stack {
                 },
               },
             }),
-            // Secrets Manager access for credentials
-            new iam.PolicyStatement({
-              effect: iam.Effect.ALLOW,
-              actions: [
-                'secretsmanager:GetSecretValue',
-                'secretsmanager:DescribeSecret',
-              ],
-              resources: [
-                `arn:aws:secretsmanager:${this.region}:${this.account}:secret:platform-pipeline/*`,
-              ],
-            }),
             // Enhanced SSM Parameter Store access for configuration
             new iam.PolicyStatement({
               effect: iam.Effect.ALLOW,
@@ -308,7 +297,6 @@ export class SecurityStack extends cdk.Stack {
               conditions: {
                 StringEquals: {
                   'kms:ViaService': [
-                    `secretsmanager.${this.region}.amazonaws.com`,
                     `ssm.${this.region}.amazonaws.com`,
                   ],
                 },

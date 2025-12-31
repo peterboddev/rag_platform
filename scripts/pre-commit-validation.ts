@@ -51,7 +51,6 @@ class PreCommitValidator {
     await this.checkLinting();
     await this.runUnitTests();
     await this.validateConfiguration();
-    await this.checkCredentialConfiguration();
     await this.checkCdkSynthesis();
     await this.checkSecurityConstraints();
     await this.checkGitIgnore();
@@ -307,75 +306,6 @@ class PreCommitValidator {
       });
       
       console.error('  ❌ Configuration validation error:', error.message);
-    }
-  }
-
-  /**
-   * Check credential configuration
-   */
-  private async checkCredentialConfiguration(): Promise<void> {
-    const startTime = Date.now();
-    
-    try {
-      console.log('🔐 Checking credential configuration...');
-      
-      // Run basic credential validation checks
-      let validationPassed = true;
-      let validationMessage = '';
-      
-      try {
-        const fs = await import('fs');
-        const path = await import('path');
-        
-        // Check .gitignore contains .git_credentials
-        const gitIgnorePath = path.join(process.cwd(), '.gitignore');
-        if (fs.existsSync(gitIgnorePath)) {
-          const gitIgnoreContent = fs.readFileSync(gitIgnorePath, 'utf8');
-          if (!gitIgnoreContent.includes('.git_credentials')) {
-            validationPassed = false;
-            validationMessage = '.git_credentials not in .gitignore';
-          }
-        } else {
-          validationPassed = false;
-          validationMessage = '.gitignore file not found';
-        }
-        
-        // Check if .git_credentials exists (optional for pre-commit)
-        const gitCredentialsPath = path.join(process.cwd(), '.git_credentials');
-        if (!fs.existsSync(gitCredentialsPath)) {
-          // This is just a warning, not a failure for pre-commit
-          console.log('  ⚠️  .git_credentials file not found (run "npm run credential-setup setup" to create)');
-        }
-        
-      } catch (error: any) {
-        validationPassed = false;
-        validationMessage = `Credential validation error: ${error.message}`;
-      }
-      
-      this.results.push({
-        name: 'Credential Configuration',
-        passed: validationPassed,
-        message: validationPassed ? undefined : validationMessage,
-        duration: Date.now() - startTime
-      });
-      
-      if (validationPassed) {
-        console.log('  ✅ Credential configuration is secure');
-      } else {
-        console.error('  ❌ Credential configuration issues found');
-        console.error(`     ${validationMessage}`);
-        console.error('     Run "npm run credential-setup validate" for detailed analysis');
-      }
-      
-    } catch (error: any) {
-      this.results.push({
-        name: 'Credential Configuration',
-        passed: false,
-        message: error.message,
-        duration: Date.now() - startTime
-      });
-      
-      console.error('  ❌ Credential check failed:', error.message);
     }
   }
 
