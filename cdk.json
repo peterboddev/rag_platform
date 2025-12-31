@@ -67,7 +67,6 @@
     "platform": {
       "region": "us-east-1",
       "account": "450683699755",
-      "connectionArn": "arn:aws:codestar-connections:us-east-1:450683699755:connection/a1e6eb5d-e680-40e2-8176-b3f35b7292fc",
       "artifactBucketPrefix": "platform-pipeline"
     },
     "environments": {

@@ -9,7 +9,7 @@ import { ApplicationPipelineStage } from './constructs/application-pipeline-stag
 import { SecurityStack } from './security-stack';
 import { MonitoringConstruct } from './constructs/monitoring-construct';
 import { CodeBuildCredentialsManager } from './config/codebuild-credentials';
-import { WebhookTriggerConstruct } from './constructs/webhook-trigger-construct';
+import { CodeConnectionsConstruct } from './constructs/codeconnections-construct';
 
 export interface PlatformPipelineStackProps extends cdk.StackProps {
   readonly githubOrg?: string;
@@ -25,7 +25,7 @@ export class PlatformPipelineStack extends cdk.Stack {
   public readonly applicationPipelineStage: ApplicationPipelineStage;
   public readonly monitoring: MonitoringConstruct;
   public readonly credentialsManager: CodeBuildCredentialsManager;
-  public readonly webhookTrigger: WebhookTriggerConstruct;
+  public readonly codeConnection: CodeConnectionsConstruct;
 
   constructor(scope: Construct, id: string, props?: PlatformPipelineStackProps) {
     super(scope, id, props);
@@ -33,10 +33,26 @@ export class PlatformPipelineStack extends cdk.Stack {
     // Initialize configuration manager
     this.configurationManager = new ConfigurationManager(this);
 
+    // Create CodeConnections connection (newer service)
+    this.codeConnection = new CodeConnectionsConstruct(this, 'CodeConnection', {
+      connectionName: 'platform-pipeline-github',
+      providerType: 'GitHub',
+      tags: [
+        {
+          key: 'ManagedBy',
+          value: 'CDK'
+        },
+        {
+          key: 'Service',
+          value: 'PlatformPipeline'
+        }
+      ]
+    });
+
     // Initialize secure credential management for CodeBuild
     this.credentialsManager = new CodeBuildCredentialsManager(this, 'CredentialsManager', {
       githubTokenSecretName: 'platform-pipeline/github-token',
-      connectionArn: props?.connectionArn || this.node.tryGetContext('connectionArn'),
+      connectionArn: this.codeConnection.getConnectionArn(),
       enableCredentialRotation: true,
       credentialValidationEnabled: true,
       secretsPrefix: 'platform-pipeline',
@@ -46,26 +62,28 @@ export class PlatformPipelineStack extends cdk.Stack {
     const githubOrg = props?.githubOrg || this.node.tryGetContext('githubOrg') || 'platform-team';
     const githubRepo = props?.githubRepo || this.node.tryGetContext('githubRepo') || 'platform-pipeline';
     const branch = props?.branch || this.node.tryGetContext('branch') || 'main';
-    const connectionArn = props?.connectionArn || this.node.tryGetContext('connectionArn');
+    const connectionArn = this.codeConnection.getConnectionArn();
 
     // Validate required configuration
     if (!connectionArn) {
-      throw new Error('CodeStar connection ARN is required. Set it via CDK context "connectionArn" or props.');
+      throw new Error('CodeConnections connection ARN is required. Connection should be created by CodeConnectionsConstruct.');
     }
 
-    // Create the self-mutating pipeline with enhanced CodeBuild configuration
+    // Create the self-mutating pipeline with enhanced CodeBuild configuration and proper triggers
     this.pipeline = new CodePipeline(this, 'PlatformPipeline', {
       pipelineName: 'PlatformPipeline',
       selfMutation: true,
       crossAccountKeys: true,
       
-      // Configure the source stage with GitHub integration
+      // Configure the source stage with GitHub integration and push triggers
       synth: new CodeBuildStep('Synth', {
         input: CodePipelineSource.connection(
           `${githubOrg}/${githubRepo}`,
           branch,
           {
             connectionArn: connectionArn,
+            // Ensure pipeline triggers on push events (default is true, but being explicit)
+            triggerOnPush: true,
           }
         ),
         
@@ -301,6 +319,13 @@ export class PlatformPipelineStack extends cdk.Stack {
           enabled: Object.keys(this.configurationManager.getEnvironments()).length > 1,
           environments: Object.keys(this.configurationManager.getEnvironments()),
         },
+        triggerConfiguration: {
+          type: 'Native Pipeline Triggers',
+          service: 'CodeStar Connections (creates as codeconnections)',
+          triggerOnPush: true,
+          noEventBridgeRequired: 'Pipeline triggers natively on push events',
+          eliminatesLoops: 'No EventBridge loops possible with native triggers',
+        },
       }),
       description: 'Comprehensive platform configuration and cross-stack integration summary',
       exportName: 'PlatformPipeline-ComprehensiveConfigurationSummary',
@@ -346,15 +371,8 @@ export class PlatformPipelineStack extends cdk.Stack {
       exportName: 'PlatformFailureNotificationTopicArn',
     });
 
-    // Create EventBridge integration for immediate pipeline triggering
-    // This must be done after the pipeline is fully created and all stages are added
-    this.webhookTrigger = new WebhookTriggerConstruct(this, 'EventBridgeTrigger', {
-      pipelineName: 'PlatformPipeline',
-      logRetentionDays: logs.RetentionDays.ONE_MONTH,
-    });
-
-    // Output webhook setup instructions for GitHub configuration
-    this.outputWebhookSetupInstructions();
+    // Output pipeline trigger information
+    this.outputPipelineTriggerInformation();
   }
 
   /**
@@ -392,34 +410,29 @@ export class PlatformPipelineStack extends cdk.Stack {
   }
 
   /**
-   * Outputs information about the EventBridge integration for immediate pipeline triggering
-   * This eliminates the 1-5 minute polling delay from CodeStar connections automatically
+   * Outputs information about the native pipeline trigger configuration
+   * This uses CodeConnections native triggers instead of EventBridge for better reliability
    */
-  private outputWebhookSetupInstructions(): void {
-    // Output EventBridge integration status
-    new cdk.CfnOutput(this, 'EventBridgeIntegrationStatus', {
+  private outputPipelineTriggerInformation(): void {
+    // Output native trigger configuration status
+    new cdk.CfnOutput(this, 'PipelineTriggerConfiguration', {
       value: JSON.stringify({
-        status: 'Enabled - Automatic immediate pipeline triggering',
-        description: 'EventBridge rules automatically trigger pipeline on CodeStar connection events',
-        noGitHubConfigRequired: 'This works automatically with existing CodeStar connection',
-        eliminatesPollingDelay: 'No more 1-5 minute wait times',
-        fallbackMechanism: 'CodeStar connection continues as backup',
+        triggerType: 'Native CodeStar Connection Triggers',
+        description: 'Pipeline triggers automatically on push events via CodeStar connections',
+        service: 'aws.codestarconnections (creates as codeconnections type)',
+        advantages: [
+          'No EventBridge loops',
+          'Immediate triggering on push',
+          'Native CodePipeline integration',
+          'Better reliability than polling',
+          'Eliminates 1-5 minute delays'
+        ],
+        connectionArn: this.codeConnection.getConnectionArn(),
+        connectionName: this.codeConnection.getConnectionName(),
+        triggerOnPush: true,
       }, null, 2),
-      description: 'EventBridge integration status for immediate pipeline triggering',
-      exportName: 'PlatformPipeline-EventBridgeIntegrationStatus',
-    });
-
-    // Output infrastructure details
-    new cdk.CfnOutput(this, 'ImmediateTriggerInfrastructure', {
-      value: JSON.stringify({
-        eventRuleArn: this.webhookTrigger.getEventRuleArn(),
-        triggerMechanism: 'EventBridge → CodePipeline (direct)',
-        authentication: 'AWS IAM (no external configuration needed)',
-        monitoring: 'EventBridge metrics and CloudTrail logs',
-        lambdaFunction: 'Not needed - EventBridge triggers CodePipeline directly',
-      }, null, 2),
-      description: 'Immediate trigger infrastructure details for monitoring',
-      exportName: 'PlatformPipeline-ImmediateTriggerInfrastructure',
+      description: 'Native pipeline trigger configuration using CodeConnections',
+      exportName: 'PlatformPipeline-TriggerConfiguration',
     });
 
     // Output pipeline monitoring URLs
@@ -427,10 +440,10 @@ export class PlatformPipelineStack extends cdk.Stack {
       value: JSON.stringify({
         pipelineConsole: `https://${cdk.Aws.REGION}.console.aws.amazon.com/codesuite/codepipeline/pipelines/PlatformPipeline/view`,
         cloudWatchLogs: `https://${cdk.Aws.REGION}.console.aws.amazon.com/cloudwatch/home?region=${cdk.Aws.REGION}#logsV2:log-groups/log-group/$252Faws$252Fcodebuild$252FPlatformPipeline-Synth`,
-        eventBridgeRules: `https://${cdk.Aws.REGION}.console.aws.amazon.com/events/home?region=${cdk.Aws.REGION}#/rules`,
+        codeConnectionsConsole: `https://${cdk.Aws.REGION}.console.aws.amazon.com/codesuite/settings/connections`,
         cloudTrail: `https://${cdk.Aws.REGION}.console.aws.amazon.com/cloudtrail/home?region=${cdk.Aws.REGION}#/events`,
       }, null, 2),
-      description: 'URLs for monitoring pipeline execution and EventBridge integration',
+      description: 'URLs for monitoring pipeline execution and CodeConnections',
       exportName: 'PlatformPipeline-MonitoringUrls',
     });
   }

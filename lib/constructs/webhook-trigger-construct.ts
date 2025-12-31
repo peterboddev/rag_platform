@@ -59,11 +59,13 @@ export class WebhookTriggerConstruct extends Construct {
       description: `Trigger ${props.pipelineName} pipeline immediately on repository push events`,
       eventPattern: {
         source: ['aws.codeconnections'],
-        detailType: ['CodeStar Source Action State Change'],
+        detailType: ['CodeConnections Source Action State Change'],
         detail: {
           pipeline: [props.pipelineName],
           'action-name': ['Source'],
-          state: ['SUCCEEDED']
+          state: ['SUCCEEDED'],
+          // Only trigger on external pushes, not internal pipeline restarts
+          'trigger-type': ['PUSH']
         }
       },
       targets: [
