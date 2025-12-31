@@ -59,9 +59,12 @@ export class PlatformPipelineStack extends cdk.Stack {
     });
 
     // Get configuration from CDK context or props with defaults
-    const githubOrg = props?.githubOrg || this.node.tryGetContext('githubOrg') || 'platform-team';
-    const githubRepo = props?.githubRepo || this.node.tryGetContext('githubRepo') || 'platform-pipeline';
-    const branch = props?.branch || this.node.tryGetContext('branch') || 'main';
+    const platformRepo = this.node.tryGetContext('platformRepository');
+    const githubOrg = props?.githubOrg || platformRepo?.owner || 'platform-team';
+    const githubRepo = props?.githubRepo || platformRepo?.repo || 'platform-pipeline';
+    const branch = props?.branch || platformRepo?.branch || 'main';
+    
+    // Use CDK-created connection ARN (always available) or fallback to props
     const connectionArn = this.codeConnection.getConnectionArn();
 
     // Validate required configuration
@@ -222,6 +225,7 @@ export class PlatformPipelineStack extends cdk.Stack {
     this.applicationPipelineStage = new ApplicationPipelineStage(this, 'ApplicationPipelines', {
       configurationManager: this.configurationManager,
       securityStack: props?.securityStack,
+      // connectionArn will be imported from CloudFormation export
       env: props?.env, // Pass through environment settings
     });
 
@@ -321,10 +325,11 @@ export class PlatformPipelineStack extends cdk.Stack {
         },
         triggerConfiguration: {
           type: 'Native Pipeline Triggers',
-          service: 'CodeStar Connections (creates as codeconnections)',
+          service: 'CodeConnections (aws.codeconnections)',
           triggerOnPush: true,
           noEventBridgeRequired: 'Pipeline triggers natively on push events',
           eliminatesLoops: 'No EventBridge loops possible with native triggers',
+          connectionType: 'codeconnections (NOT codestar-connections)',
         },
       }),
       description: 'Comprehensive platform configuration and cross-stack integration summary',
@@ -373,6 +378,13 @@ export class PlatformPipelineStack extends cdk.Stack {
 
     // Output pipeline trigger information
     this.outputPipelineTriggerInformation();
+
+    // Output the connection ARN for use by application pipelines (after stage creation)
+    new cdk.CfnOutput(this, 'CodeConnectionArn', {
+      value: this.codeConnection.getConnectionArn(),
+      description: 'ARN of the CodeStar connection for use by application pipelines',
+      exportName: 'PlatformPipeline-CodeConnectionArn',
+    });
   }
 
   /**
@@ -417,9 +429,9 @@ export class PlatformPipelineStack extends cdk.Stack {
     // Output native trigger configuration status
     new cdk.CfnOutput(this, 'PipelineTriggerConfiguration', {
       value: JSON.stringify({
-        triggerType: 'Native CodeStar Connection Triggers',
-        description: 'Pipeline triggers automatically on push events via CodeStar connections',
-        service: 'aws.codestarconnections (creates as codeconnections type)',
+        triggerType: 'Native CodeConnections Triggers',
+        description: 'Pipeline triggers automatically on push events via CodeConnections',
+        service: 'aws.codeconnections (NOT codestar-connections)',
         advantages: [
           'No EventBridge loops',
           'Immediate triggering on push',

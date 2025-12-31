@@ -10,6 +10,7 @@ import { SecurityStack } from '../security-stack';
 export interface ApplicationPipelineStageProps extends cdk.StageProps {
   readonly configurationManager: ConfigurationManager;
   readonly securityStack?: SecurityStack;
+  // connectionArn will be imported from CloudFormation export
 }
 
 /**
@@ -33,7 +34,7 @@ class ApplicationPipelineStack extends cdk.Stack {
     Object.entries(enabledApps).forEach(([appName, appConfig]) => {
       try {
         // Transform application configuration to pipeline configuration
-        const pipelineConfig = this.transformToPipelineConfig(appConfig, platformConfig.connectionArn, configurationManager, securityStack);
+        const pipelineConfig = this.transformToPipelineConfig(appConfig, configurationManager, securityStack);
         
         // Create the application pipeline construct
         const pipeline = new ApplicationPipelineConstruct(this, `${appName}-Pipeline`, {
@@ -66,7 +67,6 @@ class ApplicationPipelineStack extends cdk.Stack {
    */
   private transformToPipelineConfig(
     appConfig: ApplicationConfig,
-    connectionArn: string,
     configManager: ConfigurationManager,
     securityStack?: SecurityStack
   ): ApplicationPipelineConfig {
@@ -87,7 +87,7 @@ class ApplicationPipelineStack extends cdk.Stack {
         owner: appConfig.sourceRepo.owner,
         repo: appConfig.sourceRepo.repo,
         branch: appConfig.sourceRepo.branch,
-        connectionArn: connectionArn,
+        // connectionArn will be created by ApplicationPipelineConstruct for each app's repository
       },
       deploymentTargets: deploymentTargets,
       buildConfig: this.transformToBuildConfig(appConfig, configManager),
@@ -217,6 +217,7 @@ export class ApplicationPipelineStage extends cdk.Stage {
     this.applicationPipelineStack = new ApplicationPipelineStack(this, 'ApplicationPipelineStack', {
       configurationManager: this.configManager,
       securityStack: props.securityStack,
+      // connectionArn will be imported from CloudFormation export inside the stack
       env: props.env, // Pass through the environment settings
     });
 

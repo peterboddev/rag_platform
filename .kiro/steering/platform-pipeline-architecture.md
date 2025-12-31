@@ -195,7 +195,7 @@ phases:
 - **ALWAYS add `.git_credentials` to `.gitignore` file**
 - This file contains sensitive authentication tokens/credentials
 - Used only for local platform engineer workstation authentication
-- CodeBuild uses AWS Secrets Manager and CodeStar connections, NOT this file
+- CodeBuild uses AWS Secrets Manager and CodeConnections, NOT this file
 
 **File Location and Usage**:
 ```
@@ -216,36 +216,162 @@ echo ".git_credentials" >> .gitignore
 - ✅ Keep `.git_credentials` local to each engineer's workstation
 - ✅ Add `.git_credentials` to `.gitignore`
 - ✅ Use AWS Secrets Manager for CodeBuild credential access
-- ✅ Use CodeStar connections for pipeline GitHub integration
+- ✅ Use CodeConnections for pipeline GitHub integration
 
 #### CodeBuild Credential Access
 - CodeBuild uses AWS Secrets Manager to store GitHub tokens securely
-- CodeStar connections provide secure GitHub integration for pipelines
+- CodeConnections provide secure GitHub integration for pipelines
 - Environment variables pass credentials to CodeBuild without exposing them
 - Never use local credential files for automated pipeline authentication
 
-## Configuration Management
+### CodeConnections Integration (REQUIRED)
+
+**CRITICAL**: This project uses AWS CodeConnections exclusively. Do NOT use CodeStar connections.
+
+#### CodeConnections vs CodeStar Connections
+
+**Use CodeConnections (✅ REQUIRED)**:
+- **Service**: `aws.codeconnections` 
+- **CDK Resource**: `aws_codestarconnections.CfnConnection`
+- **Console Location**: CodePipeline → Settings → Connections
+- **Connection Type**: Shows as "codeconnections" in AWS CLI/API
+- **Advantages**: 
+  - Native pipeline triggers (no EventBridge needed)
+  - Better reliability and performance
+  - Immediate triggering on push events
+  - No polling delays (eliminates 1-5 minute delays)
+  - Future-proof service
+
+**Do NOT Use CodeStar Connections (❌ DEPRECATED)**:
+- **Service**: `aws.codestar-connections`
+- **Issues**: 
+  - Polling-based triggers (1-5 minute delays)
+  - Less reliable
+  - Being phased out in favor of CodeConnections
+
+#### Implementation Requirements
+
+**Platform Pipeline Connection**:
+- **Purpose**: Connects to platform pipeline repository
+- **Repository**: Platform team's infrastructure repository (e.g., `peterboddev/rag_platform`)
+- **Created By**: CDK construct in `PlatformPipelineStack`
+- **Connection Name**: `platform-pipeline-github`
+
+**Application Pipeline Connections**:
+- **Purpose**: Each application pipeline connects to its own application repository
+- **Repository**: Application team's code repository (e.g., `peterboddev/rag`)
+- **Created By**: CDK construct in each `ApplicationPipelineConstruct`
+- **Connection Name**: `{applicationName}-github` (e.g., `rag-app-github`)
+
+#### CDK Implementation
+
+**Platform Pipeline Connection**:
+```typescript
+// In PlatformPipelineStack
+this.codeConnection = new CodeConnectionsConstruct(this, 'CodeConnection', {
+  connectionName: 'platform-pipeline-github',
+  providerType: 'GitHub',
+});
+```
+
+**Application Pipeline Connections**:
+```typescript
+// In ApplicationPipelineConstruct (for each application)
+this.codeConnection = new CodeConnectionsConstruct(this, 'CodeConnection', {
+  connectionName: `${applicationName}-github`,
+  providerType: 'GitHub',
+});
+```
+
+#### Connection Authorization Process
+
+1. **Deploy CDK Stack**: Connection is created in PENDING status
+2. **Authorize in Console**:
+   - Go to AWS Console → CodePipeline → Settings → Connections
+   - Find the connection (will show as PENDING)
+   - Click "Update pending connection"
+   - Complete GitHub OAuth flow in browser
+   - Verify status changes to "Available"
+3. **Pipeline Triggers**: Once authorized, pipelines trigger immediately on push
+
+#### Troubleshooting CodeConnections
+
+**Connection Shows as PENDING**:
+- Normal initial state after CDK deployment
+- Requires manual authorization in AWS Console
+- Follow authorization process above
+
+**Pipeline Not Triggering**:
+- Verify connection status is "Available" (not PENDING)
+- Check repository permissions in GitHub
+- Verify branch name matches configuration
+- Check CloudTrail for connection events
+
+**Multiple Connections**:
+- Each repository needs its own connection
+- Platform pipeline: connects to platform repo
+- Application pipelines: each connects to its own app repo
+- Do NOT share connections between different repositories
 
 ### Repository Configuration (CRITICAL)
 
 **The platform pipeline MUST be configured to monitor the correct source repository.**
 
-#### CDK Context Configuration
-The repository is configured in `cdk.json`:
+#### Repository Configuration Structure
+
+The `cdk.json` file contains repository details for both platform and application pipelines:
+
 ```json
 {
   "context": {
-    "githubOrg": "your-github-org",
-    "githubRepo": "your-platform-pipeline-repo",
-    "branch": "main"
+    "platformRepository": {
+      "owner": "peterboddev",
+      "repo": "rag_platform", 
+      "branch": "main",
+      "description": "Platform pipeline infrastructure repository"
+    },
+    "applications": {
+      "rag-app": {
+        "sourceRepo": {
+          "owner": "peterboddev",
+          "repo": "rag",
+          "branch": "main"
+        }
+      }
+    }
   }
 }
 ```
 
+#### Platform Repository vs Application Repositories
+
+**Platform Repository** (`platformRepository`):
+- Contains platform pipeline infrastructure code (CDK stacks, buildspec.yml, etc.)
+- Used by the platform pipeline to deploy and manage application pipelines
+- Example: `peterboddev/rag_platform`
+
+**Application Repositories** (`applications.*.sourceRepo`):
+- Contains application code that gets deployed by application pipelines
+- Each application has its own repository and CodeConnection
+- Example: `peterboddev/rag` (RAG application code)
+
+#### CodeConnections Architecture
+
+**Platform Pipeline Connection**:
+- **Repository**: Platform infrastructure repo (`peterboddev/rag_platform`)
+- **Connection Name**: `platform-pipeline-github`
+- **Purpose**: Triggers platform pipeline when infrastructure changes
+
+**Application Pipeline Connections**:
+- **Repository**: Each app's code repo (`peterboddev/rag`)
+- **Connection Name**: `{applicationName}-github` (e.g., `rag-app-github`)
+- **Purpose**: Triggers application pipeline when application code changes
+
 #### Verification Steps
+
 Before deploying the platform pipeline:
 
-1. **Verify Repository Contents**:
+1. **Verify Platform Repository Contents**:
    ```bash
    # Check current repository
    git remote -v
@@ -260,14 +386,16 @@ Before deploying the platform pipeline:
 
 2. **Validate CDK Configuration**:
    - Open `cdk.json`
-   - Verify `githubOrg` matches your GitHub organization
-   - Verify `githubRepo` matches the repository containing THIS code
-   - Verify `branch` matches your main branch (usually "main")
+   - Verify `platformRepository.owner` matches your GitHub organization
+   - Verify `platformRepository.repo` matches the repository containing THIS code
+   - Verify `platformRepository.branch` matches your main branch (usually "main")
+   - Verify each `applications.*.sourceRepo` points to the correct application repository
 
 3. **Test Repository Access**:
-   - Ensure CodeStar connection is authorized for the repository
-   - Verify the repository is not empty (contains more than just LICENSE)
-   - Confirm all necessary files are present: `package.json`, `buildspec.yml`, CDK code
+   - Ensure CodeConnections will be authorized for all repositories
+   - Verify repositories are not empty (contain more than just LICENSE)
+   - Confirm all necessary files are present in platform repo: `package.json`, `buildspec.yml`, CDK code
+   - Confirm application repositories contain application code
 
 #### Common Configuration Errors
 - **Wrong Repository**: Pipeline points to different/empty repository
@@ -321,10 +449,10 @@ This architecture enables the platform team to maintain control and consistency 
 3. Update CDK configuration to use `LinuxArmBuildImage.AMAZON_LINUX_2_STANDARD_3_0`
 4. Node.js 20 is fully compatible with npm 11.6.2+
 
-#### CodeStar Connection Issues
+#### CodeConnections Integration
 **Symptoms**: Source stage fails with connection errors
 
-**Root Cause**: CodeStar connection not authorized or misconfigured
+**Root Cause**: CodeConnections connection not authorized or misconfigured
 
 **Solution**:
 1. Go to AWS Console → CodePipeline → Settings → Connections

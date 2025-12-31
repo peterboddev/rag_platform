@@ -61,9 +61,14 @@
     "@aws-cdk/core:stackRelativeExports": true,
     "@aws-cdk/aws-rds:preventRenderingDeprecatedCredentials": true,
     "@aws-cdk/aws-codepipeline-actions:useNewDefaultBranchForSourceAction": true,
-    "githubOrg": "peterboddev",
-    "githubRepo": "rag_platform",
-    "branch": "main",
+    
+    "platformRepository": {
+      "owner": "peterboddev",
+      "repo": "rag_platform",
+      "branch": "main",
+      "description": "Platform pipeline infrastructure repository"
+    },
+    
     "platform": {
       "region": "us-east-1",
       "account": "450683699755",

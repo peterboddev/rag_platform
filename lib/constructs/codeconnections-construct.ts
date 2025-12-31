@@ -9,11 +9,14 @@ export interface CodeConnectionsConstructProps {
 }
 
 /**
- * CDK Construct for creating CodeStar Connections (will create newer codeconnections type)
+ * CDK Construct for creating CodeConnections (aws.codeconnections service)
  * 
- * This construct creates a CodeStar connection which will automatically be
- * created as the newer codeconnections type when deployed. It provides better 
- * integration with pipeline triggers and EventBridge.
+ * This construct creates a CodeConnections connection which provides better 
+ * integration with pipeline triggers and immediate push event handling.
+ * 
+ * IMPORTANT: Use CodeConnections, NOT CodeStar connections.
+ * - CodeConnections: aws.codeconnections (✅ USE THIS)
+ * - CodeStar Connections: aws.codestar-connections (❌ DON'T USE)
  */
 export class CodeConnectionsConstruct extends Construct {
   public readonly connection: codestarconnections.CfnConnection;
@@ -22,7 +25,7 @@ export class CodeConnectionsConstruct extends Construct {
   constructor(scope: Construct, id: string, props: CodeConnectionsConstructProps) {
     super(scope, id);
 
-    // Create the CodeStar connection (will be created as codeconnections type)
+    // Create the CodeConnections connection (aws.codeconnections service)
     this.connection = new codestarconnections.CfnConnection(this, 'Connection', {
       connectionName: props.connectionName,
       providerType: props.providerType || 'GitHub',
@@ -34,6 +37,10 @@ export class CodeConnectionsConstruct extends Construct {
         {
           key: 'Service',
           value: 'PlatformPipeline'
+        },
+        {
+          key: 'ConnectionType',
+          value: 'CodeConnections'
         }
       ]
     });
@@ -44,20 +51,21 @@ export class CodeConnectionsConstruct extends Construct {
     // Output the connection ARN for reference
     new cdk.CfnOutput(this, 'ConnectionArn', {
       value: this.connectionArn,
-      description: 'ARN of the CodeStar connection (created as codeconnections type)',
+      description: 'ARN of the CodeConnections connection (aws.codeconnections service)',
       exportName: `${props.connectionName}-ConnectionArn`
     });
 
     // Output connection status information
     new cdk.CfnOutput(this, 'ConnectionStatus', {
       value: this.connection.attrConnectionStatus,
-      description: 'Status of the CodeStar connection (will be PENDING until authorized)',
+      description: 'Status of the CodeConnections connection (will be PENDING until authorized)',
       exportName: `${props.connectionName}-ConnectionStatus`
     });
 
     // Add tags for resource management
-    cdk.Tags.of(this).add('Component', 'CodeStarConnections');
+    cdk.Tags.of(this).add('Component', 'CodeConnections');
     cdk.Tags.of(this).add('ConnectionName', props.connectionName);
+    cdk.Tags.of(this).add('Service', 'aws.codeconnections');
   }
 
   /**

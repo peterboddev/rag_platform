@@ -205,9 +205,10 @@ class ConfigurationValidator {
       // Additional platform-specific validations
       const config = this.configManager.getConfig();
       
-      // Validate connection ARN format
-      if (!config.platform.connectionArn.startsWith('arn:aws:codestar-connections:')) {
-        console.error('❌ Invalid CodeStar connection ARN format');
+      // Validate connection ARN format (if provided)
+      if (config.platform.connectionArn && 
+          !config.platform.connectionArn.startsWith('arn:aws:codeconnections:')) {
+        console.error('❌ Invalid CodeConnections ARN format');
         return false;
       }
 
@@ -293,7 +294,7 @@ class ConfigurationValidator {
       platform: {
         account: config.platform.account,
         region: config.platform.region,
-        connectionConfigured: !!config.platform.connectionArn,
+        connectionConfigured: !!config.platform.connectionArn || 'Will be created by CDK',
       },
       applications: Object.keys(applications).map(appName => ({
         name: appName,

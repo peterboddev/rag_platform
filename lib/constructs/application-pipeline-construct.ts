@@ -7,6 +7,7 @@ import * as s3 from 'aws-cdk-lib/aws-s3';
 import * as logs from 'aws-cdk-lib/aws-logs';
 import { Construct } from 'constructs';
 import { MonitoringConstruct } from './monitoring-construct';
+import { CodeConnectionsConstruct } from './codeconnections-construct';
 
 /**
  * Configuration for source repository
@@ -15,7 +16,7 @@ export interface SourceRepositoryConfig {
   readonly owner: string;
   readonly repo: string;
   readonly branch: string;
-  readonly connectionArn: string;
+  // connectionArn will be created by the construct for each repository
 }
 
 /**
@@ -88,6 +89,7 @@ export class ApplicationPipelineConstruct extends Construct {
   public readonly buildProject: codebuild.Project;
   public readonly artifactBucket: s3.IBucket;
   public readonly monitoring: MonitoringConstruct;
+  public readonly codeConnection: CodeConnectionsConstruct;
 
   constructor(scope: Construct, id: string, props: ApplicationPipelineConstructProps) {
     super(scope, id);
@@ -96,6 +98,26 @@ export class ApplicationPipelineConstruct extends Construct {
 
     // Validate configuration
     this.validateConfiguration(config);
+
+    // Create CodeConnection for this application's repository
+    this.codeConnection = new CodeConnectionsConstruct(this, 'CodeConnection', {
+      connectionName: `${config.applicationName}-github`,
+      providerType: 'GitHub',
+      tags: [
+        {
+          key: 'ManagedBy',
+          value: 'CDK'
+        },
+        {
+          key: 'Application',
+          value: config.applicationName
+        },
+        {
+          key: 'Repository',
+          value: `${config.sourceRepo.owner}/${config.sourceRepo.repo}`
+        }
+      ]
+    });
 
     // Create or use existing artifact bucket
     this.artifactBucket = config.artifactBucket || this.createArtifactBucket(config.applicationName);
@@ -141,9 +163,7 @@ export class ApplicationPipelineConstruct extends Construct {
       throw new Error('Source repository owner and repo are required');
     }
 
-    if (!config.sourceRepo.connectionArn) {
-      throw new Error('CodeStar connection ARN is required for GitHub integration');
-    }
+    // connectionArn will be created by this construct, no need to validate
 
     if (!config.deploymentTargets || config.deploymentTargets.length === 0) {
       throw new Error('At least one deployment target is required');
@@ -325,7 +345,7 @@ export class ApplicationPipelineConstruct extends Construct {
           owner: config.sourceRepo.owner,
           repo: config.sourceRepo.repo,
           branch: config.sourceRepo.branch,
-          connectionArn: config.sourceRepo.connectionArn,
+          connectionArn: this.codeConnection.getConnectionArn(),
           output: sourceOutput,
         }),
       ],

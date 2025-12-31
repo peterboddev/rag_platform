@@ -9,7 +9,7 @@ test('Platform Pipeline Stack Creation', () => {
       'platform': {
         'region': 'us-east-1',
         'account': '123456789012',
-        'connectionArn': 'arn:aws:codestar-connections:us-east-1:123456789012:connection/test-connection-id',
+        // connectionArn is now optional - will be created by CDK
         'artifactBucketPrefix': 'platform-pipeline'
       },
       'environments': {},
@@ -25,7 +25,7 @@ test('Platform Pipeline Stack Creation', () => {
   
   // WHEN
   const stack = new PlatformPipeline.PlatformPipelineStack(app, 'MyTestStack', {
-    connectionArn: 'arn:aws:codestar-connections:us-east-1:123456789012:connection/test-connection-id',
+    // connectionArn is now optional - will be created by CDK construct
     env: {
       account: '123456789012',
       region: 'us-east-1'
@@ -45,4 +45,10 @@ test('Platform Pipeline Stack Creation', () => {
   
   // Verify that CodeBuild projects are created (synth, self-mutation, and validation)
   template.resourceCountIs('AWS::CodeBuild::Project', 3);
+  
+  // Verify that CodeConnections connection is created by CDK
+  template.hasResourceProperties('AWS::CodeStarConnections::Connection', {
+    ConnectionName: 'platform-pipeline-github',
+    ProviderType: 'GitHub'
+  });
 });

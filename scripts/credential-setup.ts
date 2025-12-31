@@ -216,7 +216,8 @@ class CredentialSetupManager {
       const config = this.parseGitCredentials(content);
 
       if (!config.githubToken && !config.connectionArn) {
-        result.issues.push('No GitHub authentication method found (token or connection ARN)');
+        result.isValid = false;
+        result.issues.push('Either GitHub token or CodeConnections ARN is required');
       }
 
       if (config.githubToken && config.githubToken.length < 20) {

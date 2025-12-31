@@ -162,7 +162,7 @@ class ConfigurationValidator {
     console.log(`\n🏗️  Platform Configuration:`);
     console.log(`  Region: ${config.platform.region}`);
     console.log(`  Account: ${config.platform.account}`);
-    console.log(`  Connection ARN: ${config.platform.connectionArn}`);
+    console.log(`  Connection ARN: ${config.platform.connectionArn || 'Will be created by CDK'}`);
     
     console.log(`\n🌍 Environments (${Object.keys(config.environments).length}):`);
     Object.entries(config.environments).forEach(([name, env]) => {
@@ -220,7 +220,7 @@ class ConfigurationValidator {
       const cdkJson = JSON.parse(fs.readFileSync('cdk.json', 'utf8'));
       
       const requiredContextKeys = [
-        'platform.connectionArn',
+        // 'platform.connectionArn', // Optional - can be created by CDK
         'environments',
         'applications',
       ];

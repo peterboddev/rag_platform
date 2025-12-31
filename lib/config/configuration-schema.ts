@@ -16,7 +16,7 @@ export const ConfigurationSchemas = {
    */
   platform: {
     type: 'object',
-    required: ['region', 'account', 'connectionArn'],
+    required: ['region', 'account'],
     properties: {
       region: {
         type: 'string',
@@ -30,8 +30,8 @@ export const ConfigurationSchemas = {
       },
       connectionArn: {
         type: 'string',
-        pattern: '^arn:aws:codestar-connections:[^:]+:\\d{12}:connection/.+$',
-        description: 'CodeStar connection ARN for GitHub integration',
+        pattern: '^(arn:aws:codeconnections:[^:]+:\\d{12}:connection/.+|\\${Token\\[.+\\]})?$',
+        description: 'CodeConnections ARN for GitHub integration (optional if created by CDK)',
       },
       artifactBucketPrefix: {
         type: 'string',
@@ -461,7 +461,7 @@ export class ConfigurationSchemaValidator {
         return {
           region: 'us-east-1',
           account: '123456789012',
-          connectionArn: 'arn:aws:codestar-connections:us-east-1:123456789012:connection/sample-id',
+          connectionArn: 'arn:aws:codeconnections:us-east-1:123456789012:connection/sample-id', // Optional - can be created by CDK
           artifactBucketPrefix: 'platform-pipeline',
         };
 

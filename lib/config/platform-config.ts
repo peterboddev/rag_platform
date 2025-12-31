@@ -44,7 +44,7 @@ export interface PlatformConfig {
   readonly platform: {
     readonly region: string;
     readonly account: string;
-    readonly connectionArn: string;
+    readonly connectionArn?: string; // Optional - can be created by CDK
     readonly artifactBucketPrefix?: string;
   };
   readonly environments: { [envName: string]: EnvironmentConfig };
@@ -166,7 +166,7 @@ export class ConfigurationManager {
       platform: {
         region: '',
         account: '',
-        connectionArn: '',
+        connectionArn: '', // Optional - will be created by CDK if not provided
       },
       environments: {},
       applications: {},
@@ -234,8 +234,19 @@ export class ConfigurationManager {
     const warnings: string[] = [];
     const platform = this.config.platform;
 
+    // Allow empty connectionArn if it will be created by CDK (indicated by CDK token pattern)
     if (!platform.connectionArn) {
-      errors.push('Platform connectionArn is required for GitHub integration');
+      // Check if we're in CDK synthesis mode where connection will be created
+      const isCdkSynthesis = process.env.CDK_CONTEXT_JSON || 
+                            this.scope.node.tryGetContext('aws:cdk:version') ||
+                            platform.connectionArn === '' || 
+                            platform.connectionArn === undefined;
+      
+      if (!isCdkSynthesis) {
+        errors.push('Platform connectionArn is required for GitHub integration');
+      } else {
+        warnings.push('Platform connectionArn will be created by CDK during deployment');
+      }
     }
 
     if (!platform.region) {
@@ -246,9 +257,11 @@ export class ConfigurationManager {
       errors.push('Platform account is required');
     }
 
-    // Validate ARN format
-    if (platform.connectionArn && !platform.connectionArn.startsWith('arn:aws:codestar-connections:')) {
-      errors.push('Platform connectionArn must be a valid CodeStar connection ARN');
+    // Validate ARN format only if it's provided and not a CDK token
+    if (platform.connectionArn && 
+        !platform.connectionArn.startsWith('${Token[') && 
+        !platform.connectionArn.startsWith('arn:aws:codeconnections:')) {
+      errors.push('Platform connectionArn must be a valid CodeConnections ARN');
     }
 
     return { isValid: errors.length === 0, errors, warnings };
@@ -540,7 +553,7 @@ export class ConfigurationUtils {
       platform: {
         region: 'us-east-1',
         account: '123456789012',
-        connectionArn: 'arn:aws:codestar-connections:us-east-1:123456789012:connection/sample-connection-id',
+        connectionArn: 'arn:aws:codeconnections:us-east-1:123456789012:connection/sample-connection-id', // Optional
         artifactBucketPrefix: 'platform-pipeline',
       },
       environments: {

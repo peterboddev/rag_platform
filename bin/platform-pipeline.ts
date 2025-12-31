@@ -45,9 +45,9 @@ if (!account || !region) {
   process.exit(1);
 }
 
+// Note: connectionArn will be created by CDK if not provided
 if (!platformConfig.connectionArn) {
-  console.error('❌ CodeStar connection ARN is required for GitHub integration');
-  process.exit(1);
+  console.log('ℹ️  CodeStar connection will be created by CDK during deployment');
 }
 
 // Extract cross-account configuration for multi-account deployments
@@ -66,9 +66,10 @@ Object.values(environments).forEach(env => {
 });
 
 // Platform pipeline configuration from context and config
-const githubOrg = app.node.tryGetContext('githubOrg') || 'platform-team';
-const githubRepo = app.node.tryGetContext('githubRepo') || 'platform-pipeline';
-const branch = app.node.tryGetContext('branch') || 'main';
+const platformRepo = app.node.tryGetContext('platformRepository');
+const githubOrg = platformRepo?.owner || 'platform-team';
+const githubRepo = platformRepo?.repo || 'platform-pipeline';
+const branch = platformRepo?.branch || 'main';
 
 // Log deployment summary
 console.log('🚀 Deploying Platform Pipeline System:');
@@ -110,7 +111,7 @@ const platformPipelineStack = new PlatformPipelineStack(app, 'PlatformPipelineSt
   githubOrg: githubOrg,
   githubRepo: githubRepo,
   branch: branch,
-  connectionArn: platformConfig.connectionArn,
+  // connectionArn will be created by CDK construct, not passed from config
   securityStack: securityStack,
   tags: {
     'Project': 'PlatformPipeline',
