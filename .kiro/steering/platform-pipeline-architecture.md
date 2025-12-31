@@ -226,14 +226,14 @@ echo ".git_credentials" >> .gitignore
 
 ### CodeConnections Integration (REQUIRED)
 
-**CRITICAL**: This project uses AWS CodeConnections exclusively. Do NOT use CodeStar connections.
+**CRITICAL**: This project uses AWS CodeConnections exclusively.
 
-#### CodeConnections vs CodeStar Connections
+#### CodeConnections Implementation
 
 **Use CodeConnections (✅ REQUIRED)**:
 - **Service**: `aws.codeconnections` 
 - **CDK Resource**: `aws_codeconnections.CfnConnection`
-- **CDK Action**: `CodeStarConnectionsSourceAction` (same action, different ARN format)
+- **CDK Action**: `CodeStarConnectionsSourceAction` (same action, works with CodeConnections ARN format)
 - **Console Location**: CodePipeline → Settings → Connections
 - **Connection Type**: Shows as "codeconnections" in AWS CLI/API
 - **ARN Format**: `arn:aws:codeconnections:region:account:connection/connection-id`
@@ -245,14 +245,6 @@ echo ".git_credentials" >> .gitignore
   - No polling delays (eliminates 1-5 minute delays)
   - Future-proof service
   - Automatic CDK creation and management
-
-**Do NOT Use CodeStar Connections (❌ DEPRECATED)**:
-- **Service**: `aws.codestar-connections`
-- **ARN Format**: `arn:aws:codestar-connections:region:account:connection/connection-id`
-- **Issues**: 
-  - Polling-based triggers (1-5 minute delays)
-  - Less reliable
-  - Being phased out in favor of CodeConnections
 
 #### Repository Architecture
 
@@ -473,7 +465,7 @@ This architecture enables the platform team to maintain control and consistency 
 2. Find your connection and click "Update pending connection"
 3. Complete GitHub authorization in browser
 4. Verify connection status shows "Available"
-5. Verify connection ARN format is `arn:aws:codeconnections:...` (NOT `arn:aws:codestar-connections:...`)
+5. Verify connection ARN format is `arn:aws:codeconnections:...`
 
 ### Repository Configuration Issues
 

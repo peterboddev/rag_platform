@@ -53,11 +53,11 @@ export class CodeBuildCredentialsManager extends Construct {
    * Sets up AWS Secrets Manager secrets for credential storage
    */
   private setupCredentialSecrets(): void {
-    // GitHub token secret for repository access
-    if (this.config.githubTokenSecretName) {
+    // Only create GitHub token secret if explicitly configured (not needed for CodeConnections)
+    if (this.config.githubTokenSecretName && this.config.enableCredentialRotation) {
       const githubSecret = new secretsmanager.Secret(this, 'GitHubTokenSecret', {
         secretName: `${this.secretsPrefix}/github-token`,
-        description: 'GitHub personal access token for platform pipeline repository access',
+        description: 'GitHub personal access token for platform pipeline repository access (optional - CodeConnections preferred)',
         generateSecretString: {
           secretStringTemplate: JSON.stringify({ username: 'platform-pipeline' }),
           generateStringKey: 'token',
@@ -73,41 +73,43 @@ export class CodeBuildCredentialsManager extends Construct {
       }
     }
 
-    // Additional secrets for other integrations
-    const additionalSecrets: SecretConfiguration[] = [
-      {
-        secretName: `${this.secretsPrefix}/aws-credentials`,
-        secretKey: 'access-key',
-        environmentVariableName: 'AWS_ACCESS_KEY_ID',
-        description: 'AWS access credentials for cross-account deployments',
-        rotationEnabled: this.config.enableCredentialRotation,
-      },
-      {
-        secretName: `${this.secretsPrefix}/deployment-keys`,
-        secretKey: 'private-key',
-        environmentVariableName: 'DEPLOYMENT_PRIVATE_KEY',
-        description: 'SSH private key for secure deployments',
-        rotationEnabled: false, // SSH keys require manual rotation
-      },
-    ];
-
-    additionalSecrets.forEach(secretConfig => {
-      const secret = new secretsmanager.Secret(this, `Secret-${secretConfig.secretKey}`, {
-        secretName: secretConfig.secretName,
-        description: secretConfig.description,
-        generateSecretString: {
-          secretStringTemplate: JSON.stringify({ type: secretConfig.secretKey }),
-          generateStringKey: 'value',
-          excludeCharacters: '"@/\\\'',
+    // Only create additional secrets if credential rotation is enabled
+    if (this.config.enableCredentialRotation) {
+      const additionalSecrets: SecretConfiguration[] = [
+        {
+          secretName: `${this.secretsPrefix}/aws-credentials`,
+          secretKey: 'access-key',
+          environmentVariableName: 'AWS_ACCESS_KEY_ID',
+          description: 'AWS access credentials for cross-account deployments (optional - IAM roles preferred)',
+          rotationEnabled: this.config.enableCredentialRotation,
         },
+        {
+          secretName: `${this.secretsPrefix}/deployment-keys`,
+          secretKey: 'private-key',
+          environmentVariableName: 'DEPLOYMENT_PRIVATE_KEY',
+          description: 'SSH private key for secure deployments (optional)',
+          rotationEnabled: false, // SSH keys require manual rotation
+        },
+      ];
+
+      additionalSecrets.forEach(secretConfig => {
+        const secret = new secretsmanager.Secret(this, `Secret-${secretConfig.secretKey}`, {
+          secretName: secretConfig.secretName,
+          description: secretConfig.description,
+          generateSecretString: {
+            secretStringTemplate: JSON.stringify({ type: secretConfig.secretKey }),
+            generateStringKey: 'value',
+            excludeCharacters: '"@/\\\'',
+          },
+        });
+
+        this.secrets.set(secretConfig.secretKey, secret);
+
+        if (secretConfig.rotationEnabled) {
+          this.setupCredentialRotation(secret, secretConfig.secretKey);
+        }
       });
-
-      this.secrets.set(secretConfig.secretKey, secret);
-
-      if (secretConfig.rotationEnabled) {
-        this.setupCredentialRotation(secret, secretConfig.secretKey);
-      }
-    });
+    }
   }
 
   /**
@@ -126,35 +128,37 @@ export class CodeBuildCredentialsManager extends Construct {
       this.parameters.set('connection-arn', connectionParam);
     }
 
-    // Additional configuration parameters
-    const configParameters = [
-      {
-        name: 'github-org',
-        value: 'platform-team', // Default value, can be overridden
-        description: 'GitHub organization name for repository access',
-      },
-      {
-        name: 'github-repo',
-        value: 'platform-pipeline', // Default value, can be overridden
-        description: 'GitHub repository name for platform pipeline',
-      },
-      {
-        name: 'default-branch',
-        value: 'main',
-        description: 'Default branch for platform pipeline repository',
-      },
-    ];
+    // Only create additional configuration parameters if needed
+    if (this.config.enableCredentialRotation || this.config.credentialValidationEnabled) {
+      const configParameters = [
+        {
+          name: 'github-org',
+          value: 'platform-team', // Default value, can be overridden
+          description: 'GitHub organization name for repository access',
+        },
+        {
+          name: 'github-repo',
+          value: 'platform-pipeline', // Default value, can be overridden
+          description: 'GitHub repository name for platform pipeline',
+        },
+        {
+          name: 'default-branch',
+          value: 'main',
+          description: 'Default branch for platform pipeline repository',
+        },
+      ];
 
-    configParameters.forEach(param => {
-      const parameter = new ssm.StringParameter(this, `Parameter-${param.name}`, {
-        parameterName: `/${this.secretsPrefix}/${param.name}`,
-        stringValue: param.value,
-        description: param.description,
-        tier: ssm.ParameterTier.STANDARD,
+      configParameters.forEach(param => {
+        const parameter = new ssm.StringParameter(this, `Parameter-${param.name}`, {
+          parameterName: `/${this.secretsPrefix}/${param.name}`,
+          stringValue: param.value,
+          description: param.description,
+          tier: ssm.ParameterTier.STANDARD,
+        });
+
+        this.parameters.set(param.name, parameter);
       });
-
-      this.parameters.set(param.name, parameter);
-    });
+    }
   }
 
   /**

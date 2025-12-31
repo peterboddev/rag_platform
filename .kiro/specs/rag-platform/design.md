@@ -180,11 +180,11 @@ export class WebhookTriggerConstruct extends Construct {
     super(scope, id);
     
     // EventBridge rule to trigger CodePipeline directly on CodeConnections events
-    this.eventRule = new events.Rule(this, 'CodeStarEventRule', {
+    this.eventRule = new events.Rule(this, 'CodeConnectionsEventRule', {
       description: `Trigger ${props.pipelineName} pipeline immediately on repository push events`,
       eventPattern: {
         source: ['aws.codeconnections'],
-        detailType: ['CodeStar Source Action State Change'],
+        detailType: ['CodeConnections Source Action State Change'],
         detail: {
           pipeline: [props.pipelineName],
           'action-name': ['Source'],
@@ -357,11 +357,11 @@ After reviewing the prework analysis, I'll consolidate redundant properties and 
 **Validates: Requirements 8.2**
 
 **Property 15: EventBridge infrastructure deployment**
-*For any* platform pipeline deployment, the system should create EventBridge rules that monitor CodeStar connection events and trigger the pipeline directly.
+*For any* platform pipeline deployment, the system should create EventBridge rules that monitor CodeConnections events and trigger the pipeline directly.
 **Validates: Requirements 7.1, 7.2**
 
 **Property 16: Immediate triggering functionality**
-*For any* CodeStar connection event indicating a successful source action, the EventBridge rule should trigger the corresponding pipeline immediately.
+*For any* CodeConnections event indicating a successful source action, the EventBridge rule should trigger the corresponding pipeline immediately.
 **Validates: Requirements 7.3, 7.4**
 
 ## Error Handling

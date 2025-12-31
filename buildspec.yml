@@ -39,9 +39,9 @@ phases:
             fi
           fi
           
-          # Check if CodeStar connection ARN is available (for connection-based auth)
+          # Check if CodeConnections connection ARN is available (for connection-based auth)
           if [ -n "$CONNECTION_ARN" ]; then
-            echo "✅ CodeStar connection ARN is configured: $CONNECTION_ARN"
+            echo "✅ CodeConnections connection ARN is configured: $CONNECTION_ARN"
           fi
           
           # Validate AWS credentials
@@ -82,7 +82,7 @@ phases:
       - |
         if [ "$CREDENTIAL_VALIDATION_ENABLED" = "true" ]; then
           echo "📊 Credential usage audit:"
-          echo "  - GitHub authentication method: $([ -n "$GITHUB_TOKEN" ] && echo "Token" || echo "CodeStar Connection")"
+          echo "  - GitHub authentication method: $([ -n "$GITHUB_TOKEN" ] && echo "Token" || echo "CodeConnections Connection")"
           echo "  - AWS identity: $(aws sts get-caller-identity --output text --query 'Arn' 2>/dev/null || echo "Unknown")"
           echo "  - Secrets prefix: ${SECRETS_PREFIX:-"Not configured"}"
         fi

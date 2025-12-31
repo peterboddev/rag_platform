@@ -347,6 +347,7 @@ export class ApplicationPipelineConstruct extends Construct {
           branch: config.sourceRepo.branch,
           connectionArn: this.codeConnection.getConnectionArn(), // Uses CodeConnections ARN (arn:aws:codeconnections:...)
           output: sourceOutput,
+          detectChanges: true, // Enable native CodeConnections triggers
         }),
       ],
     });

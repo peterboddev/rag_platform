@@ -33,7 +33,8 @@ export class PlatformPipelineStack extends cdk.Stack {
     // Initialize configuration manager
     this.configurationManager = new ConfigurationManager(this);
 
-    // Create CodeConnections connection (newer service)
+    // Create CodeConnections connection (aws.codeconnections service with CDK 2.233.0)
+    // This will create a fresh CodeConnections connection with a new logical ID
     this.codeConnection = new CodeConnectionsConstruct(this, 'CodeConnection', {
       connectionName: 'platform-pipeline-github',
       providerType: 'GitHub',
@@ -50,10 +51,11 @@ export class PlatformPipelineStack extends cdk.Stack {
     });
 
     // Initialize secure credential management for CodeBuild
+    // Note: Credential rotation is disabled for initial deployment to avoid conflicts
     this.credentialsManager = new CodeBuildCredentialsManager(this, 'CredentialsManager', {
       githubTokenSecretName: 'platform-pipeline/github-token',
       connectionArn: this.codeConnection.getConnectionArn(),
-      enableCredentialRotation: true,
+      enableCredentialRotation: false, // Disabled to avoid rotation schedule conflicts
       credentialValidationEnabled: true,
       secretsPrefix: 'platform-pipeline',
     });
@@ -329,7 +331,7 @@ export class PlatformPipelineStack extends cdk.Stack {
           triggerOnPush: true,
           noEventBridgeRequired: 'Pipeline triggers natively on push events',
           eliminatesLoops: 'No EventBridge loops possible with native triggers',
-          connectionType: 'codeconnections (NOT codestar-connections - DEPRECATED)',
+          connectionType: 'codeconnections (fresh connection created)',
         },
       }),
       description: 'Comprehensive platform configuration and cross-stack integration summary',
@@ -431,7 +433,7 @@ export class PlatformPipelineStack extends cdk.Stack {
       value: JSON.stringify({
         triggerType: 'Native CodeConnections Triggers',
         description: 'Pipeline triggers automatically on push events via CodeConnections',
-        service: 'aws.codeconnections (NOT codestar-connections - DEPRECATED)',
+        service: 'aws.codeconnections (fresh connection created)',
         advantages: [
           'No EventBridge loops',
           'Immediate triggering on push',

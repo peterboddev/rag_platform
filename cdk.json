@@ -98,17 +98,6 @@
       }
     },
     "applications": {
-      "sample-app": {
-        "applicationName": "sample-app",
-        "team": "platform-team",
-        "sourceRepo": {
-          "owner": "platform-team",
-          "repo": "sample-application",
-          "branch": "main"
-        },
-        "deploymentTargets": ["dev", "staging", "prod"],
-        "enabled": true
-      },
       "rag-app": {
         "applicationName": "rag-app",
         "team": "ai-team",

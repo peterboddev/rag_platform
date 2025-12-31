@@ -242,8 +242,8 @@ export class ConfigurationManager {
     } else if (platform.connectionArn && 
                !platform.connectionArn.startsWith('${Token[') && 
                !platform.connectionArn.startsWith('arn:aws:codeconnections:')) {
-      // If connectionArn is provided, validate its format (must be CodeConnections, not CodeStar)
-      errors.push('Platform connectionArn must be a valid CodeConnections ARN (arn:aws:codeconnections:...), NOT CodeStar connections ARN (arn:aws:codestar-connections:...)');
+      // If connectionArn is provided, validate its format (must be CodeConnections)
+      errors.push('Platform connectionArn must be a valid CodeConnections ARN (arn:aws:codeconnections:...)');
     }
 
     if (!platform.region) {

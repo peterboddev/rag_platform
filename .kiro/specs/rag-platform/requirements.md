@@ -90,14 +90,14 @@ This document defines the requirements for a platform-owned CI/CD pipeline syste
 
 ### Requirement 7: Immediate Pipeline Triggering
 
-**User Story:** As a platform engineer, I want the pipeline to trigger immediately after pushing changes, so that I don't have to wait for CodeStar connection polling delays.
+**User Story:** As a platform engineer, I want the pipeline to trigger immediately after pushing changes, so that I don't have to wait for connection polling delays.
 
 #### Acceptance Criteria
 
 1. WHEN the platform pipeline is deployed, THE System SHALL create EventBridge infrastructure for immediate pipeline triggering
-2. THE System SHALL deploy EventBridge rules that trigger CodePipeline directly on CodeStar connection events
-3. THE System SHALL eliminate the 1-5 minute polling delay inherent in CodeStar connections
-4. THE System SHALL work automatically with existing CodeStar connections without requiring GitHub configuration
+2. THE System SHALL deploy EventBridge rules that trigger CodePipeline directly on CodeConnections events
+3. THE System SHALL eliminate the 1-5 minute polling delay inherent in older connection types
+4. THE System SHALL work automatically with CodeConnections without requiring GitHub configuration
 5. THE System SHALL provide CloudWatch logging for EventBridge rule executions
 
 ### Requirement 8: Monitoring and Observability
