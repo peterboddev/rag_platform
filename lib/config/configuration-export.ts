@@ -253,7 +253,7 @@ export class ConfigurationExporter {
       cfParams.Parameters.PlatformConnectionArn = {
         Type: 'String',
         Default: filteredConfig.platform.connectionArn,
-        Description: 'CodeStar connection ARN for GitHub integration',
+        Description: 'CodeConnections connection ARN for GitHub integration',
       };
     }
 

@@ -37,7 +37,7 @@ This implementation plan breaks down the platform pipeline CDK system into discr
 - [ ] 3. Implement platform pipeline core infrastructure
   - [x] 3.1 Create PlatformPipelineStack with self-mutating pipeline
     - Implement CodePipeline with self-mutation enabled
-    - Configure GitHub source integration with CodeStar connections
+    - Configure GitHub source integration with CodeConnections
     - Set up synth stage with TypeScript compilation and CDK commands
     - _Requirements: 1.2, 2.1, 5.1, 5.2_
 
@@ -105,21 +105,21 @@ This implementation plan breaks down the platform pipeline CDK system into discr
 
 - [x] 7. Implement EventBridge infrastructure for immediate pipeline triggering
   - [x] 7.1 Create WebhookTriggerConstruct for EventBridge-based immediate triggering
-    - Implement EventBridge rules that monitor CodeStar connection events
+    - Implement EventBridge rules that monitor CodeConnections events
     - Configure direct CodePipeline triggering without external dependencies
     - Add IAM roles and permissions for EventBridge to trigger CodePipeline
     - _Requirements: 7.1, 7.2_
 
   - [x] 7.2 Integrate EventBridge construct into PlatformPipelineStack
     - Add WebhookTriggerConstruct to main platform pipeline stack
-    - Configure automatic integration with existing CodeStar connections
+    - Configure automatic integration with existing CodeConnections
     - Set up CloudWatch logging for EventBridge rule executions
     - _Requirements: 7.1, 7.3, 7.5_
 
   - [x] 7.3 Configure EventBridge rule targeting and monitoring
     - Implement proper EventBridge target configuration for CodePipeline
     - Add CloudWatch logging for rule execution monitoring
-    - Configure rule patterns to match CodeStar connection events
+    - Configure rule patterns to match CodeConnections events
     - _Requirements: 7.4, 7.5_
 
   - [ ]* 7.4 Write property test for EventBridge infrastructure deployment

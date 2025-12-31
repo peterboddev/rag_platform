@@ -119,7 +119,7 @@ export class CodeBuildCredentialsManager extends Construct {
       const connectionParam = new ssm.StringParameter(this, 'ConnectionArnParameter', {
         parameterName: `/${this.secretsPrefix}/connection-arn`,
         stringValue: this.config.connectionArn,
-        description: 'AWS CodeStar connection ARN for GitHub integration',
+        description: 'CodeConnections connection ARN for GitHub integration',
         tier: ssm.ParameterTier.STANDARD,
       });
 
@@ -401,7 +401,7 @@ if [ "$CREDENTIAL_VALIDATION_ENABLED" = "true" ]; then
         validation_failed=true
     fi
     
-    # Validate connection ARN (if using CodeStar connection)
+    # Validate connection ARN (if using CodeConnections connection)
     if [ -n "$CONNECTION_ARN" ]; then
         validate_env_var "CONNECTION_ARN"
         if [ $? -ne 0 ]; then

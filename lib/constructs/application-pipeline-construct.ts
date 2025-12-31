@@ -77,7 +77,7 @@ export interface ApplicationPipelineConstructProps {
  * Reusable construct for creating standardized application pipelines
  * 
  * This construct creates a CodePipeline with standardized stages:
- * - Source: GitHub integration via CodeStar connections
+ * - Source: GitHub integration via CodeConnections
  * - Build: CodeBuild project with configurable build specifications
  * - Deploy: Multiple deployment stages with optional manual approvals
  * 
@@ -345,7 +345,7 @@ export class ApplicationPipelineConstruct extends Construct {
           owner: config.sourceRepo.owner,
           repo: config.sourceRepo.repo,
           branch: config.sourceRepo.branch,
-          connectionArn: this.codeConnection.getConnectionArn(),
+          connectionArn: this.codeConnection.getConnectionArn(), // Uses CodeConnections ARN (arn:aws:codeconnections:...)
           output: sourceOutput,
         }),
       ],

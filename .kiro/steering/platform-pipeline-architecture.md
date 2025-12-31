@@ -232,46 +232,56 @@ echo ".git_credentials" >> .gitignore
 
 **Use CodeConnections (✅ REQUIRED)**:
 - **Service**: `aws.codeconnections` 
-- **CDK Resource**: `aws_codestarconnections.CfnConnection`
+- **CDK Resource**: `aws_codeconnections.CfnConnection`
+- **CDK Action**: `CodeStarConnectionsSourceAction` (same action, different ARN format)
 - **Console Location**: CodePipeline → Settings → Connections
 - **Connection Type**: Shows as "codeconnections" in AWS CLI/API
+- **ARN Format**: `arn:aws:codeconnections:region:account:connection/connection-id`
+- **Configuration**: `connectionArn` is OPTIONAL in platform config - created automatically by CDK
 - **Advantages**: 
   - Native pipeline triggers (no EventBridge needed)
   - Better reliability and performance
   - Immediate triggering on push events
   - No polling delays (eliminates 1-5 minute delays)
   - Future-proof service
+  - Automatic CDK creation and management
 
 **Do NOT Use CodeStar Connections (❌ DEPRECATED)**:
 - **Service**: `aws.codestar-connections`
+- **ARN Format**: `arn:aws:codestar-connections:region:account:connection/connection-id`
 - **Issues**: 
   - Polling-based triggers (1-5 minute delays)
   - Less reliable
   - Being phased out in favor of CodeConnections
 
-#### Implementation Requirements
+#### Repository Architecture
 
-**Platform Pipeline Connection**:
-- **Purpose**: Connects to platform pipeline repository
+**Platform Repository** (`platformRepository` in `cdk.json`):
+- **Purpose**: Contains platform pipeline infrastructure code (CDK stacks, buildspec.yml, etc.)
 - **Repository**: Platform team's infrastructure repository (e.g., `peterboddev/rag_platform`)
-- **Created By**: CDK construct in `PlatformPipelineStack`
+- **Connection**: Created by CDK construct in `PlatformPipelineStack`
 - **Connection Name**: `platform-pipeline-github`
+- **Used By**: Platform pipeline to deploy and manage application pipelines
 
-**Application Pipeline Connections**:
-- **Purpose**: Each application pipeline connects to its own application repository
-- **Repository**: Application team's code repository (e.g., `peterboddev/rag`)
-- **Created By**: CDK construct in each `ApplicationPipelineConstruct`
+**Application Repositories** (`applications.*.sourceRepo` in `cdk.json`):
+- **Purpose**: Contains application code that gets deployed by application pipelines
+- **Repository**: Each application team's code repository (e.g., `peterboddev/rag`)
+- **Connection**: Created by CDK construct in each `ApplicationPipelineConstruct`
 - **Connection Name**: `{applicationName}-github` (e.g., `rag-app-github`)
+- **Used By**: Application pipelines to deploy application code
 
 #### CDK Implementation
 
 **Platform Pipeline Connection**:
 ```typescript
-// In PlatformPipelineStack
+// In PlatformPipelineStack - automatically creates connection
 this.codeConnection = new CodeConnectionsConstruct(this, 'CodeConnection', {
   connectionName: 'platform-pipeline-github',
   providerType: 'GitHub',
 });
+
+// connectionArn is automatically available via this.codeConnection.getConnectionArn()
+// No need to specify connectionArn in platform configuration
 ```
 
 **Application Pipeline Connections**:
@@ -281,6 +291,40 @@ this.codeConnection = new CodeConnectionsConstruct(this, 'CodeConnection', {
   connectionName: `${applicationName}-github`,
   providerType: 'GitHub',
 });
+```
+
+#### Configuration in cdk.json
+
+```json
+{
+  "context": {
+    "platformRepository": {
+      "owner": "peterboddev",
+      "repo": "rag_platform", 
+      "branch": "main",
+      "description": "Platform pipeline infrastructure repository"
+    },
+    "platform": {
+      "region": "us-east-1",
+      "account": "450683699755",
+      "artifactBucketPrefix": "platform-pipeline"
+      // connectionArn is OPTIONAL - created automatically by CDK
+    },
+    "applications": {
+      "rag-app": {
+        "applicationName": "rag-app",
+        "team": "ai-team",
+        "sourceRepo": {
+          "owner": "peterboddev",
+          "repo": "rag",
+          "branch": "main"
+        },
+        "deploymentTargets": ["dev", "staging", "prod"],
+        "enabled": true
+      }
+    }
+  }
+}
 ```
 
 #### Connection Authorization Process
@@ -313,63 +357,33 @@ this.codeConnection = new CodeConnectionsConstruct(this, 'CodeConnection', {
 - Application pipelines: each connects to its own app repo
 - Do NOT share connections between different repositories
 
-### Repository Configuration (CRITICAL)
+#### Connection Authorization Process
 
-**The platform pipeline MUST be configured to monitor the correct source repository.**
+1. **Deploy CDK Stack**: Connection is created in PENDING status
+2. **Authorize in Console**:
+   - Go to AWS Console → CodePipeline → Settings → Connections
+   - Find the connection (will show as PENDING)
+   - Click "Update pending connection"
+   - Complete GitHub OAuth flow in browser
+   - Verify status changes to "Available"
+3. **Pipeline Triggers**: Once authorized, pipelines trigger immediately on push
 
-#### Repository Configuration Structure
+#### Troubleshooting CodeConnections
 
-The `cdk.json` file contains repository details for both platform and application pipelines:
+**Connection Shows as PENDING**:
+- Normal initial state after CDK deployment
+- Requires manual authorization in AWS Console
+- Follow authorization process above
 
-```json
-{
-  "context": {
-    "platformRepository": {
-      "owner": "peterboddev",
-      "repo": "rag_platform", 
-      "branch": "main",
-      "description": "Platform pipeline infrastructure repository"
-    },
-    "applications": {
-      "rag-app": {
-        "sourceRepo": {
-          "owner": "peterboddev",
-          "repo": "rag",
-          "branch": "main"
-        }
-      }
-    }
-  }
-}
-```
+**Pipeline Not Triggering**:
+- Verify connection status is "Available" (not PENDING)
+- Check repository permissions in GitHub
+- Verify branch name matches configuration
+- Check CloudTrail for connection events
 
-#### Platform Repository vs Application Repositories
+### Repository Configuration Verification
 
-**Platform Repository** (`platformRepository`):
-- Contains platform pipeline infrastructure code (CDK stacks, buildspec.yml, etc.)
-- Used by the platform pipeline to deploy and manage application pipelines
-- Example: `peterboddev/rag_platform`
-
-**Application Repositories** (`applications.*.sourceRepo`):
-- Contains application code that gets deployed by application pipelines
-- Each application has its own repository and CodeConnection
-- Example: `peterboddev/rag` (RAG application code)
-
-#### CodeConnections Architecture
-
-**Platform Pipeline Connection**:
-- **Repository**: Platform infrastructure repo (`peterboddev/rag_platform`)
-- **Connection Name**: `platform-pipeline-github`
-- **Purpose**: Triggers platform pipeline when infrastructure changes
-
-**Application Pipeline Connections**:
-- **Repository**: Each app's code repo (`peterboddev/rag`)
-- **Connection Name**: `{applicationName}-github` (e.g., `rag-app-github`)
-- **Purpose**: Triggers application pipeline when application code changes
-
-#### Verification Steps
-
-Before deploying the platform pipeline:
+Before deploying the platform pipeline, verify your configuration:
 
 1. **Verify Platform Repository Contents**:
    ```bash
@@ -459,6 +473,7 @@ This architecture enables the platform team to maintain control and consistency 
 2. Find your connection and click "Update pending connection"
 3. Complete GitHub authorization in browser
 4. Verify connection status shows "Available"
+5. Verify connection ARN format is `arn:aws:codeconnections:...` (NOT `arn:aws:codestar-connections:...`)
 
 ### Repository Configuration Issues
 

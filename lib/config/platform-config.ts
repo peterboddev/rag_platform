@@ -234,19 +234,16 @@ export class ConfigurationManager {
     const warnings: string[] = [];
     const platform = this.config.platform;
 
-    // Allow empty connectionArn if it will be created by CDK (indicated by CDK token pattern)
-    if (!platform.connectionArn) {
-      // Check if we're in CDK synthesis mode where connection will be created
-      const isCdkSynthesis = process.env.CDK_CONTEXT_JSON || 
-                            this.scope.node.tryGetContext('aws:cdk:version') ||
-                            platform.connectionArn === '' || 
-                            platform.connectionArn === undefined;
-      
-      if (!isCdkSynthesis) {
-        errors.push('Platform connectionArn is required for GitHub integration');
-      } else {
-        warnings.push('Platform connectionArn will be created by CDK during deployment');
-      }
+    // connectionArn is optional - it can be created by CDK during deployment
+    // Only validate format if it's provided and not a CDK token
+    if (!platform.connectionArn || platform.connectionArn === '') {
+      // connectionArn will be created by CDK during deployment
+      warnings.push('Platform connectionArn will be created by CDK during deployment');
+    } else if (platform.connectionArn && 
+               !platform.connectionArn.startsWith('${Token[') && 
+               !platform.connectionArn.startsWith('arn:aws:codeconnections:')) {
+      // If connectionArn is provided, validate its format (must be CodeConnections, not CodeStar)
+      errors.push('Platform connectionArn must be a valid CodeConnections ARN (arn:aws:codeconnections:...), NOT CodeStar connections ARN (arn:aws:codestar-connections:...)');
     }
 
     if (!platform.region) {
@@ -255,13 +252,6 @@ export class ConfigurationManager {
 
     if (!platform.account) {
       errors.push('Platform account is required');
-    }
-
-    // Validate ARN format only if it's provided and not a CDK token
-    if (platform.connectionArn && 
-        !platform.connectionArn.startsWith('${Token[') && 
-        !platform.connectionArn.startsWith('arn:aws:codeconnections:')) {
-      errors.push('Platform connectionArn must be a valid CodeConnections ARN');
     }
 
     return { isValid: errors.length === 0, errors, warnings };

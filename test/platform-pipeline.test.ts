@@ -47,7 +47,7 @@ test('Platform Pipeline Stack Creation', () => {
   template.resourceCountIs('AWS::CodeBuild::Project', 3);
   
   // Verify that CodeConnections connection is created by CDK
-  template.hasResourceProperties('AWS::CodeStarConnections::Connection', {
+  template.hasResourceProperties('AWS::CodeConnections::Connection', {
     ConnectionName: 'platform-pipeline-github',
     ProviderType: 'GitHub'
   });

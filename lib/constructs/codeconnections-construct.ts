@@ -1,6 +1,5 @@
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
-import { aws_codestarconnections as codestarconnections } from 'aws-cdk-lib';
 
 export interface CodeConnectionsConstructProps {
   readonly connectionName: string;
@@ -16,37 +15,41 @@ export interface CodeConnectionsConstructProps {
  * 
  * IMPORTANT: Use CodeConnections, NOT CodeStar connections.
  * - CodeConnections: aws.codeconnections (✅ USE THIS)
- * - CodeStar Connections: aws.codestar-connections (❌ DON'T USE)
+ * - CodeStar Connections: aws.codestar-connections (❌ DEPRECATED - DON'T USE)
  */
 export class CodeConnectionsConstruct extends Construct {
-  public readonly connection: codestarconnections.CfnConnection;
+  public readonly connection: cdk.CfnResource;
   public readonly connectionArn: string;
 
   constructor(scope: Construct, id: string, props: CodeConnectionsConstructProps) {
     super(scope, id);
 
     // Create the CodeConnections connection (aws.codeconnections service)
-    this.connection = new codestarconnections.CfnConnection(this, 'Connection', {
-      connectionName: props.connectionName,
-      providerType: props.providerType || 'GitHub',
-      tags: props.tags || [
-        {
-          key: 'ManagedBy',
-          value: 'CDK'
-        },
-        {
-          key: 'Service',
-          value: 'PlatformPipeline'
-        },
-        {
-          key: 'ConnectionType',
-          value: 'CodeConnections'
-        }
-      ]
+    // Using CfnResource to create AWS::CodeConnections::Connection directly
+    this.connection = new cdk.CfnResource(this, 'Connection', {
+      type: 'AWS::CodeConnections::Connection',
+      properties: {
+        ConnectionName: props.connectionName,
+        ProviderType: props.providerType || 'GitHub',
+        Tags: props.tags || [
+          {
+            Key: 'ManagedBy',
+            Value: 'CDK'
+          },
+          {
+            Key: 'Service',
+            Value: 'PlatformPipeline'
+          },
+          {
+            Key: 'ConnectionType',
+            Value: 'CodeConnections'
+          }
+        ]
+      }
     });
 
     // Store the connection ARN for use in pipelines
-    this.connectionArn = this.connection.attrConnectionArn;
+    this.connectionArn = this.connection.getAtt('ConnectionArn').toString();
 
     // Output the connection ARN for reference
     new cdk.CfnOutput(this, 'ConnectionArn', {
@@ -57,7 +60,7 @@ export class CodeConnectionsConstruct extends Construct {
 
     // Output connection status information
     new cdk.CfnOutput(this, 'ConnectionStatus', {
-      value: this.connection.attrConnectionStatus,
+      value: this.connection.getAtt('ConnectionStatus').toString(),
       description: 'Status of the CodeConnections connection (will be PENDING until authorized)',
       exportName: `${props.connectionName}-ConnectionStatus`
     });
@@ -79,6 +82,6 @@ export class CodeConnectionsConstruct extends Construct {
    * Gets the connection name
    */
   public getConnectionName(): string {
-    return this.connection.connectionName!;
+    return this.connection.getAtt('ConnectionName').toString();
   }
 }

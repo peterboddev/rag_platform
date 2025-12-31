@@ -74,7 +74,7 @@ The core component that implements the self-mutating pipeline pattern using CDK 
 
 **Key Responsibilities:**
 - Self-mutation capabilities for pipeline updates
-- Source integration with GitHub via CodeStar connections
+- Source integration with GitHub via CodeConnections
 - Orchestration of application pipeline deployments
 - Environment management and promotion
 
@@ -162,12 +162,12 @@ export interface PlatformConfig {
 
 ### Immediate Pipeline Triggering System
 
-A critical CDK infrastructure component that eliminates the 1-5 minute polling delay inherent in CodeStar connections by deploying EventBridge rules for immediate pipeline execution.
+A critical CDK infrastructure component that eliminates the 1-5 minute polling delay inherent in CodeConnections by deploying EventBridge rules for immediate pipeline execution.
 
 **Key Features:**
-- EventBridge rules that monitor CodeStar connection events
+- EventBridge rules that monitor CodeConnections events
 - Direct CodePipeline triggering without external dependencies
-- Automatic integration with existing CodeStar connections
+- Automatic integration with existing CodeConnections
 - No GitHub webhook configuration required
 - CloudWatch logging for monitoring and debugging
 
@@ -179,7 +179,7 @@ export class WebhookTriggerConstruct extends Construct {
   constructor(scope: Construct, id: string, props: WebhookTriggerProps) {
     super(scope, id);
     
-    // EventBridge rule to trigger CodePipeline directly on CodeStar events
+    // EventBridge rule to trigger CodePipeline directly on CodeConnections events
     this.eventRule = new events.Rule(this, 'CodeStarEventRule', {
       description: `Trigger ${props.pipelineName} pipeline immediately on repository push events`,
       eventPattern: {

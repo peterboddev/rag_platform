@@ -27,9 +27,13 @@ class CodePipelineTarget implements events.IRuleTarget {
 /**
  * CDK Construct that creates EventBridge integration for immediate pipeline triggering
  * 
- * This construct eliminates the 1-5 minute polling delay of CodeStar connections
- * by using EventBridge rules to trigger the pipeline directly on CodeStar events.
- * No GitHub configuration required - works automatically with existing CodeStar connection.
+ * This construct eliminates the 1-5 minute polling delay of CodeConnections
+ * by using EventBridge rules to trigger the pipeline directly on CodeConnections events.
+ * No GitHub configuration required - works automatically with existing CodeConnections connection.
+ * 
+ * IMPORTANT: This construct is currently DISABLED to prevent infinite loops.
+ * CodeConnections provides native pipeline triggers that work immediately without EventBridge.
+ * Use native CodeConnections triggers instead of this EventBridge integration.
  */
 export class WebhookTriggerConstruct extends Construct {
   public readonly eventRule: events.Rule;
@@ -55,7 +59,7 @@ export class WebhookTriggerConstruct extends Construct {
     });
 
     // EventBridge rule to trigger CodePipeline directly on push events
-    this.eventRule = new events.Rule(this, 'CodeStarEventRule', {
+    this.eventRule = new events.Rule(this, 'CodeConnectionsEventRule', {
       description: `Trigger ${props.pipelineName} pipeline immediately on repository push events`,
       eventPattern: {
         source: ['aws.codeconnections'],

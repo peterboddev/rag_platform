@@ -47,7 +47,7 @@ if (!account || !region) {
 
 // Note: connectionArn will be created by CDK if not provided
 if (!platformConfig.connectionArn) {
-  console.log('ℹ️  CodeStar connection will be created by CDK during deployment');
+  console.log('ℹ️  CodeConnections connection will be created by CDK during deployment');
 }
 
 // Extract cross-account configuration for multi-account deployments

@@ -330,8 +330,8 @@ class CredentialSetupManager {
 # GITHUB_TOKEN=ghp_your_personal_access_token_here
 # GITHUB_USERNAME=your_github_username
 
-# Option 2: AWS CodeStar Connection ARN (recommended for production)
-# CONNECTION_ARN=arn:aws:codestar-connections:region:account:connection/connection-id
+# Option 2: AWS CodeConnections ARN (recommended for production)
+# CONNECTION_ARN=arn:aws:codeconnections:region:account:connection/connection-id
 
 # Additional configuration (optional)
 # GITHUB_ORG=your_organization_name
@@ -342,7 +342,7 @@ class CredentialSetupManager {
 # 1. Uncomment and fill in the appropriate authentication method above
 # 2. For GitHub tokens: Create at https://github.com/settings/tokens
 #    Required scopes: repo, workflow, admin:repo_hook
-# 3. For CodeStar connections: Create in AWS Console under Developer Tools > Connections
+# 3. For CodeConnections: Create in AWS Console under Developer Tools > Connections
 # 4. Save this file and run: npm run credential-setup validate
 `;
 

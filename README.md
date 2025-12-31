@@ -4,7 +4,7 @@ This project implements a platform-owned CI/CD pipeline system using AWS CDK wit
 
 ## Key Features
 
-- **Immediate Pipeline Triggering**: EventBridge integration automatically eliminates 1-5 minute CodeStar connection polling delays
+- **Immediate Pipeline Triggering**: Native CodeConnections triggers automatically eliminate polling delays
 - **Self-Mutating Pipeline**: Platform pipeline updates itself automatically
 - **Two-Tier Architecture**: Platform pipeline manages application pipelines
 - **Comprehensive Monitoring**: CloudWatch integration with failure notifications
@@ -34,7 +34,7 @@ The system implements a two-tier pipeline structure:
 
 2. **Configure GitHub Integration** (Required):
    
-   Create a CodeStar connection in AWS Console:
+   Create a CodeConnections connection in AWS Console:
    - Go to AWS CodePipeline → Settings → Connections
    - Create a new connection to GitHub
    - Copy the connection ARN
@@ -42,10 +42,10 @@ The system implements a two-tier pipeline structure:
    Set the connection ARN in CDK context:
    ```bash
    # Option 1: Set in cdk.json context
-   # Add "connectionArn": "arn:aws:codestar-connections:region:account:connection/connection-id" to cdk.json
+   # Add "connectionArn": "arn:aws:codeconnections:region:account:connection/connection-id" to cdk.json
    
    # Option 2: Pass as context parameter
-   npx cdk deploy --context connectionArn=arn:aws:codestar-connections:region:account:connection/connection-id
+   npx cdk deploy --context connectionArn=arn:aws:codeconnections:region:account:connection/connection-id
    ```
 
 3. **Bootstrap your AWS environment** (first time only):
@@ -87,12 +87,11 @@ The system implements a two-tier pipeline structure:
 
 This project includes **direct EventBridge integration** for immediate pipeline triggering:
 
-- **EventBridge → CodePipeline**: Direct integration, no Lambda function needed
-- **No Configuration Required**: Works automatically with existing CodeStar connection
-- **Immediate Execution**: No 1-5 minute CodeStar connection polling delay
-- **Minimal Infrastructure**: Just EventBridge rule targeting CodePipeline
-- **Monitored**: EventBridge metrics and CloudTrail logs
-- **Fallback**: CodeStar connection continues as backup polling mechanism
+- **Native CodeConnections Triggers**: Direct integration, no EventBridge needed
+- **No Configuration Required**: Works automatically with existing CodeConnections connection
+- **Immediate Execution**: No polling delay
+- **Minimal Infrastructure**: Uses native CodePipeline triggers
+- **Monitored**: CodePipeline metrics and CloudTrail logs
 
 ### Available Scripts
 
@@ -137,12 +136,12 @@ This project includes **direct EventBridge integration** for immediate pipeline 
 
 ## Immediate Pipeline Triggering
 
-This project deploys **EventBridge integration** to eliminate the standard 1-5 minute CodeStar connection polling delay:
+This project uses **native CodeConnections triggers** to eliminate polling delays:
 
-- **EventBridge Rules**: Automatically detect CodeStar connection events and trigger CodePipeline directly
-- **No Lambda Function**: EventBridge targets CodePipeline directly for maximum simplicity
-- **No GitHub Configuration**: Works automatically with existing CodeStar connection
-- **Minimal Infrastructure**: Just one EventBridge rule, no additional compute resources
+- **Native Pipeline Triggers**: CodeConnections triggers CodePipeline directly on push events
+- **No EventBridge Required**: Uses built-in CodePipeline trigger functionality
+- **No GitHub Configuration**: Works automatically with existing CodeConnections connection
+- **Minimal Infrastructure**: No additional compute resources needed
 - **CloudTrail Monitoring**: Full observability of trigger events via AWS CloudTrail
 
 **Zero configuration required** - immediate triggering works automatically after deployment!

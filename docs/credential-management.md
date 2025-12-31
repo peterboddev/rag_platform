@@ -71,9 +71,9 @@ if [ "$CREDENTIAL_VALIDATION_ENABLED" = "true" ]; then
   # Validate AWS credentials
   aws sts get-caller-identity
   
-  # Validate CodeStar connection
+  # Validate CodeConnections connection
   if [ -n "$CONNECTION_ARN" ]; then
-    echo "Using CodeStar connection: $CONNECTION_ARN"
+    echo "Using CodeConnections connection: $CONNECTION_ARN"
   fi
 fi
 ```
@@ -82,7 +82,7 @@ fi
 
 - **Token Validity**: Verifies GitHub tokens can access required repositories
 - **AWS Identity**: Confirms AWS credentials have necessary permissions
-- **Connection Status**: Validates CodeStar connections are active
+- **Connection Status**: Validates CodeConnections connections are active
 - **Audit Logging**: Records all validation attempts for security monitoring
 
 ### Credential Rotation
@@ -158,10 +158,10 @@ GITHUB_REPO=platform-pipeline-repo-name
 BRANCH=main
 ```
 
-**Option 2: AWS CodeStar Connection ARN (Recommended for Production)**
+**Option 2: AWS CodeConnections ARN (Recommended for Production)**
 ```bash
-# AWS CodeStar Connection Authentication
-CONNECTION_ARN=arn:aws:codestar-connections:region:account:connection/connection-id
+# AWS CodeConnections Authentication
+CONNECTION_ARN=arn:aws:codeconnections:region:account:connection/connection-id
 GITHUB_ORG=your_organization_name
 GITHUB_REPO=platform-pipeline-repo-name
 BRANCH=main
@@ -187,7 +187,7 @@ BRANCH=main
    GITHUB_USERNAME=your_username
    ```
 
-#### AWS CodeStar Connection Setup
+#### AWS CodeConnections Setup
 
 1. **Create Connection in AWS Console:**
    - Navigate to Developer Tools → Connections
@@ -197,7 +197,7 @@ BRANCH=main
 
 2. **Add ARN to .git_credentials:**
    ```bash
-   CONNECTION_ARN=arn:aws:codestar-connections:us-east-1:123456789012:connection/12345678-1234-1234-1234-123456789012
+   CONNECTION_ARN=arn:aws:codeconnections:us-east-1:123456789012:connection/12345678-1234-1234-1234-123456789012
    ```
 
 ### File Security
@@ -506,7 +506,7 @@ npm run bootstrap:all-envs
 
 - [AWS CDK Security Best Practices](https://docs.aws.amazon.com/cdk/v2/guide/security.html)
 - [GitHub Personal Access Tokens](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token)
-- [AWS CodeStar Connections](https://docs.aws.amazon.com/codepipeline/latest/userguide/connections.html)
+- [AWS CodeConnections](https://docs.aws.amazon.com/codepipeline/latest/userguide/connections.html)
 - [AWS Secrets Manager](https://docs.aws.amazon.com/secretsmanager/)
 - [IAM Best Practices](https://docs.aws.amazon.com/IAM/latest/UserGuide/best-practices.html)
 

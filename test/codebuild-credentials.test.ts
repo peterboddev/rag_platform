@@ -44,7 +44,7 @@ describe('CodeBuildCredentialsManager', () => {
     // GIVEN
     const config = {
       githubTokenSecretName: 'custom-github-token',
-      connectionArn: 'arn:aws:codestar-connections:us-east-1:123456789012:connection/test',
+      connectionArn: 'arn:aws:codeconnections:us-east-1:123456789012:connection/test',
       enableCredentialRotation: true,
       credentialValidationEnabled: true,
       secretsPrefix: 'custom-prefix',
@@ -62,7 +62,7 @@ describe('CodeBuildCredentialsManager', () => {
 
     template.hasResourceProperties('AWS::SSM::Parameter', {
       Name: '/custom-prefix/connection-arn',
-      Value: 'arn:aws:codestar-connections:us-east-1:123456789012:connection/test',
+      Value: 'arn:aws:codeconnections:us-east-1:123456789012:connection/test',
     });
   });
 
@@ -70,7 +70,7 @@ describe('CodeBuildCredentialsManager', () => {
     // GIVEN
     const credentialsManager = new CodeBuildCredentialsManager(stack, 'CredentialsManager', {
       githubTokenSecretName: 'test-token',
-      connectionArn: 'arn:aws:codestar-connections:us-east-1:123456789012:connection/test',
+      connectionArn: 'arn:aws:codeconnections:us-east-1:123456789012:connection/test',
       credentialValidationEnabled: true,
     });
 
@@ -144,7 +144,7 @@ describe('CodeBuildCredentialsManager', () => {
     // GIVEN
     const credentialsManager = new CodeBuildCredentialsManager(stack, 'CredentialsManager', {
       githubTokenSecretName: 'test-token',
-      connectionArn: 'arn:aws:codestar-connections:us-east-1:123456789012:connection/test',
+      connectionArn: 'arn:aws:codeconnections:us-east-1:123456789012:connection/test',
     });
 
     // WHEN & THEN - Should be able to retrieve created secrets and parameters

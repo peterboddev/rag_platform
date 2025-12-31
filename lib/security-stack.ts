@@ -46,14 +46,14 @@ export class SecurityStack extends cdk.Stack {
                 `arn:aws:codepipeline:${this.region}:${this.account}:pipeline/PlatformPipeline*`,
               ],
             }),
-            // CodeStar Connections permissions for GitHub integration
+            // CodeConnections permissions for GitHub integration
             new iam.PolicyStatement({
               effect: iam.Effect.ALLOW,
               actions: [
-                'codestar-connections:UseConnection',
+                'codeconnections:UseConnection',
               ],
               resources: [
-                `arn:aws:codestar-connections:${this.region}:${this.account}:connection/*`,
+                `arn:aws:codeconnections:${this.region}:${this.account}:connection/*`,
               ],
             }),
             // S3 permissions for pipeline artifacts
@@ -156,14 +156,14 @@ export class SecurityStack extends cdk.Stack {
                 `arn:aws:codepipeline:${this.region}:${this.account}:pipeline/ApplicationPipeline*`,
               ],
             }),
-            // CodeStar Connections permissions for GitHub integration
+            // CodeConnections permissions for GitHub integration
             new iam.PolicyStatement({
               effect: iam.Effect.ALLOW,
               actions: [
-                'codestar-connections:UseConnection',
+                'codeconnections:UseConnection',
               ],
               resources: [
-                `arn:aws:codestar-connections:${this.region}:${this.account}:connection/*`,
+                `arn:aws:codeconnections:${this.region}:${this.account}:connection/*`,
               ],
             }),
             // S3 permissions for application artifacts
@@ -261,7 +261,7 @@ export class SecurityStack extends cdk.Stack {
                 'iam:*',
                 'codepipeline:*',
                 'codebuild:*',
-                'codestar-connections:*',
+                'codeconnections:*',
                 'sns:*',
                 'events:*',
               ],
