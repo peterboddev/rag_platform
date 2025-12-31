@@ -1,6 +1,7 @@
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import { CodePipeline, CodePipelineSource, CodeBuildStep } from 'aws-cdk-lib/pipelines';
+import * as codepipeline from 'aws-cdk-lib/aws-codepipeline';
 import * as codebuild from 'aws-cdk-lib/aws-codebuild';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as logs from 'aws-cdk-lib/aws-logs';
@@ -77,6 +78,7 @@ export class PlatformPipelineStack extends cdk.Stack {
     // Create the self-mutating pipeline with enhanced CodeBuild configuration and proper triggers
     this.pipeline = new CodePipeline(this, 'PlatformPipeline', {
       pipelineName: 'PlatformPipeline',
+      pipelineType: codepipeline.PipelineType.V2, // Use V2 for CodeConnections source revisions
       selfMutation: true,
       crossAccountKeys: true,
       

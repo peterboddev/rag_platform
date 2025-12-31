@@ -331,6 +331,7 @@ export class ApplicationPipelineConstruct extends Construct {
     // Create the pipeline
     const pipeline = new codepipeline.Pipeline(this, 'Pipeline', {
       pipelineName: `${config.applicationName}-pipeline`,
+      pipelineType: codepipeline.PipelineType.V2, // Use V2 for CodeConnections source revisions
       artifactBucket: this.artifactBucket,
       role: config.pipelineRole,
       restartExecutionOnUpdate: true,
@@ -347,7 +348,6 @@ export class ApplicationPipelineConstruct extends Construct {
           branch: config.sourceRepo.branch,
           connectionArn: this.codeConnection.getConnectionArn(), // Uses CodeConnections ARN (arn:aws:codeconnections:...)
           output: sourceOutput,
-          detectChanges: true, // Enable native CodeConnections triggers
         }),
       ],
     });

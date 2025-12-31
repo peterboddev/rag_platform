@@ -234,6 +234,8 @@ echo ".git_credentials" >> .gitignore
 - **Service**: `aws.codeconnections` 
 - **CDK Resource**: `aws_codeconnections.CfnConnection`
 - **CDK Action**: `CodeStarConnectionsSourceAction` (same action, works with CodeConnections ARN format)
+- **Pipeline Type**: `PipelineType.V2` (DEFAULT for ALL pipelines - platform and application)
+- **V2 Requirement**: CodeConnections source revisions require V2 pipelines
 - **Console Location**: CodePipeline → Settings → Connections
 - **Connection Type**: Shows as "codeconnections" in AWS CLI/API
 - **ARN Format**: `arn:aws:codeconnections:region:account:connection/connection-id`
@@ -245,6 +247,7 @@ echo ".git_credentials" >> .gitignore
   - No polling delays (eliminates 1-5 minute delays)
   - Future-proof service
   - Automatic CDK creation and management
+  - Source revisions support with V2 pipelines
 
 #### Repository Architecture
 
@@ -284,6 +287,43 @@ this.codeConnection = new CodeConnectionsConstruct(this, 'CodeConnection', {
   providerType: 'GitHub',
 });
 ```
+
+#### V2 Pipeline Configuration (DEFAULT)
+
+**CRITICAL**: All pipelines (platform and application) use CodePipeline V2 by default.
+
+**Platform Pipeline V2 Configuration**:
+```typescript
+// In PlatformPipelineStack
+this.pipeline = new CodePipeline(this, 'PlatformPipeline', {
+  pipelineName: 'PlatformPipeline',
+  pipelineType: codepipeline.PipelineType.V2, // V2 for CodeConnections source revisions
+  // ... other configuration
+});
+```
+
+**Application Pipeline V2 Configuration**:
+```typescript
+// In ApplicationPipelineConstruct
+const pipeline = new codepipeline.Pipeline(this, 'Pipeline', {
+  pipelineName: `${config.applicationName}-pipeline`,
+  pipelineType: codepipeline.PipelineType.V2, // V2 for CodeConnections source revisions
+  // ... other configuration
+});
+```
+
+**V2 Pipeline Requirements**:
+- **REQUIRED** for CodeConnections source revisions
+- **DEFAULT** for all new pipelines in this platform
+- Provides better performance and reliability
+- Supports native CodeConnections triggers
+- Eliminates need for EventBridge polling
+
+**CRITICAL - Trigger Configuration**:
+- **DO NOT** set `triggers` property on V2 pipelines - this disables default change detection
+- **DO** use `triggerOnPush: true` in `CodePipelineSource.connection()` for automatic triggering
+- Default change detection works automatically with V2 + CodeConnections when no custom triggers are specified
+- Custom triggers should only be used for advanced scenarios (tags, pull requests, etc.)
 
 #### Configuration in cdk.json
 
