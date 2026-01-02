@@ -8,6 +8,7 @@
  */
 
 import { ConfigurationManager, ConfigurationUtils } from '../lib/config/platform-config';
+import { HybridConfigurationLoader } from '../lib/config/configuration-loaders';
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import * as fs from 'fs';
@@ -15,6 +16,7 @@ import * as path from 'path';
 
 class ConfigurationValidator {
   private configManager: ConfigurationManager;
+  private loader: HybridConfigurationLoader;
 
   constructor() {
     // Create a CDK app with the actual context from cdk.json
@@ -23,6 +25,9 @@ class ConfigurationValidator {
     });
     const tempConstruct = new Construct(app, 'ConfigValidationConstruct');
     this.configManager = new ConfigurationManager(tempConstruct);
+    
+    // Initialize hybrid configuration loader
+    this.loader = new HybridConfigurationLoader();
   }
 
   /**
@@ -48,21 +53,21 @@ class ConfigurationValidator {
     console.log('🔍 Starting configuration validation...');
     
     try {
-      // Validate CDK context configuration
-      const contextValid = await this.validateCdkContext();
-      if (!contextValid) {
+      // Validate platform configuration using hybrid loader
+      const platformValid = await this.validateCdkContext();
+      if (!platformValid) {
         return false;
       }
 
-      // Validate application configuration files
+      // Validate application configuration files using hybrid loader
       const appConfigsValid = await this.validateApplicationConfigs();
       if (!appConfigsValid) {
         return false;
       }
 
-      // Validate platform configuration
-      const platformValid = await this.validatePlatformConfiguration();
-      if (!platformValid) {
+      // Validate platform configuration using ConfigurationManager
+      const platformManagerValid = await this.validatePlatformConfiguration();
+      if (!platformManagerValid) {
         return false;
       }
 
@@ -85,38 +90,30 @@ class ConfigurationValidator {
    * Validates CDK context configuration
    */
   private async validateCdkContext(): Promise<boolean> {
-    console.log('📋 Validating CDK context configuration...');
+    console.log('📋 Validating platform configuration...');
     
     try {
-      // Check if cdk.json exists
-      const cdkJsonPath = path.join(process.cwd(), 'cdk.json');
-      if (!fs.existsSync(cdkJsonPath)) {
-        console.error('❌ cdk.json file not found');
-        return false;
-      }
-
-      // Parse and validate cdk.json
-      const cdkJson = JSON.parse(fs.readFileSync(cdkJsonPath, 'utf8'));
+      // Load platform config using hybrid loader
+      const platformConfig = this.loader.loadPlatformConfig();
       
-      if (!cdkJson.context) {
-        console.error('❌ CDK context configuration missing');
+      // Validate platform configuration structure
+      const validation = this.loader.validateConfiguration(platformConfig, 'platform');
+      if (!validation.isValid) {
+        console.error('❌ Platform configuration validation failed:');
+        validation.errors.forEach(error => console.error(`   - ${error}`));
         return false;
       }
 
-      // Validate required context keys
-      const requiredKeys = ['platform', 'environments', 'applications'];
-      for (const key of requiredKeys) {
-        if (!cdkJson.context[key]) {
-          console.error(`❌ Required CDK context key '${key}' missing`);
-          return false;
-        }
+      if (validation.warnings.length > 0) {
+        console.warn('⚠️  Platform configuration warnings:');
+        validation.warnings.forEach(warning => console.warn(`   - ${warning}`));
       }
 
-      console.log('✅ CDK context validation passed');
+      console.log('✅ Platform configuration validation passed');
       return true;
 
     } catch (error) {
-      console.error('❌ CDK context validation failed:', error);
+      console.error('❌ Platform configuration loading failed:', error);
       return false;
     }
   }
@@ -128,52 +125,32 @@ class ConfigurationValidator {
     console.log('📱 Validating application configuration files...');
     
     try {
-      const configDir = path.join(process.cwd(), 'config', 'applications');
+      // Load application configs using hybrid loader
+      const applicationConfigs = this.loader.loadApplicationConfigs();
       
-      if (!fs.existsSync(configDir)) {
-        console.warn('⚠️  Application configuration directory not found');
-        return true; // Not required if using CDK context only
+      if (applicationConfigs.length === 0) {
+        console.warn('⚠️  No application configurations found');
+        return true; // Not an error if no applications are configured
       }
 
-      const configFiles = fs.readdirSync(configDir).filter(file => file.endsWith('.json'));
-      
-      for (const configFile of configFiles) {
-        const configPath = path.join(configDir, configFile);
-        const appName = path.basename(configFile, '.json');
+      // Validate each application configuration
+      for (const appConfig of applicationConfigs) {
+        console.log(`   Validating ${appConfig.applicationName}...`);
         
-        console.log(`   Validating ${appName}...`);
-        
-        try {
-          const appConfig = JSON.parse(fs.readFileSync(configPath, 'utf8'));
-          
-          // Validate required fields
-          const requiredFields = ['applicationName', 'team', 'sourceRepo', 'deploymentTargets'];
-          for (const field of requiredFields) {
-            if (!appConfig[field]) {
-              console.error(`❌ Application '${appName}' missing required field '${field}'`);
-              return false;
-            }
-          }
-
-          // Validate source repository configuration
-          if (!appConfig.sourceRepo.owner || !appConfig.sourceRepo.repo || !appConfig.sourceRepo.branch) {
-            console.error(`❌ Application '${appName}' has incomplete sourceRepo configuration`);
-            return false;
-          }
-
-          // Validate deployment targets
-          if (!Array.isArray(appConfig.deploymentTargets) || appConfig.deploymentTargets.length === 0) {
-            console.error(`❌ Application '${appName}' must have at least one deployment target`);
-            return false;
-          }
-
-        } catch (parseError) {
-          console.error(`❌ Failed to parse application config '${appName}':`, parseError);
+        const validation = this.loader.validateConfiguration(appConfig, 'application');
+        if (!validation.isValid) {
+          console.error(`❌ Application '${appConfig.applicationName}' validation failed:`);
+          validation.errors.forEach(error => console.error(`   - ${error}`));
           return false;
+        }
+
+        if (validation.warnings.length > 0) {
+          console.warn(`⚠️  Application '${appConfig.applicationName}' warnings:`);
+          validation.warnings.forEach(warning => console.warn(`   - ${warning}`));
         }
       }
 
-      console.log(`✅ Application configuration files validated (${configFiles.length} files)`);
+      console.log(`✅ Application configuration files validated (${applicationConfigs.length} applications)`);
       return true;
 
     } catch (error) {
@@ -234,8 +211,17 @@ class ConfigurationValidator {
     console.log('🔗 Validating configuration dependencies...');
     
     try {
-      const applications = this.configManager.getEnabledApplications();
-      const environments = this.configManager.getEnvironments();
+      // Load configurations using hybrid loader
+      const platformConfig = this.loader.loadPlatformConfig();
+      const applicationConfigs = this.loader.loadApplicationConfigs();
+
+      // Convert to format expected by existing validation methods
+      const applications: { [key: string]: any } = {};
+      applicationConfigs.forEach(app => {
+        applications[app.applicationName] = app;
+      });
+
+      const environments = platformConfig.environments;
 
       // Validate that all application deployment targets reference valid environments
       for (const [appName, appConfig] of Object.entries(applications)) {
@@ -248,8 +234,11 @@ class ConfigurationValidator {
         }
       }
 
+      // Use ConfigurationManager for remaining validations (it will use the same data)
+      const config = this.configManager.getConfig();
+
       // Validate resource naming conventions
-      const namingValidation = ConfigurationUtils.validateResourceNames(this.configManager.getConfig());
+      const namingValidation = ConfigurationUtils.validateResourceNames(config);
       if (!namingValidation.isValid) {
         console.error('❌ Resource naming validation failed:');
         namingValidation.errors.forEach(error => console.error(`   - ${error}`));
@@ -257,7 +246,7 @@ class ConfigurationValidator {
       }
 
       // Validate deployment target consistency
-      const deploymentValidation = ConfigurationUtils.validateDeploymentTargets(this.configManager.getConfig());
+      const deploymentValidation = ConfigurationUtils.validateDeploymentTargets(config);
       if (!deploymentValidation.isValid) {
         console.error('❌ Deployment target validation failed:');
         deploymentValidation.errors.forEach(error => console.error(`   - ${error}`));
@@ -277,43 +266,72 @@ class ConfigurationValidator {
    * Generates a comprehensive validation report
    */
   generateReport(): any {
-    const config = this.configManager.getConfig();
-    const validation = this.configManager.validateConfiguration();
-    const applications = this.configManager.getEnabledApplications();
-    const environments = this.configManager.getEnvironments();
+    try {
+      // Load configurations using hybrid loader
+      const platformConfig = this.loader.loadPlatformConfig();
+      const applicationConfigs = this.loader.loadApplicationConfigs();
 
-    return {
-      timestamp: new Date().toISOString(),
-      summary: {
-        isValid: validation.isValid,
-        applicationCount: Object.keys(applications).length,
-        environmentCount: Object.keys(environments).length,
-        errorCount: validation.errors.length,
-        warningCount: validation.warnings.length,
-      },
-      platform: {
-        account: config.platform.account,
-        region: config.platform.region,
-        connectionConfigured: !!config.platform.connectionArn || 'Will be created by CDK',
-      },
-      applications: Object.keys(applications).map(appName => ({
-        name: appName,
-        team: applications[appName].team,
-        deploymentTargets: applications[appName].deploymentTargets,
-        enabled: applications[appName].enabled !== false,
-      })),
-      environments: Object.keys(environments).map(envName => ({
-        name: envName,
-        account: environments[envName].account,
-        region: environments[envName].region,
-        isProd: environments[envName].isProd || false,
-        requiresApproval: environments[envName].requiresApproval || false,
-      })),
-      validation: {
-        errors: validation.errors,
-        warnings: validation.warnings,
-      },
-    };
+      // Convert to format expected by existing methods
+      const applications: { [key: string]: any } = {};
+      applicationConfigs.forEach(app => {
+        applications[app.applicationName] = app;
+      });
+
+      // Use ConfigurationManager for validation (it will use the same underlying data)
+      const config = this.configManager.getConfig();
+      const validation = this.configManager.validateConfiguration();
+      const environments = platformConfig.environments;
+
+      return {
+        timestamp: new Date().toISOString(),
+        summary: {
+          isValid: validation.isValid,
+          applicationCount: Object.keys(applications).length,
+          environmentCount: Object.keys(environments).length,
+          errorCount: validation.errors.length,
+          warningCount: validation.warnings.length,
+        },
+        platform: {
+          account: platformConfig.platform.account,
+          region: platformConfig.platform.region,
+          connectionConfigured: !!platformConfig.platform.connectionArn || 'Will be created by CDK',
+        },
+        applications: Object.keys(applications).map(appName => ({
+          name: appName,
+          team: applications[appName].team,
+          deploymentTargets: applications[appName].deploymentTargets,
+          enabled: applications[appName].enabled !== false,
+        })),
+        environments: Object.keys(environments).map(envName => ({
+          name: envName,
+          account: environments[envName].account,
+          region: environments[envName].region,
+          isProd: environments[envName].isProd || false,
+          requiresApproval: environments[envName].requiresApproval || false,
+        })),
+        validation: {
+          errors: validation.errors,
+          warnings: validation.warnings,
+        },
+        configurationSource: {
+          loader: this.loader.getSourceDescription(),
+          platformConfigSource: 'cdk.json context',
+          applicationConfigSource: applicationConfigs.length > 0 ? 'config/applications/*.json files' : 'CDK context (fallback)',
+        },
+      };
+    } catch (error) {
+      return {
+        timestamp: new Date().toISOString(),
+        error: `Failed to generate report: ${(error as Error).message}`,
+        summary: {
+          isValid: false,
+          applicationCount: 0,
+          environmentCount: 0,
+          errorCount: 1,
+          warningCount: 0,
+        },
+      };
+    }
   }
 }
 
