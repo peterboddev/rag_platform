@@ -1,0 +1,50 @@
+digraph G {
+  # Arrows represent an "unlocks" relationship (opposite of dependency). So chosen
+  # because the layout looks more natural that way.
+  # To represent subgraph dependencies, subgraphs are represented by BEGIN/END nodes.
+  # To render: `dot -Tsvg PlatformPipelineStackPlatformPipelineE5D0CD45.dot > graph.svg`, open in a browser.
+  node [shape="box"];
+"BEGIN Build" [shape="cds", style="filled", fillcolor="#b7deff"];
+"END Build" [shape="cds", style="filled", fillcolor="#b7deff"];
+"Build.Synth";
+"Source.peterboddev/rag_platform" -> "Build.Synth";
+"BEGIN Build" -> "Build.Synth";
+"Build.Synth" -> "END Build";
+"BEGIN Assets" [shape="cds", style="filled", fillcolor="#b7deff"];
+"END Assets" [shape="cds", style="filled", fillcolor="#b7deff"];
+"Assets.FileAsset1";
+"Build.Synth" -> "Assets.FileAsset1";
+"Assets.FileAsset2";
+"Build.Synth" -> "Assets.FileAsset2";
+"BEGIN Assets" -> "Assets.FileAsset1";
+"BEGIN Assets" -> "Assets.FileAsset2";
+"Assets.FileAsset1" -> "END Assets";
+"Assets.FileAsset2" -> "END Assets";
+"BEGIN ApplicationPipelines" [shape="cds", style="filled", fillcolor="#b7deff"];
+"END ApplicationPipelines" [shape="cds", style="filled", fillcolor="#b7deff"];
+"Build.Synth" -> "BEGIN ApplicationPipelines";
+"BEGIN ApplicationPipelines.ApplicationPipelineStack" [shape="cds", style="filled", fillcolor="#b7deff"];
+"END ApplicationPipelines.ApplicationPipelineStack" [shape="cds", style="filled", fillcolor="#b7deff"];
+"ApplicationPipelines.ValidateApplicationConfigs" -> "BEGIN ApplicationPipelines.ApplicationPipelineStack";
+"ApplicationPipelines.ApplicationPipelineStack.Deploy";
+"ApplicationPipelines.ApplicationPipelineStack.Prepare" -> "ApplicationPipelines.ApplicationPipelineStack.Deploy";
+"ApplicationPipelines.ApplicationPipelineStack.Prepare";
+"Build.Synth" -> "ApplicationPipelines.ApplicationPipelineStack.Prepare";
+"Assets.FileAsset1" -> "ApplicationPipelines.ApplicationPipelineStack.Prepare";
+"Assets.FileAsset2" -> "ApplicationPipelines.ApplicationPipelineStack.Prepare";
+"BEGIN ApplicationPipelines.ApplicationPipelineStack" -> "ApplicationPipelines.ApplicationPipelineStack.Prepare";
+"ApplicationPipelines.ApplicationPipelineStack.Deploy" -> "END ApplicationPipelines.ApplicationPipelineStack";
+"ApplicationPipelines.ValidateApplicationConfigs";
+"ApplicationPipelines.ValidatePromotion-staging";
+"END ApplicationPipelines.ApplicationPipelineStack" -> "ApplicationPipelines.ValidatePromotion-staging";
+"ApplicationPipelines.ValidatePromotion-prod";
+"END ApplicationPipelines.ApplicationPipelineStack" -> "ApplicationPipelines.ValidatePromotion-prod";
+"BEGIN ApplicationPipelines" -> "ApplicationPipelines.ValidateApplicationConfigs";
+"ApplicationPipelines.ValidatePromotion-prod" -> "END ApplicationPipelines";
+"ApplicationPipelines.ValidatePromotion-staging" -> "END ApplicationPipelines";
+"BEGIN Source" [shape="cds", style="filled", fillcolor="#b7deff"];
+"END Source" [shape="cds", style="filled", fillcolor="#b7deff"];
+"Source.peterboddev/rag_platform";
+"BEGIN Source" -> "Source.peterboddev/rag_platform";
+"Source.peterboddev/rag_platform" -> "END Source";
+}

@@ -27,7 +27,7 @@ test('Platform Pipeline Stack Creation', () => {
   const stack = new PlatformPipeline.PlatformPipelineStack(app, 'MyTestStack', {
     // connectionArn is now optional - will be created by CDK construct
     env: {
-      account: '123456789012',
+      account: '450683699755', // Use the same account as our environments
       region: 'us-east-1'
     }
   });
@@ -43,8 +43,8 @@ test('Platform Pipeline Stack Creation', () => {
     Name: 'PlatformPipeline'
   });
   
-  // Verify that CodeBuild projects are created (synth, self-mutation, and validation)
-  template.resourceCountIs('AWS::CodeBuild::Project', 3);
+  // Verify that CodeBuild projects are created (synth + validation steps for staging/prod + asset builds)
+  template.resourceCountIs('AWS::CodeBuild::Project', 6);
   
   // Verify that CodeConnections connection is created by CDK
   template.hasResourceProperties('AWS::CodeConnections::Connection', {

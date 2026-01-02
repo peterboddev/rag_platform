@@ -63,11 +63,11 @@ export class PlatformPipelineStack extends cdk.Stack {
       throw new Error('CodeConnections connection ARN is required. Connection should be created by CodeConnectionsConstruct.');
     }
 
-    // Create the self-mutating pipeline with enhanced CodeBuild configuration and proper triggers
+    // Create the pipeline with self-mutation DISABLED to prevent loops
     this.pipeline = new CodePipeline(this, 'PlatformPipeline', {
       pipelineName: 'PlatformPipeline',
       pipelineType: codepipeline.PipelineType.V2, // Use V2 for CodeConnections source revisions
-      selfMutation: true,
+      selfMutation: false, // DISABLED to prevent infinite loops
       crossAccountKeys: true,
       
       // Configure the source stage with GitHub integration and push triggers
@@ -77,8 +77,7 @@ export class PlatformPipelineStack extends cdk.Stack {
           branch,
           {
             connectionArn: connectionArn,
-            // Ensure pipeline triggers on push events (default is true, but being explicit)
-            triggerOnPush: true,
+            // Use default trigger behavior - no explicit triggerOnPush
           }
         ),
         
@@ -225,6 +224,15 @@ export class PlatformPipelineStack extends cdk.Stack {
         new CodeBuildStep('ValidateApplicationConfigs', {
           commands: [
             'echo "Validating application configurations..."',
+            'echo "Node.js version: $(node --version)"',
+            'echo "NPM version: $(npm --version)"',
+            'echo "Current directory: $(pwd)"',
+            'echo "Directory contents:"',
+            'ls -la',
+            'echo "Checking for configuration files..."',
+            'test -f cdk.json && echo "✅ cdk.json found" || echo "❌ cdk.json not found"',
+            'test -d config/applications && echo "✅ config/applications directory found" || echo "❌ config/applications directory not found"',
+            'if [ -d config/applications ]; then echo "Application configs:"; ls -la config/applications/; fi',
             'npm install',
             'npx ts-node scripts/validate-configs.ts',
             'echo "Configuration validation completed"',
@@ -233,6 +241,17 @@ export class PlatformPipelineStack extends cdk.Stack {
             buildImage: codebuild.LinuxArmBuildImage.AMAZON_LINUX_2_STANDARD_3_0,
             computeType: codebuild.ComputeType.SMALL,
           },
+          // Add proper Node.js runtime configuration
+          partialBuildSpec: codebuild.BuildSpec.fromObject({
+            version: '0.2',
+            phases: {
+              install: {
+                'runtime-versions': {
+                  nodejs: '20'
+                }
+              }
+            }
+          }),
         }),
       ],
     });
@@ -256,6 +275,15 @@ export class PlatformPipelineStack extends cdk.Stack {
               new CodeBuildStep(`ValidatePromotion-${envName}`, {
                 commands: [
                   `echo "Validating promotion to ${envName} environment..."`,
+                  'echo "Node.js version: $(node --version)"',
+                  'echo "NPM version: $(npm --version)"',
+                  'echo "Current directory: $(pwd)"',
+                  'echo "Directory contents:"',
+                  'ls -la',
+                  'echo "Checking for configuration files..."',
+                  'test -f cdk.json && echo "✅ cdk.json found" || echo "❌ cdk.json not found"',
+                  'test -d config/applications && echo "✅ config/applications directory found" || echo "❌ config/applications directory not found"',
+                  'if [ -d config/applications ]; then echo "Application configs:"; ls -la config/applications/; fi',
                   'npm install',
                   `npx ts-node scripts/validate-deployment.ts -- --environment ${envName}`,
                   `echo "Promotion to ${envName} validated successfully"`,
@@ -264,6 +292,17 @@ export class PlatformPipelineStack extends cdk.Stack {
                   buildImage: codebuild.LinuxArmBuildImage.AMAZON_LINUX_2_STANDARD_3_0,
                   computeType: codebuild.ComputeType.SMALL,
                 },
+                // Add proper Node.js runtime configuration
+                partialBuildSpec: codebuild.BuildSpec.fromObject({
+                  version: '0.2',
+                  phases: {
+                    install: {
+                      'runtime-versions': {
+                        nodejs: '20'
+                      }
+                    }
+                  }
+                }),
                 env: {
                   ENVIRONMENT_NAME: envName,
                   VALIDATION_MODE: 'promotion',
@@ -314,9 +353,10 @@ export class PlatformPipelineStack extends cdk.Stack {
         triggerConfiguration: {
           type: 'Native Pipeline Triggers',
           service: 'CodeConnections (aws.codeconnections)',
-          triggerOnPush: true,
+          triggerOnPush: 'Default behavior',
+          selfMutation: 'DISABLED to prevent loops',
           noEventBridgeRequired: 'Pipeline triggers natively on push events',
-          eliminatesLoops: 'No EventBridge loops possible with native triggers',
+          eliminatesLoops: 'Self-mutation disabled for loop prevention',
           connectionType: 'codeconnections (fresh connection created)',
         },
       }),
@@ -429,7 +469,8 @@ export class PlatformPipelineStack extends cdk.Stack {
         ],
         connectionArn: this.codeConnection.getConnectionArn(),
         connectionName: this.codeConnection.getConnectionName(),
-        triggerOnPush: true,
+        triggerOnPush: 'Default behavior',
+        selfMutation: 'DISABLED',
       }, null, 2),
       description: 'Native pipeline trigger configuration using CodeConnections',
       exportName: 'PlatformPipeline-TriggerConfiguration',

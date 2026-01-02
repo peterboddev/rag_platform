@@ -282,20 +282,90 @@ class PreCommitValidator {
     try {
       console.log('📋 Validating configuration...');
       
+      // Validate platform configuration (cdk.json)
+      console.log('  🔍 Validating platform configuration...');
+      if (!fs.existsSync('cdk.json')) {
+        throw new Error('Platform configuration file (cdk.json) not found');
+      }
+
+      // Validate JSON syntax
+      try {
+        const cdkJson = JSON.parse(fs.readFileSync('cdk.json', 'utf8'));
+        if (!cdkJson.context) {
+          throw new Error('Platform configuration missing context section');
+        }
+        
+        // Check for required platform fields
+        const context = cdkJson.context;
+        const requiredPlatformFields = ['platform', 'environments', 'defaults'];
+        const missingFields = requiredPlatformFields.filter(field => !context[field]);
+        
+        if (missingFields.length > 0) {
+          throw new Error(`Platform configuration missing required fields: ${missingFields.join(', ')}`);
+        }
+        
+        console.log('    ✅ Platform configuration syntax and structure valid');
+      } catch (error) {
+        throw new Error(`Platform configuration validation failed: ${(error as Error).message}`);
+      }
+
+      // Validate application configurations
+      console.log('  🔍 Validating application configurations...');
+      if (fs.existsSync('config/applications')) {
+        const configFiles = fs.readdirSync('config/applications').filter(file => file.endsWith('.json'));
+        
+        if (configFiles.length === 0) {
+          console.log('    ⚠️  No application configuration files found');
+        } else {
+          for (const configFile of configFiles) {
+            const filePath = `config/applications/${configFile}`;
+            try {
+              const appConfig = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+              
+              // Check for required application fields
+              const requiredAppFields = ['applicationName', 'team', 'sourceRepo', 'deploymentTargets'];
+              const missingFields = requiredAppFields.filter(field => !appConfig[field]);
+              
+              if (missingFields.length > 0) {
+                throw new Error(`Application configuration ${configFile} missing required fields: ${missingFields.join(', ')}`);
+              }
+              
+              // Validate sourceRepo structure
+              if (!appConfig.sourceRepo.owner || !appConfig.sourceRepo.repo || !appConfig.sourceRepo.branch) {
+                throw new Error(`Application configuration ${configFile} has invalid sourceRepo structure`);
+              }
+              
+              // Validate deploymentTargets is array
+              if (!Array.isArray(appConfig.deploymentTargets) || appConfig.deploymentTargets.length === 0) {
+                throw new Error(`Application configuration ${configFile} must have at least one deployment target`);
+              }
+              
+              console.log(`    ✅ ${configFile} configuration valid`);
+            } catch (error) {
+              throw new Error(`Application configuration ${configFile} validation failed: ${(error as Error).message}`);
+            }
+          }
+        }
+      } else {
+        console.log('    ⚠️  Application configuration directory not found (config/applications)');
+      }
+
+      // Run comprehensive configuration validation using ConfigurationValidator
+      console.log('  🔍 Running comprehensive configuration validation...');
       const validator = new ConfigurationValidator({ verbose: false });
       const isValid = await validator.validate();
       
+      if (!isValid) {
+        throw new Error('Comprehensive configuration validation failed');
+      }
+      
       this.results.push({
         name: 'Configuration Validation',
-        passed: isValid,
+        passed: true,
         duration: Date.now() - startTime
       });
       
-      if (isValid) {
-        console.log('  ✅ Configuration validation passed');
-      } else {
-        console.error('  ❌ Configuration validation failed');
-      }
+      console.log('  ✅ All configuration validation passed');
       
     } catch (error: any) {
       this.results.push({
@@ -305,7 +375,7 @@ class PreCommitValidator {
         duration: Date.now() - startTime
       });
       
-      console.error('  ❌ Configuration validation error:', error.message);
+      console.error('  ❌ Configuration validation failed:', error.message);
     }
   }
 

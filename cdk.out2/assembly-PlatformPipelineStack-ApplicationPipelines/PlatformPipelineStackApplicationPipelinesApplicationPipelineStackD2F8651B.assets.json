@@ -1,0 +1,51 @@
+{
+  "version": "48.0.0",
+  "files": {
+    "faa95a81ae7d7373f3e1f242268f904eb748d8d0fdd306e8a6fe515a1905a7d6": {
+      "displayName": "PlatformPipelineStack/ApplicationPipelines/ApplicationPipelineStack/Custom::S3AutoDeleteObjectsCustomResourceProvider Code",
+      "source": {
+        "path": "..\\asset.faa95a81ae7d7373f3e1f242268f904eb748d8d0fdd306e8a6fe515a1905a7d6",
+        "packaging": "zip"
+      },
+      "destinations": {
+        "450683699755-us-east-1-334dde94": {
+          "bucketName": "cdk-hnb659fds-assets-450683699755-us-east-1",
+          "objectKey": "faa95a81ae7d7373f3e1f242268f904eb748d8d0fdd306e8a6fe515a1905a7d6.zip",
+          "region": "us-east-1",
+          "assumeRoleArn": "arn:${AWS::Partition}:iam::450683699755:role/cdk-hnb659fds-file-publishing-role-450683699755-us-east-1"
+        }
+      }
+    },
+    "bc8ef58951f4c88e641dd23090e9d2e2e61c7530a07960e767522941e959b625": {
+      "displayName": "AWS679f53fac002430cb0da5b7982bd2287/Code",
+      "source": {
+        "path": "..\\asset.bc8ef58951f4c88e641dd23090e9d2e2e61c7530a07960e767522941e959b625",
+        "packaging": "zip"
+      },
+      "destinations": {
+        "450683699755-us-east-1-169510c5": {
+          "bucketName": "cdk-hnb659fds-assets-450683699755-us-east-1",
+          "objectKey": "bc8ef58951f4c88e641dd23090e9d2e2e61c7530a07960e767522941e959b625.zip",
+          "region": "us-east-1",
+          "assumeRoleArn": "arn:${AWS::Partition}:iam::450683699755:role/cdk-hnb659fds-file-publishing-role-450683699755-us-east-1"
+        }
+      }
+    },
+    "14b43aa34addfd2a174acf01d363c97f2aa4c0163604c1c5ba1ba0851742e6f6": {
+      "displayName": "ApplicationPipelines-ApplicationPipelineStack Template",
+      "source": {
+        "path": "PlatformPipelineStackApplicationPipelinesApplicationPipelineStackD2F8651B.template.json",
+        "packaging": "file"
+      },
+      "destinations": {
+        "450683699755-us-east-1-319cc9f9": {
+          "bucketName": "cdk-hnb659fds-assets-450683699755-us-east-1",
+          "objectKey": "14b43aa34addfd2a174acf01d363c97f2aa4c0163604c1c5ba1ba0851742e6f6.json",
+          "region": "us-east-1",
+          "assumeRoleArn": "arn:${AWS::Partition}:iam::450683699755:role/cdk-hnb659fds-file-publishing-role-450683699755-us-east-1"
+        }
+      }
+    }
+  },
+  "dockerImages": {}
+}

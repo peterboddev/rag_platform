@@ -1,0 +1,115 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Application Configuration Schema",
+  "description": "Schema for application-specific configuration including source repository, build settings, and deployment targets",
+  "type": "object",
+  "properties": {
+    "applicationName": {
+      "type": "string",
+      "pattern": "^[a-zA-Z][a-zA-Z0-9-]*$",
+      "maxLength": 63,
+      "description": "Application name (must be valid for AWS resource names)"
+    },
+    "team": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Team responsible for this application"
+    },
+    "sourceRepo": {
+      "type": "object",
+      "properties": {
+        "owner": {
+          "type": "string",
+          "minLength": 1,
+          "description": "GitHub organization or user name"
+        },
+        "repo": {
+          "type": "string",
+          "minLength": 1,
+          "description": "GitHub repository name"
+        },
+        "branch": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Git branch name"
+        }
+      },
+      "required": ["owner", "repo", "branch"],
+      "additionalProperties": false
+    },
+    "buildConfig": {
+      "type": "object",
+      "properties": {
+        "runtime": {
+          "type": "string",
+          "enum": ["18", "20"],
+          "description": "Node.js runtime version"
+        },
+        "commands": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1,
+          "description": "Build commands to execute"
+        },
+        "environment": {
+          "type": "object",
+          "patternProperties": {
+            "^[a-zA-Z][a-zA-Z0-9_]*$": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false,
+          "description": "Environment variables for build"
+        }
+      },
+      "additionalProperties": false
+    },
+    "deploymentTargets": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[a-zA-Z][a-zA-Z0-9-]*$"
+      },
+      "minItems": 1,
+      "uniqueItems": true,
+      "description": "List of environment names to deploy to"
+    },
+    "notifications": {
+      "type": "object",
+      "properties": {
+        "snsTopicArn": {
+          "type": "string",
+          "pattern": "^arn:aws:sns:[a-z0-9-]+:[0-9]{12}:[a-zA-Z0-9-_]+$",
+          "description": "SNS topic ARN for notifications"
+        },
+        "emailAddresses": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "email"
+          },
+          "uniqueItems": true,
+          "description": "Email addresses for notifications"
+        }
+      },
+      "additionalProperties": false
+    },
+    "enabled": {
+      "type": "boolean",
+      "description": "Whether this application is enabled for deployment"
+    }
+  },
+  "required": ["applicationName", "team", "sourceRepo", "deploymentTargets"],
+  "additionalProperties": false,
+  "not": {
+    "anyOf": [
+      {"properties": {"platform": true}},
+      {"properties": {"platformRepository": true}},
+      {"properties": {"environments": true}},
+      {"properties": {"defaults": true}}
+    ]
+  }
+}

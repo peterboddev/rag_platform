@@ -7,24 +7,21 @@
     "branch": "main"
   },
   "buildConfig": {
-    "runtime": "18",
+    "runtime": "20",
     "commands": [
       "echo 'Installing dependencies...'",
       "npm ci",
       "echo 'Running tests...'",
-      "npm run test",
-      "echo 'Building RAG application...'",
-      "npm run build"
+      "npm run test --if-present",
+      "echo 'Building application...'",
+      "npm run build --if-present",
+      "echo 'Build completed successfully'"
     ],
     "environment": {
       "NODE_ENV": "production",
-      "BUILD_ENV": "pipeline",
-      "APP_TYPE": "rag"
+      "NPM_CONFIG_CACHE": "/tmp/.npm"
     }
   },
   "deploymentTargets": ["dev", "staging", "prod"],
-  "notifications": {
-    "emailAddresses": ["ai-team@company.com"]
-  },
   "enabled": true
 }

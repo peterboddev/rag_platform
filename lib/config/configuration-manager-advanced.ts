@@ -1,7 +1,7 @@
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import { ConfigurationManager, PlatformConfig, ApplicationConfig, EnvironmentConfig, ValidationResult } from './platform-config';
-import { ConfigurationLoader } from './configuration-loader';
+import { ConfigurationLoader } from './configuration-loaders';
 
 /**
  * Advanced configuration management features for the platform pipeline system
@@ -14,12 +14,10 @@ import { ConfigurationLoader } from './configuration-loader';
  * - Rollback capabilities
  */
 export class AdvancedConfigurationManager extends ConfigurationManager {
-  private loader: ConfigurationLoader;
   private configHistory: PlatformConfig[] = [];
 
-  constructor(scope: Construct, configDir: string = 'config') {
-    super(scope);
-    this.loader = new ConfigurationLoader(configDir);
+  constructor(scope: Construct, loader?: ConfigurationLoader) {
+    super(scope, loader);
     this.initializeConfigHistory();
   }
 
@@ -43,8 +41,8 @@ export class AdvancedConfigurationManager extends ConfigurationManager {
     const currentConfig = this.getConfig();
     this.configHistory.push(JSON.parse(JSON.stringify(currentConfig)));
 
-    // Apply updates
-    const updatedConfig = this.loader.mergeConfigurations(currentConfig, updates);
+    // Apply updates (merge manually since we don't have direct access to loader)
+    const updatedConfig = this.mergeConfigurationUpdates(currentConfig, updates);
     
     // Validate updated configuration
     const validation = this.validateUpdatedConfiguration(updatedConfig);
@@ -58,6 +56,35 @@ export class AdvancedConfigurationManager extends ConfigurationManager {
     }
 
     return validation;
+  }
+
+  /**
+   * Merges configuration objects (helper method)
+   */
+  private mergeConfigurationUpdates(base: PlatformConfig, updates: Partial<PlatformConfig>): PlatformConfig {
+    const merged = JSON.parse(JSON.stringify(base)); // Deep clone
+
+    if (updates.platform) {
+      merged.platform = { ...merged.platform, ...updates.platform };
+    }
+
+    if (updates.environments) {
+      Object.entries(updates.environments).forEach(([envName, envConfig]) => {
+        merged.environments[envName] = { ...merged.environments[envName], ...envConfig };
+      });
+    }
+
+    if (updates.applications) {
+      Object.entries(updates.applications).forEach(([appName, appConfig]) => {
+        merged.applications[appName] = { ...merged.applications[appName], ...appConfig };
+      });
+    }
+
+    if (updates.defaults) {
+      merged.defaults = { ...merged.defaults, ...updates.defaults };
+    }
+
+    return merged;
   }
 
   /**
@@ -149,7 +176,8 @@ export class AdvancedConfigurationManager extends ConfigurationManager {
     // Replace CDK context values
     const contextPattern = /\$\{context\.([^}]+)\}/g;
     resolved = resolved.replace(contextPattern, (match, contextKey) => {
-      const contextValue = this.scope.node.tryGetContext(contextKey);
+      // Access context through the configuration manager's methods
+      const contextValue = this.resolveParameter(contextKey);
       return contextValue !== undefined ? contextValue : match;
     });
 

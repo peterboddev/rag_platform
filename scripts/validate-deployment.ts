@@ -8,6 +8,7 @@
  */
 
 import { ConfigurationManager, ConfigurationUtils } from '../lib/config/platform-config';
+import { HybridConfigurationLoader } from '../lib/config/configuration-loaders';
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 
@@ -20,14 +21,109 @@ interface ValidationOptions {
 class DeploymentValidator {
   private configManager: ConfigurationManager;
   private options: ValidationOptions;
+  private loadedContext: any;
 
   constructor(options: ValidationOptions = {}) {
     this.options = options;
     
+    // Load context from cdk.json first
+    this.loadedContext = this.loadCdkContext();
+    
+    console.log('🔍 Debug: Creating CDK App with context keys:', Object.keys(this.loadedContext));
+    console.log('🔍 Debug: Context environments:', Object.keys(this.loadedContext.environments || {}));
+    console.log('🔍 Debug: Context applications:', Object.keys(this.loadedContext.applications || {}));
+    
     // Create a temporary CDK app for configuration validation
-    const app = new cdk.App();
+    const app = new cdk.App({
+      context: this.loadedContext
+    });
     const tempConstruct = new Construct(app, 'ValidationConstruct');
-    this.configManager = new ConfigurationManager(tempConstruct);
+    
+    // Verify the construct can see the context
+    console.log('🔍 Debug: CDK construct context check...');
+    console.log('🔍 Debug: Construct sees environments:', tempConstruct.node.tryGetContext('environments'));
+    console.log('🔍 Debug: Construct sees applications:', tempConstruct.node.tryGetContext('applications'));
+    
+    // Use HybridConfigurationLoader to load from both CDK context and separate files
+    // This ensures we get environments from cdk.json and applications from config/applications/*.json
+    const hybridLoader = new HybridConfigurationLoader();
+    console.log('🔍 Debug: Using configuration loader:', hybridLoader.getSourceDescription());
+    
+    // Add debug logging to see what the loader finds
+    console.log('🔍 Debug: Testing configuration loader directly...');
+    try {
+      const platformConfig = hybridLoader.loadPlatformConfig();
+      console.log('🔍 Debug: Platform config loaded - environments:', Object.keys(platformConfig.environments));
+      console.log('🔍 Debug: Platform config loaded - platform:', platformConfig.platform);
+      
+      const applicationConfigs = hybridLoader.loadApplicationConfigs();
+      console.log('🔍 Debug: Application configs loaded - count:', applicationConfigs.length);
+      applicationConfigs.forEach(app => {
+        console.log(`🔍 Debug: Found application: ${app.applicationName} by ${app.team}`);
+      });
+    } catch (error) {
+      console.error('🔍 Debug: Configuration loader failed:', error);
+    }
+    
+    // Create ConfigurationManager with the CDK construct and hybrid loader
+    this.configManager = new ConfigurationManager(tempConstruct, hybridLoader);
+    
+    // Add final debug check to see what ConfigurationManager sees
+    console.log('🔍 Debug: Final ConfigurationManager check...');
+    try {
+      const config = this.configManager.getConfig();
+      console.log('🔍 Debug: Final - environments:', Object.keys(config.environments));
+      console.log('🔍 Debug: Final - applications:', Object.keys(config.applications));
+    } catch (error) {
+      console.error('🔍 Debug: Final ConfigurationManager check failed:', error);
+    }
+  }
+
+  /**
+   * Loads CDK context from cdk.json file
+   */
+  private loadCdkContext(): any {
+    try {
+      const fs = require('fs');
+      const path = require('path');
+      
+      console.log('🔍 Debug: Current working directory:', process.cwd());
+      console.log('🔍 Debug: Directory contents:', fs.readdirSync(process.cwd()));
+      
+      // Look for cdk.json in current directory and parent directories
+      let currentDir = process.cwd();
+      let cdkJsonPath: string | null = null;
+      
+      while (currentDir !== path.dirname(currentDir)) {
+        const potentialPath = path.join(currentDir, 'cdk.json');
+        console.log('🔍 Debug: Checking for cdk.json at:', potentialPath);
+        if (fs.existsSync(potentialPath)) {
+          cdkJsonPath = potentialPath;
+          console.log('✅ Debug: Found cdk.json at:', cdkJsonPath);
+          break;
+        }
+        currentDir = path.dirname(currentDir);
+      }
+      
+      if (!cdkJsonPath) {
+        console.warn('⚠️  cdk.json not found, using empty context');
+        console.log('🔍 Debug: Searched directories up to:', currentDir);
+        return {};
+      }
+      
+      const cdkJson = JSON.parse(fs.readFileSync(cdkJsonPath, 'utf8'));
+      const context = cdkJson.context || {};
+      
+      console.log('✅ Debug: Loaded CDK context with keys:', Object.keys(context));
+      console.log('🔍 Debug: Environments found:', Object.keys(context.environments || {}));
+      console.log('🔍 Debug: Applications found:', Object.keys(context.applications || {}));
+      
+      return context;
+    } catch (error) {
+      console.warn('⚠️  Failed to load cdk.json context:', (error as Error).message);
+      console.log('🔍 Debug: Error details:', error);
+      return {};
+    }
   }
 
   /**
@@ -79,6 +175,26 @@ class DeploymentValidator {
     console.log('📋 Validating platform configuration...');
     
     try {
+      // Add debug logging to see what the ConfigurationManager sees
+      console.log('🔍 Debug: ConfigurationManager context check...');
+      console.log('🔍 Debug: Configuration source:', this.configManager.getConfigurationSource());
+      
+      const config = this.configManager.getConfig();
+      console.log('🔍 Debug: ConfigManager sees environments:', Object.keys(config.environments));
+      console.log('🔍 Debug: ConfigManager sees applications:', Object.keys(config.applications));
+      console.log('🔍 Debug: ConfigManager platform config:', config.platform);
+      
+      // Add more detailed debug info about what was loaded
+      console.log('🔍 Debug: Environment details:');
+      Object.entries(config.environments).forEach(([name, env]) => {
+        console.log(`  - ${name}: ${env.name} (${env.account}/${env.region})`);
+      });
+      
+      console.log('🔍 Debug: Application details:');
+      Object.entries(config.applications).forEach(([name, app]) => {
+        console.log(`  - ${name}: ${app.applicationName} by ${app.team} (targets: ${app.deploymentTargets.join(', ')})`);
+      });
+      
       this.configManager.validateOrThrow();
       console.log('✅ Configuration validation passed');
       return true;

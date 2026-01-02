@@ -298,6 +298,7 @@ this.codeConnection = new CodeConnectionsConstruct(this, 'CodeConnection', {
 this.pipeline = new CodePipeline(this, 'PlatformPipeline', {
   pipelineName: 'PlatformPipeline',
   pipelineType: codepipeline.PipelineType.V2, // V2 for CodeConnections source revisions
+  selfMutation: false, // DISABLED to prevent infinite loops
   // ... other configuration
 });
 ```
@@ -319,11 +320,13 @@ const pipeline = new codepipeline.Pipeline(this, 'Pipeline', {
 - Supports native CodeConnections triggers
 - Eliminates need for EventBridge polling
 
-**CRITICAL - Trigger Configuration**:
-- **DO NOT** set `triggers` property on V2 pipelines - this disables default change detection
-- **DO** use `triggerOnPush: true` in `CodePipelineSource.connection()` for automatic triggering
-- Default change detection works automatically with V2 + CodeConnections when no custom triggers are specified
-- Custom triggers should only be used for advanced scenarios (tags, pull requests, etc.)
+**CRITICAL - Loop Prevention Configuration**:
+- **SELF-MUTATION DISABLED**: Set `selfMutation: false` in CodePipeline construct to prevent infinite loops
+- **V2 PIPELINE REQUIRED**: Use `pipelineType: codepipeline.PipelineType.V2` for CodeConnections compatibility
+- **DEFAULT TRIGGERS**: Do NOT set explicit `triggerOnPush` or `triggers` properties - use default change detection
+- **LOOP RESOLUTION**: Disabling self-mutation eliminates the loop cycle where pipeline updates trigger new executions
+- **TRADE-OFF**: Pipeline infrastructure changes require manual CDK deployment instead of automatic self-mutation
+- **RECOMMENDED APPROACH**: Platform team deploys pipeline changes via local CDK, applications trigger normally
 
 #### Configuration in cdk.json
 

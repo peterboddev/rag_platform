@@ -1,5 +1,6 @@
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
+import { ConfigurationLoader, HybridConfigurationLoader, ApplicationOnlyConfig, PlatformOnlyConfig } from './configuration-loaders';
 
 /**
  * Environment-specific configuration
@@ -79,16 +80,55 @@ export interface ValidationResult {
 export class ConfigurationManager {
   private config: PlatformConfig;
   protected readonly scope: Construct;
+  private loader: ConfigurationLoader;
 
-  constructor(scope: Construct) {
+  constructor(scope: Construct, loader?: ConfigurationLoader) {
     this.scope = scope;
+    this.loader = loader || new HybridConfigurationLoader();
     this.config = this.loadConfiguration();
   }
 
   /**
-   * Loads configuration from CDK context and configuration files
+   * Loads configuration from pluggable configuration loader
    */
   private loadConfiguration(): PlatformConfig {
+    try {
+      // Load platform and application configurations separately
+      const platformConfig = this.loader.loadPlatformConfig();
+      const applicationConfigs = this.loader.loadApplicationConfigs();
+
+      // Convert application configs to the expected format
+      const applications: { [appName: string]: ApplicationConfig } = {};
+      applicationConfigs.forEach(appConfig => {
+        applications[appConfig.applicationName] = appConfig;
+      });
+
+      // Merge into complete platform configuration
+      const config: PlatformConfig = {
+        platform: platformConfig.platform,
+        environments: platformConfig.environments,
+        applications,
+        defaults: platformConfig.defaults,
+      };
+
+      // Load environment-specific overrides (from CDK context)
+      const envOverrides = this.loadEnvironmentOverrides();
+      
+      // Merge configurations with precedence: base config < env overrides
+      return this.mergeConfigurations(config, envOverrides);
+    } catch (error) {
+      console.error(`Configuration loading failed with ${this.loader.getSourceDescription()}:`, error);
+      
+      // Fall back to CDK context loading for backward compatibility
+      console.log('Falling back to legacy CDK context loading...');
+      return this.loadLegacyConfiguration();
+    }
+  }
+
+  /**
+   * Legacy configuration loading from CDK context (backward compatibility)
+   */
+  private loadLegacyConfiguration(): PlatformConfig {
     // Load base configuration from CDK context
     const baseConfig = this.loadFromContext();
     
@@ -350,6 +390,13 @@ export class ConfigurationManager {
     });
 
     return { isValid: errors.length === 0, errors, warnings };
+  }
+
+  /**
+   * Gets the configuration source description for debugging
+   */
+  public getConfigurationSource(): string {
+    return this.loader.getSourceDescription();
   }
 
   /**

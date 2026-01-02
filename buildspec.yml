@@ -57,10 +57,58 @@ phases:
         else
           echo "⚠️  Credential validation is disabled"
         fi
+      - echo "📋 Validating platform and application configurations..."
+      - |
+        echo "🔍 Validating platform configuration (cdk.json)..."
+        if [ -f "cdk.json" ]; then
+          echo "✅ Platform configuration file found"
+          # Validate JSON syntax
+          if jq empty cdk.json 2>/dev/null; then
+            echo "✅ Platform configuration JSON syntax is valid"
+          else
+            echo "❌ Platform configuration JSON syntax is invalid"
+            exit 1
+          fi
+        else
+          echo "❌ Platform configuration file (cdk.json) not found"
+          exit 1
+        fi
+        
+        echo "🔍 Validating application configurations..."
+        if [ -d "config/applications" ]; then
+          echo "✅ Application configuration directory found"
+          # Validate each application configuration file
+          for config_file in config/applications/*.json; do
+            if [ -f "$config_file" ]; then
+              echo "🔍 Validating $(basename "$config_file")..."
+              if jq empty "$config_file" 2>/dev/null; then
+                echo "✅ $(basename "$config_file") JSON syntax is valid"
+                # Check for required application fields
+                if jq -e '.applicationName and .team and .sourceRepo and .deploymentTargets' "$config_file" >/dev/null 2>&1; then
+                  echo "✅ $(basename "$config_file") has required fields"
+                else
+                  echo "❌ $(basename "$config_file") missing required fields"
+                  exit 1
+                fi
+              else
+                echo "❌ $(basename "$config_file") JSON syntax is invalid"
+                exit 1
+              fi
+            fi
+          done
+        else
+          echo "⚠️  No application configuration directory found (config/applications)"
+        fi
+        
+        echo "✅ Configuration validation completed successfully"
+      - echo "Installing project dependencies..."
+      - npm install
       - echo "Validating TypeScript configuration..."
       - npx tsc --noEmit --skipLibCheck
       - echo "Compiling TypeScript..."
       - npm run build
+      - echo "Running configuration validation script..."
+      - npx ts-node scripts/validate-deployment.ts --mode configuration --verbose
       - echo "Running tests..."
       - npm test
       

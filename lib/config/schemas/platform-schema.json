@@ -1,0 +1,147 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Platform Configuration Schema",
+  "description": "Schema for platform-level configuration including environments, platform settings, and defaults",
+  "type": "object",
+  "properties": {
+    "platform": {
+      "type": "object",
+      "properties": {
+        "region": {
+          "type": "string",
+          "pattern": "^[a-z]{2}-[a-z]+-[0-9]+$",
+          "description": "AWS region (e.g., us-east-1)"
+        },
+        "account": {
+          "type": "string",
+          "pattern": "^[0-9]{12}$",
+          "description": "12-digit AWS account ID"
+        },
+        "connectionArn": {
+          "type": "string",
+          "pattern": "^arn:aws:codeconnections:[a-z0-9-]+:[0-9]{12}:connection/[a-f0-9-]+$",
+          "description": "CodeConnections ARN (optional - can be created by CDK)"
+        },
+        "artifactBucketPrefix": {
+          "type": "string",
+          "pattern": "^[a-z0-9-]+$",
+          "description": "S3 bucket prefix for pipeline artifacts"
+        }
+      },
+      "required": ["region", "account"],
+      "additionalProperties": false
+    },
+    "platformRepository": {
+      "type": "object",
+      "properties": {
+        "owner": {
+          "type": "string",
+          "minLength": 1,
+          "description": "GitHub organization or user name"
+        },
+        "repo": {
+          "type": "string",
+          "minLength": 1,
+          "description": "GitHub repository name"
+        },
+        "branch": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Git branch name"
+        },
+        "description": {
+          "type": "string",
+          "description": "Repository description"
+        }
+      },
+      "required": ["owner", "repo", "branch"],
+      "additionalProperties": false
+    },
+    "environments": {
+      "type": "object",
+      "patternProperties": {
+        "^[a-zA-Z][a-zA-Z0-9-]*$": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Human-readable environment name"
+            },
+            "account": {
+              "type": "string",
+              "pattern": "^[0-9]{12}$",
+              "description": "12-digit AWS account ID"
+            },
+            "region": {
+              "type": "string",
+              "pattern": "^[a-z]{2}-[a-z]+-[0-9]+$",
+              "description": "AWS region"
+            },
+            "isProd": {
+              "type": "boolean",
+              "description": "Whether this is a production environment"
+            },
+            "requiresApproval": {
+              "type": "boolean",
+              "description": "Whether deployments require manual approval"
+            },
+            "parameters": {
+              "type": "object",
+              "patternProperties": {
+                "^[a-zA-Z][a-zA-Z0-9_]*$": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false,
+              "description": "Environment-specific parameters"
+            }
+          },
+          "required": ["name", "account", "region"],
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false,
+      "minProperties": 1,
+      "description": "Environment configurations"
+    },
+    "defaults": {
+      "type": "object",
+      "properties": {
+        "buildRuntime": {
+          "type": "string",
+          "enum": ["18", "20"],
+          "description": "Node.js runtime version"
+        },
+        "computeType": {
+          "type": "string",
+          "enum": ["BUILD_GENERAL1_SMALL", "BUILD_GENERAL1_MEDIUM", "BUILD_GENERAL1_LARGE"],
+          "description": "CodeBuild compute type"
+        },
+        "buildImage": {
+          "type": "string",
+          "enum": ["AMAZON_LINUX_2_STANDARD_3_0_ARM", "AMAZON_LINUX_2_STANDARD_5_0"],
+          "description": "CodeBuild image"
+        },
+        "cacheEnabled": {
+          "type": "boolean",
+          "description": "Whether build caching is enabled"
+        }
+      },
+      "required": ["buildRuntime", "computeType", "buildImage", "cacheEnabled"],
+      "additionalProperties": false
+    }
+  },
+  "required": ["platform", "platformRepository", "environments", "defaults"],
+  "additionalProperties": false,
+  "not": {
+    "anyOf": [
+      {"properties": {"applications": true}},
+      {"properties": {"applicationName": true}},
+      {"properties": {"team": true}},
+      {"properties": {"sourceRepo": true}},
+      {"properties": {"buildConfig": true}},
+      {"properties": {"deploymentTargets": true}}
+    ]
+  }
+}
