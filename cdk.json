@@ -102,6 +102,35 @@
       "computeType": "BUILD_GENERAL1_SMALL",
       "buildImage": "AMAZON_LINUX_2_STANDARD_3_0_ARM",
       "cacheEnabled": true
+    },
+    "applications": {
+      "rag-app": {
+        "applicationName": "rag-app",
+        "team": "ai-team",
+        "sourceRepo": {
+          "owner": "peterboddev",
+          "repo": "rag",
+          "branch": "main"
+        },
+        "buildConfig": {
+          "runtime": "20",
+          "commands": [
+            "echo 'Installing dependencies...'",
+            "npm ci",
+            "echo 'Running tests...'",
+            "npm run test --if-present",
+            "echo 'Building application...'",
+            "npm run build --if-present",
+            "echo 'Build completed successfully'"
+          ],
+          "environment": {
+            "NODE_ENV": "production",
+            "NPM_CONFIG_CACHE": "/tmp/.npm"
+          }
+        },
+        "deploymentTargets": ["dev", "staging", "prod"],
+        "enabled": true
+      }
     }
   }
 }
