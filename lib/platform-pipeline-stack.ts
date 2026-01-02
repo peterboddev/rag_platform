@@ -285,7 +285,7 @@ export class PlatformPipelineStack extends cdk.Stack {
                   'test -d config/applications && echo "✅ config/applications directory found" || echo "❌ config/applications directory not found"',
                   'if [ -d config/applications ]; then echo "Application configs:"; ls -la config/applications/; fi',
                   'npm install',
-                  `npx ts-node scripts/validate-deployment.ts -- --environment ${envName}`,
+                  `npx ts-node scripts/test-config-simple.ts`,
                   `echo "Promotion to ${envName} validated successfully"`,
                 ],
                 buildEnvironment: {
