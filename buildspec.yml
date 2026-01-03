@@ -27,18 +27,6 @@ phases:
         if [ "$CREDENTIAL_VALIDATION_ENABLED" = "true" ]; then
           echo "📋 Credential validation is enabled"
           
-          # Check if GitHub token is available (for token-based auth)
-          if [ -n "$GITHUB_TOKEN" ]; then
-            echo "✅ GitHub token is configured"
-            # Validate token by making a test API call
-            if curl -s -H "Authorization: token $GITHUB_TOKEN" https://api.github.com/user | grep -q '"login"'; then
-              echo "✅ GitHub token is valid"
-            else
-              echo "❌ GitHub token is invalid"
-              exit 1
-            fi
-          fi
-          
           # Check if CodeConnections connection ARN is available (for connection-based auth)
           if [ -n "$CONNECTION_ARN" ]; then
             echo "✅ CodeConnections connection ARN is configured: $CONNECTION_ARN"
@@ -130,7 +118,7 @@ phases:
       - |
         if [ "$CREDENTIAL_VALIDATION_ENABLED" = "true" ]; then
           echo "📊 Credential usage audit:"
-          echo "  - GitHub authentication method: $([ -n "$GITHUB_TOKEN" ] && echo "Token" || echo "CodeConnections Connection")"
+          echo "  - GitHub authentication method: CodeConnections Connection"
           echo "  - AWS identity: $(aws sts get-caller-identity --output text --query 'Arn' 2>/dev/null || echo "Unknown")"
           echo "  - Secrets prefix: ${SECRETS_PREFIX:-"Not configured"}"
         fi

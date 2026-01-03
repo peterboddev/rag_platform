@@ -424,7 +424,6 @@ class PreCommitValidator {
       
       // Check for sensitive files that shouldn't be committed
       const sensitivePatterns = [
-        '.git_credentials',
         '*.pem',
         '*.key',
         '.env',
@@ -452,7 +451,6 @@ class PreCommitValidator {
 
       // Check .gitignore for required entries
       const requiredGitIgnoreEntries = [
-        '.git_credentials',
         'node_modules',
         'cdk.out',
         '*.js',
@@ -525,7 +523,6 @@ class PreCommitValidator {
 
       const gitIgnoreContent = fs.readFileSync('.gitignore', 'utf8');
       const requiredEntries = [
-        '.git_credentials',
         'node_modules/',
         'cdk.out/',
         '*.js',

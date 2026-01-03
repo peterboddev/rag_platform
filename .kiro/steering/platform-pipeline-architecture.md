@@ -186,37 +186,34 @@ phases:
    - [ ] `githubOrg` and `githubRepo` in `cdk.json` match the actual repository
    - [ ] All platform pipeline code has been committed and pushed
 
-#### Git Credentials File (.git_credentials)
+#### Local Development Authentication
 
-**PURPOSE**: The `.git_credentials` file stores GitHub authentication credentials for local development workstations.
+**PURPOSE**: Local development requires standard Git authentication for repository access and AWS CLI configuration for CodeConnections management.
 
-**CRITICAL SECURITY REQUIREMENTS**:
-- **NEVER commit `.git_credentials` to any repository**
-- **ALWAYS add `.git_credentials` to `.gitignore` file**
-- This file contains sensitive authentication tokens/credentials
-- Used only for local platform engineer workstation authentication
-- CodeBuild uses AWS Secrets Manager and CodeConnections, NOT this file
+**Local Development Requirements**:
+- **Git Authentication**: Use Git credential helper or SSH keys for repository access
+- **AWS CLI**: Configure AWS credentials for CodeConnections authorization
+- **No Stored Files**: No credential files needed in the project directory
+- **CodeBuild Uses CodeConnections**: CI/CD uses CodeConnections, not local credentials
 
-**File Location and Usage**:
+**Local Development Setup**:
+```bash
+# Configure Git authentication
+git config --global credential.helper store
+# OR use SSH keys (recommended)
+ssh-keygen -t ed25519 -C "your_email@example.com"
+
+# Configure AWS CLI
+aws configure
+# OR use AWS SSO (recommended)
+aws configure sso
 ```
-# Local workstation only - NEVER in repository
-.git_credentials
 
-# Must be in .gitignore
-echo ".git_credentials" >> .gitignore
-```
-
-**What NOT to do**:
-- ❌ Commit `.git_credentials` to repository
-- ❌ Share `.git_credentials` between team members
-- ❌ Use `.git_credentials` for CodeBuild authentication
-- ❌ Store `.git_credentials` in shared locations
-
-**What TO do**:
-- ✅ Keep `.git_credentials` local to each engineer's workstation
-- ✅ Add `.git_credentials` to `.gitignore`
-- ✅ Use AWS Secrets Manager for CodeBuild credential access
-- ✅ Use CodeConnections for pipeline GitHub integration
+**Security Best Practices**:
+- ✅ Use standard Git authentication methods
+- ✅ Keep `.git_credentials` in `.gitignore` for security (legacy protection)
+- ✅ Use AWS CLI for CodeConnections management
+- ✅ Use CodeConnections for all CI/CD GitHub integration
 
 #### CodeBuild Credential Access
 - CodeConnections provide secure GitHub integration for pipelines
@@ -534,13 +531,13 @@ This architecture enables the platform team to maintain control and consistency 
 
 ### Security and Credentials
 
-#### .git_credentials Accidentally Committed
+#### Accidental Credential Exposure
 **Symptoms**: Security scan flags or credential exposure
 
-**Root Cause**: `.git_credentials` file was committed to repository
+**Root Cause**: Sensitive files were committed to repository
 
 **Solution**:
-1. Remove from repository: `git rm .git_credentials`
-2. Add to .gitignore: `echo ".git_credentials" >> .gitignore`
+1. Remove from repository: `git rm .env .git_credentials *.key`
+2. Add to .gitignore: `echo -e ".env\n.git_credentials\n*.key" >> .gitignore`
 3. Commit changes: `git commit -m "Remove credentials and update gitignore"`
 4. Rotate any exposed credentials immediately

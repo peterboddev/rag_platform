@@ -65,50 +65,37 @@ CDK_DEFAULT_ACCOUNT: 123456789012
 
 ## Local Development Credentials
 
-### .git_credentials File (Local Development Only)
+### GitHub Authentication for Local Development
 
-For local development, GitHub credentials are stored in a `.git_credentials` file in the project root. This file is automatically excluded from version control and is **ONLY** used for local CDK operations.
+For local development, GitHub authentication is handled through standard Git credential helpers and the AWS CLI for CodeConnections authorization. No stored credential files are required.
 
-#### File Location
-```
-platform-pipeline/
-├── .git_credentials          # GitHub credentials (excluded from git)
-├── .gitignore               # Contains .git_credentials exclusion
-└── ...
-```
+#### Local Development Setup
 
-#### File Format
-
-The `.git_credentials` file supports GitHub Personal Access Token authentication:
-
-```bash
-# GitHub Personal Access Token Authentication (Local Development Only)
-GITHUB_TOKEN=ghp_your_personal_access_token_here
-GITHUB_USERNAME=your_github_username
-GITHUB_ORG=your_organization_name
-GITHUB_REPO=platform-pipeline-repo-name
-BRANCH=main
-```
-
-#### GitHub Personal Access Token Setup
-
-1. **Create Token:**
-   - Go to GitHub Settings → Developer settings → Personal access tokens
-   - Click "Generate new token (classic)"
-   - Set expiration (recommend 90 days for security)
-
-2. **Required Scopes:**
-   ```
-   ✅ repo (Full control of private repositories)
-   ✅ workflow (Update GitHub Action workflows)
-   ✅ admin:repo_hook (Full control of repository hooks)
-   ```
-
-3. **Add to .git_credentials:**
+1. **Configure Git Credentials:**
    ```bash
-   GITHUB_TOKEN=ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-   GITHUB_USERNAME=your_username
+   # Use Git credential helper (recommended)
+   git config --global credential.helper store
+   
+   # Or use SSH keys (most secure)
+   ssh-keygen -t ed25519 -C "your_email@example.com"
+   # Add to GitHub: Settings → SSH and GPG keys
    ```
+
+2. **AWS CLI Configuration:**
+   ```bash
+   # Configure AWS credentials for CodeConnections
+   aws configure
+   
+   # Or use AWS SSO (recommended)
+   aws configure sso
+   ```
+
+#### Repository Access
+
+Local development requires:
+- **Git Access**: Standard Git authentication (HTTPS with tokens or SSH keys)
+- **AWS Access**: AWS CLI configured for CodeConnections management
+- **No Stored Files**: No credential files needed in the project directory
 
 ### File Security
 
@@ -128,24 +115,7 @@ The `.gitignore` file automatically excludes credential files:
 .env.local
 ```
 
-#### File Permissions
-
-Set secure permissions manually:
-
-```bash
-# Set secure permissions
-chmod 600 .git_credentials  # Owner read/write only
-```
-
-#### Manual Permission Check
-
-```bash
-# Check current permissions
-ls -la .git_credentials
-
-# Should show: -rw------- (600 permissions)
-# If not, fix with: chmod 600 .git_credentials
-```
+**Note**: `.git_credentials` remains in `.gitignore` for security, even though it's no longer used by the platform.
 
 ## AWS Credentials
 
@@ -250,13 +220,12 @@ const codeBuildRole = new iam.Role(this, 'CodeBuildRole', {
 ### Manual Validation Checklist
 
 #### Local Development Checklist
-- [ ] `.git_credentials` file exists and contains valid GitHub token (local development only)
-- [ ] `.git_credentials` has secure permissions (600)
-- [ ] `.git_credentials` is excluded from version control
+- [ ] Git credentials configured (credential helper or SSH keys)
 - [ ] AWS CLI is installed and configured
 - [ ] CDK CLI is installed globally
 - [ ] Can run `aws sts get-caller-identity` successfully
 - [ ] Can run `cdk --version` successfully
+- [ ] Can run `git push` to repository successfully
 
 #### CI/CD Environment Checklist
 - [ ] CodeConnections connection is authorized and shows "Available" status
@@ -277,13 +246,16 @@ const codeBuildRole = new iam.Role(this, 'CodeBuildRole', {
 # Click "Update pending connection" and complete OAuth flow
 ```
 
-**2. Invalid GitHub token (local development)**
+**2. Git authentication issues (local development)**
 ```bash
-# Check token validity
-curl -H "Authorization: token YOUR_TOKEN" https://api.github.com/user
+# Check Git credential configuration
+git config --list | grep credential
 
-# If invalid, generate new token at:
-# https://github.com/settings/tokens
+# Test repository access
+git ls-remote origin
+
+# If using HTTPS, ensure token has correct permissions
+# If using SSH, ensure key is added to ssh-agent
 ```
 
 **3. AWS credentials not configured**
@@ -295,10 +267,15 @@ aws configure
 aws configure list
 ```
 
-**4. Permission denied on .git_credentials**
+**4. Git repository access denied**
 ```bash
-# Fix file permissions
-chmod 600 .git_credentials
+# Check Git configuration
+git config --list | grep credential
+
+# Test repository access
+git ls-remote origin
+
+# Ensure proper authentication method is configured
 ```
 
 **5. CDK bootstrap required**
@@ -322,7 +299,7 @@ cdk bootstrap
    ```bash
    # Remove from git history (use with caution)
    git filter-branch --force --index-filter \
-     'git rm --cached --ignore-unmatch .git_credentials' \
+     'git rm --cached --ignore-unmatch .git_credentials .env' \
      --prune-empty --tag-name-filter cat -- --all
    
    # Force push (coordinate with team)
@@ -331,9 +308,9 @@ cdk bootstrap
 
 3. **Generate New Credentials:**
    ```bash
-   # Generate new GitHub token
-   # Update .git_credentials file
-   # Test with CDK commands
+   # Generate new GitHub token or SSH key
+   # Update local Git configuration
+   # Test with Git commands
    ```
 
 ## Best Practices Summary
@@ -341,17 +318,15 @@ cdk bootstrap
 ### Security Best Practices
 1. **Never commit credentials to version control**
 2. **Use CodeConnections for all CI/CD GitHub access**
-3. **Use short-lived tokens for local development (90 days recommended)**
+3. **Use standard Git authentication for local development**
 4. **Use IAM roles instead of long-term keys in production**
-5. **Set restrictive file permissions (600) on credential files**
-6. **Monitor credential usage and access patterns**
+5. **Monitor credential usage and access patterns**
 
 ### Development Best Practices
 1. **Use CodeConnections for all pipeline GitHub integration**
-2. **Test credential configuration before committing code**
+2. **Test Git access before committing code**
 3. **Use separate credentials for different environments**
 4. **Document credential requirements in team runbooks**
-5. **Keep local .git_credentials file secure and excluded from git**
 
 ### Operational Best Practices
 1. **Use CodeConnections exclusively for production pipelines**

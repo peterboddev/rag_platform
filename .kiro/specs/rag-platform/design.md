@@ -388,7 +388,7 @@ The system implements comprehensive error handling at multiple levels:
 
 ### Security and Access Errors
 - IAM permission validation before deployment
-- Credential validation and rotation handling
+- CodeConnections validation and setup handling
 - Cross-account access error management
 - Audit trail for all security-related failures
 

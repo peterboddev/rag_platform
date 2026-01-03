@@ -182,7 +182,7 @@ This implementation plan breaks down the platform pipeline CDK system into discr
 
   - [x] 10.3 Configure secure credential access for CodeBuild
     - Set up environment variable and Secrets Manager integration
-    - Implement credential rotation and validation
+    - Configure CodeConnections for secure GitHub integration
     - _Requirements: 4.3_
 
   - [ ]* 10.4 Write property test for secure credential access in CI/CD
