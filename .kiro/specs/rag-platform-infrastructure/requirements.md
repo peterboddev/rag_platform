@@ -2,16 +2,19 @@
 
 ## Introduction
 
-This document defines the requirements for RAG (Retrieval-Augmented Generation) application infrastructure that will be deployed and managed by the platform team. The infrastructure provides foundational AI/ML services, particularly AWS Bedrock Nova Pro, that application developers can use to build RAG applications. 
+This document defines the requirements for **RAG Platform Infrastructure** that will be deployed and managed by the platform team. This infrastructure provides foundational AI/ML services, particularly AWS Bedrock Nova Pro, that application developers can use to build RAG applications. 
 
-**Prerequisites**: This specification assumes that the platform CodePipeline infrastructure is already deployed and functional, as defined in the `rag-platform` specification. The RAG application infrastructure will be deployed through this existing platform pipeline system.
+**Project Distinction**: This is the **RAG Platform Infrastructure** project, which provides the underlying AWS infrastructure and services. Application developers will use this infrastructure to build separate **RAG Applications** that consume these platform services.
+
+**Prerequisites**: This specification assumes that the platform CodePipeline infrastructure is already deployed and functional, as defined in the `rag-platform` specification. The RAG Platform Infrastructure will be deployed through this existing platform pipeline system.
 
 ## Glossary
 
-- **RAG_Application**: Retrieval-Augmented Generation application that combines information retrieval with generative AI
+- **RAG_Platform_Infrastructure**: The foundational AWS infrastructure and services that enable RAG capabilities (this project)
+- **RAG_Application**: Individual applications built by developers that consume the RAG Platform Infrastructure services
 - **Bedrock_Nova_Pro**: AWS Bedrock's Nova Pro foundation model for advanced text generation and reasoning
-- **Platform_Team**: Infrastructure team responsible for deploying and managing shared AI/ML services
-- **Application_Developer**: Developer who builds RAG applications using the platform-provided infrastructure
+- **Platform_Team**: Infrastructure team responsible for deploying and managing the RAG Platform Infrastructure
+- **Application_Developer**: Developer who builds RAG Applications using the platform-provided infrastructure
 - **Foundation_Model**: Pre-trained AI model available through AWS Bedrock service
 - **Model_Endpoint**: Accessible interface for invoking foundation models
 - **Vector_Database**: Database optimized for storing and querying high-dimensional vectors for similarity search
@@ -22,39 +25,39 @@ This document defines the requirements for RAG (Retrieval-Augmented Generation) 
 
 ### Requirement 1: Bedrock Nova Pro Foundation Model Access
 
-**User Story:** As an application developer, I want access to AWS Bedrock Nova Pro foundation model, so that I can build advanced RAG applications with state-of-the-art text generation capabilities.
+**User Story:** As an application developer, I want access to AWS Bedrock Nova Pro foundation model through the RAG Platform Infrastructure, so that I can build advanced RAG Applications with state-of-the-art text generation capabilities.
 
 #### Acceptance Criteria
 
-1. THE Platform_Team SHALL deploy AWS Bedrock Nova Pro model access in the target AWS account
-2. WHEN application developers invoke the Nova Pro model, THE System SHALL provide secure, authenticated access
-3. THE System SHALL configure appropriate IAM roles and policies for Nova Pro model access
-4. THE System SHALL enable Nova Pro model in all required AWS regions for the RAG application
-5. WHEN Nova Pro model requests are made, THE System SHALL handle rate limiting and quota management appropriately
+1. THE Platform_Team SHALL deploy AWS Bedrock Nova Pro model access in the target AWS account as part of the RAG Platform Infrastructure
+2. WHEN application developers invoke the Nova Pro model from their RAG Applications, THE RAG_Platform_Infrastructure SHALL provide secure, authenticated access
+3. THE RAG_Platform_Infrastructure SHALL configure appropriate IAM roles and policies for Nova Pro model access
+4. THE RAG_Platform_Infrastructure SHALL enable Nova Pro model in all required AWS regions
+5. WHEN Nova Pro model requests are made from RAG Applications, THE RAG_Platform_Infrastructure SHALL handle rate limiting and quota management appropriately
 
 ### Requirement 2: Vector Database Infrastructure
 
-**User Story:** As an application developer, I want a managed vector database service, so that I can store and query document embeddings for retrieval in my RAG application.
+**User Story:** As an application developer, I want a managed vector database service provided by the RAG Platform Infrastructure, so that I can store and query document embeddings for retrieval in my RAG Applications.
 
 #### Acceptance Criteria
 
-1. THE Platform_Team SHALL deploy a managed vector database service (Amazon OpenSearch or Amazon RDS with pgvector)
-2. THE Vector_Database SHALL support high-dimensional vector storage and similarity search operations
-3. WHEN developers store embeddings, THE Vector_Database SHALL provide fast indexing and retrieval capabilities
+1. THE Platform_Team SHALL deploy a managed vector database service as part of the RAG Platform Infrastructure (Amazon OpenSearch or Amazon RDS with pgvector)
+2. THE Vector_Database SHALL support high-dimensional vector storage and similarity search operations for RAG Applications
+3. WHEN developers store embeddings from their RAG Applications, THE Vector_Database SHALL provide fast indexing and retrieval capabilities
 4. THE Vector_Database SHALL be configured with appropriate backup and disaster recovery policies
-5. THE System SHALL provide secure network access to the Vector_Database from application environments
+5. THE RAG_Platform_Infrastructure SHALL provide secure network access to the Vector_Database from RAG Applications
 
 ### Requirement 3: Document Processing and Embedding Pipeline
 
-**User Story:** As an application developer, I want an automated pipeline for processing documents and generating embeddings, so that I can easily populate my knowledge base without manual preprocessing.
+**User Story:** As an application developer, I want an automated pipeline for processing documents and generating embeddings provided by the RAG Platform Infrastructure, so that I can easily populate my knowledge base in my RAG Applications without manual preprocessing.
 
 #### Acceptance Criteria
 
-1. THE Platform_Team SHALL deploy document processing infrastructure using AWS services (S3, Lambda, SQS)
-2. WHEN documents are uploaded to the designated S3 bucket, THE System SHALL automatically trigger processing
-3. THE System SHALL extract text content from various document formats (PDF, DOCX, TXT, HTML)
-4. THE System SHALL generate embeddings using AWS Bedrock embedding models
-5. THE System SHALL store processed embeddings in the Vector_Database with metadata
+1. THE Platform_Team SHALL deploy document processing infrastructure as part of the RAG Platform Infrastructure using AWS services (S3, Lambda, SQS)
+2. WHEN documents are uploaded to the designated S3 bucket from RAG Applications, THE RAG_Platform_Infrastructure SHALL automatically trigger processing
+3. THE RAG_Platform_Infrastructure SHALL extract text content from various document formats (PDF, DOCX, TXT, HTML)
+4. THE RAG_Platform_Infrastructure SHALL generate embeddings using AWS Bedrock embedding models
+5. THE RAG_Platform_Infrastructure SHALL store processed embeddings in the Vector_Database with metadata
 
 ### Requirement 4: Knowledge Base Management Service
 
@@ -70,15 +73,15 @@ This document defines the requirements for RAG (Retrieval-Augmented Generation) 
 
 ### Requirement 5: Developer Integration Support
 
-**User Story:** As an application developer, I want to integrate RAG capabilities into my frontend applications and Lambda functions, so that I can build complete RAG applications using the platform-provided infrastructure.
+**User Story:** As an application developer, I want to integrate RAG capabilities into my frontend applications and Lambda functions, so that I can build complete RAG Applications using the RAG Platform Infrastructure services.
 
 #### Acceptance Criteria
 
-1. THE Platform_Team SHALL provide SDK libraries and documentation for accessing Bedrock Nova Pro from Lambda functions
-2. THE System SHALL support integration with developer-created API Gateway methods and Lambda functions
-3. WHEN developers deploy applications through the application pipeline, THE System SHALL provide access to AI services via IAM roles
-4. THE System SHALL provide example code and templates for common RAG integration patterns
-5. THE System SHALL support both direct Bedrock API calls and higher-level abstraction libraries
+1. THE Platform_Team SHALL provide SDK libraries and documentation for accessing Bedrock Nova Pro from Lambda functions in RAG Applications
+2. THE RAG_Platform_Infrastructure SHALL support integration with developer-created API Gateway methods and Lambda functions
+3. WHEN developers deploy RAG Applications through the application pipeline, THE RAG_Platform_Infrastructure SHALL provide access to AI services via IAM roles
+4. THE RAG_Platform_Infrastructure SHALL provide example code and templates for common RAG integration patterns
+5. THE RAG_Platform_Infrastructure SHALL support both direct Bedrock API calls and higher-level abstraction libraries
 
 ### Requirement 6: Application Pipeline Integration
 

@@ -1,18 +1,20 @@
-# Design Document: RAG Application Infrastructure
+# Design Document: RAG Platform Infrastructure
 
 ## Overview
 
-This design document outlines the architecture and implementation approach for RAG (Retrieval-Augmented Generation) application infrastructure that will be deployed and managed by the platform team. The infrastructure provides foundational AI/ML services, particularly AWS Bedrock Nova Pro, vector databases, and supporting services that application developers can use to build RAG applications.
+This design document outlines the architecture and implementation approach for **RAG Platform Infrastructure** that will be deployed and managed by the platform team. This infrastructure provides foundational AI/ML services, particularly AWS Bedrock Nova Pro, vector databases, and supporting services that application developers can use to build **RAG Applications**.
+
+**Project Distinction**: This design covers the **RAG Platform Infrastructure** project, which provides the underlying AWS infrastructure and services. Application developers will use this infrastructure to build separate **RAG Applications** that consume these platform services.
 
 **Prerequisites**: This design assumes that the platform CodePipeline infrastructure is already deployed and functional, as defined in the platform pipeline architecture. 
 
-**Deployment Strategy**: The RAG application infrastructure follows a two-phase deployment approach:
-1. **Initial Bootstrap**: Deploy the RAG infrastructure stack locally using `cdk deploy` to establish the initial resources
+**Deployment Strategy**: The RAG Platform Infrastructure follows a two-phase deployment approach:
+1. **Initial Bootstrap**: Deploy the RAG Platform Infrastructure stack locally using `cdk deploy` to establish the initial resources
 2. **Pipeline Management**: Once deployed, all future updates will be managed through the existing platform pipeline system when changes are pushed to the repository
 
 This approach allows the platform team to establish the infrastructure initially without requiring repository access, while ensuring all subsequent changes go through the controlled pipeline process.
 
-The solution leverages AWS CDK with TypeScript to deploy a comprehensive AI infrastructure stack that integrates seamlessly with the existing platform pipeline architecture. The infrastructure is designed to support multiple environments (dev, staging, prod) and provides secure, scalable access to AI services for application developers building frontend applications and Lambda-based APIs.
+The solution leverages AWS CDK with TypeScript to deploy a comprehensive AI infrastructure stack that integrates seamlessly with the existing platform pipeline architecture. The infrastructure is designed to support multiple environments (dev, staging, prod) and provides secure, scalable access to AI services for application developers building RAG Applications with frontend components and Lambda-based APIs.
 
 ## Architecture
 
@@ -38,7 +40,7 @@ graph TB
             end
             
             subgraph "Private Subnets"
-                subgraph "RAG Infrastructure Stack"
+                subgraph "RAG Platform Infrastructure Stack"
                     subgraph "AI Services"
                         BEDROCK[Bedrock Nova Pro]
                         EMBED[Embedding Models]
@@ -99,7 +101,7 @@ graph TB
     end
     
     PP --> CB
-    CB --> RAG_STACK[RAG Infrastructure Stack]
+    CB --> RAG_PLATFORM_STACK[RAG Platform Infrastructure Stack]
     AP --> DEPLOY
     DEPLOY --> LAMBDA_APP
     DEPLOY --> FRONTEND
@@ -127,13 +129,13 @@ graph TB
     VPC_TEXTRACT --> TEXTRACT
     VPC_SECRETS --> AURORA
     
-    RAG_STACK --> CW
+    RAG_PLATFORM_STACK --> CW
     CW --> ALERTS
 ```
 
 ### Component Architecture
 
-The RAG infrastructure consists of several key components:
+The RAG Platform Infrastructure consists of several key components:
 
 1. **Network Infrastructure**: Multi-AZ VPC with public/private subnets and VPC endpoints
 2. **Bedrock AI Services**: Nova Pro foundation model and embedding models
@@ -144,8 +146,8 @@ The RAG infrastructure consists of several key components:
 7. **Authentication Services**: Cognito User Pool for user authentication
 8. **S3 Storage Infrastructure**: Multiple buckets for website, documents, configuration, and backup
 9. **Security Layer**: IAM roles, KMS encryption, security groups, and VPC endpoints
-10. **Integration Layer**: Environment-specific configuration for application pipeline integration
-11. **Configuration Export**: Shared configuration file for development teams
+10. **Integration Layer**: Environment-specific configuration for RAG Application pipeline integration
+11. **Configuration Export**: Shared configuration file for development teams building RAG Applications
 
 ## Components and Interfaces
 
