@@ -13,8 +13,9 @@
     }
   },
   "defaults": {
-    "buildRuntime": "18",
+    "buildRuntime": "20",
     "computeType": "BUILD_GENERAL1_MEDIUM",
+    "buildImage": "AMAZON_LINUX_2_STANDARD_3_0_ARM",
     "cacheEnabled": true
   }
 }
