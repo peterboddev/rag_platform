@@ -24,6 +24,7 @@ export interface DocumentProcessingProps {
 
 export class DocumentProcessingConstruct extends Construct {
   public readonly processingFunction: lambda.Function;
+  public readonly embeddingFunction: lambda.Function;
   public readonly processingQueue: sqs.Queue;
   public readonly textractRole: iam.Role;
 
@@ -216,6 +217,78 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         batchSize: 1,
       })
     );
+
+    // Create embedding generation Lambda function
+    this.embeddingFunction = new lambda.Function(this, 'EmbeddingFunction', {
+      functionName: `${props.applicationName}-embedding-generator-${props.environment}`,
+      runtime: lambda.Runtime.PYTHON_3_11,
+      handler: 'index.handler',
+      code: lambda.Code.fromInline(`
+import json
+import boto3
+from typing import Dict, Any
+
+def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
+    """
+    Generate embeddings for processed documents and store in vector database.
+    """
+    print(f"Processing embedding event: {json.dumps(event)}")
+    
+    bedrock = boto3.client('bedrock-runtime')
+    
+    try:
+        # Process SQS messages
+        for record in event.get('Records', []):
+            if record.get('eventSource') == 'aws:sqs':
+                message = json.loads(record['body'])
+                
+                print(f"Generating embeddings for document")
+                
+                # Generate embeddings using Bedrock Titan
+                embedding_response = bedrock.invoke_model(
+                    modelId='${props.embeddingModelId}',
+                    body=json.dumps({
+                        'inputText': message.get('text', '')[:8000]  # Limit text length
+                    })
+                )
+                
+                embedding_data = json.loads(embedding_response['body'].read())
+                embedding_vector = embedding_data['embedding']
+                
+                print(f"Generated embedding vector of length: {len(embedding_vector)}")
+                
+                # TODO: Store embedding in OpenSearch Serverless
+                print(f"Embedding generated (storage not implemented)")
+        
+        return {
+            'statusCode': 200,
+            'body': json.dumps({'message': 'Embeddings generated successfully'})
+        }
+        
+    except Exception as e:
+        print(f"Error generating embeddings: {str(e)}")
+        return {
+            'statusCode': 500,
+            'body': json.dumps({'error': str(e)})
+        }
+      `),
+      timeout: cdk.Duration.minutes(10),
+      memorySize: 512,
+      role: this.textractRole,
+      vpc: props.vpc,
+      vpcSubnets: {
+        subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS,
+      },
+      securityGroups: [props.securityGroups.lambda],
+      environment: {
+        BEDROCK_EMBEDDING_MODEL_ID: props.embeddingModelId,
+        VECTOR_COLLECTION_ENDPOINT: props.vectorDatabase.collectionEndpoint,
+        KNOWLEDGE_BASE_ID: props.knowledgeBase.knowledgeBaseId,
+      },
+    });
+
+    // Grant S3 access to embedding function
+    props.s3Storage.documentBucket.grantReadWrite(this.embeddingFunction);
 
     // Output processing function information
     new cdk.CfnOutput(this, 'ProcessingFunctionArn', {

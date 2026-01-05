@@ -47,7 +47,6 @@ const commonProps = {
 };
 
 // Import values from existing stacks (these should be available as CloudFormation exports)
-const vpcId = cdk.Fn.importValue(`${applicationName}-${environment}-vpc-id`);
 const documentsBucketName = cdk.Fn.importValue(`${applicationName}-${environment}-document-bucket`);
 const vectorDatabaseEndpoint = cdk.Fn.importValue(`${applicationName}-${environment}-vector-db-endpoint`);
 const vectorDatabaseArn = cdk.Fn.importValue(`${applicationName}-${environment}-vector-db-arn`);
@@ -61,7 +60,6 @@ const authenticationStack = new AuthenticationStack(app, `${applicationName}-aut
 // 2. Knowledge Base Stack - Bedrock Knowledge Base
 const knowledgeBaseStack = new KnowledgeBaseStack(app, `${applicationName}-knowledge-base-${environment}`, {
   ...commonProps,
-  vpcId: vpcId,
   vectorDatabaseEndpoint: vectorDatabaseEndpoint,
   vectorDatabaseArn: vectorDatabaseArn,
   documentsBucketName: documentsBucketName,
@@ -71,7 +69,6 @@ const knowledgeBaseStack = new KnowledgeBaseStack(app, `${applicationName}-knowl
 // 3. Document Processing Stack - Lambda pipeline
 const documentProcessingStack = new DocumentProcessingStack(app, `${applicationName}-document-processing-${environment}`, {
   ...commonProps,
-  vpcId: vpcId,
   documentsBucketName: documentsBucketName,
   vectorDatabaseEndpoint: vectorDatabaseEndpoint,
   vectorDatabaseArn: vectorDatabaseArn,
@@ -81,7 +78,6 @@ const documentProcessingStack = new DocumentProcessingStack(app, `${applicationN
 // 4. Monitoring Stack - CloudWatch
 const monitoringStack = new MonitoringStack(app, `${applicationName}-monitoring-${environment}`, {
   ...commonProps,
-  vpcId: vpcId,
   vectorDatabaseArn: vectorDatabaseArn,
   knowledgeBaseId: knowledgeBaseStack.knowledgeBase.knowledgeBaseId,
   processingFunctionArns: [
