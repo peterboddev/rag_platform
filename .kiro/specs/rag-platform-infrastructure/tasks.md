@@ -4,6 +4,18 @@
 
 This implementation plan breaks down the **RAG Platform Infrastructure** into discrete, manageable coding tasks. This infrastructure provides foundational AI/ML services including AWS Bedrock Nova Pro, vector databases, document processing, and supporting services that enable developers to build **RAG Applications**. 
 
+**CURRENT STATUS**: The core RAG Platform Infrastructure has been successfully deployed and is operational. The following major components are complete:
+- ✅ **Network Infrastructure**: VPC, subnets, security groups, VPC endpoints
+- ✅ **Storage Infrastructure**: S3 buckets with partitioning and lifecycle policies
+- ✅ **AI Services**: Bedrock Nova Pro and embedding models
+- ✅ **Vector Database**: OpenSearch Serverless collection
+- ✅ **Authentication**: Cognito user pools and identity pools
+- ✅ **Document Processing**: Lambda pipeline with Textract integration
+- ✅ **Application Integration**: IAM roles with **Textract access included**
+- ✅ **Monitoring**: CloudWatch dashboards and alerting
+
+**TEXTRACT ACCESS**: ✅ **Already configured** - The ApplicationIntegrationConstruct includes Textract permissions (`textract:DetectDocumentText` and `textract:AnalyzeDocument`) in the IAM role for RAG application pipelines.
+
 **Project Distinction**: This implementation covers the **RAG Platform Infrastructure** project, which provides the underlying AWS infrastructure and services. Application developers will use this infrastructure to build separate **RAG Applications** that consume these platform services.
 
 **Prerequisites**: This implementation assumes that the platform CodePipeline infrastructure is already deployed and functional. 
@@ -30,8 +42,8 @@ The initial implementation focuses on development and staging environments, with
   - Test TypeScript compilation setup for RAG Platform Infrastructure
   - _Requirements: 1.1_
 
-- [ ] 2. Implement network infrastructure foundation
-  - [ ] 2.1 Create NetworkInfrastructure construct with VPC and subnets
+- [x] 2. Implement network infrastructure foundation
+  - [x] 2.1 Create NetworkInfrastructure construct with VPC and subnets
     - Implement multi-AZ VPC with public, private, and database subnets
     - Configure Internet Gateway and NAT Gateways (1 for dev, cost-optimized)
     - Set up route tables and subnet associations
@@ -41,7 +53,7 @@ The initial implementation focuses on development and staging environments, with
     - **Property 16: Network security controls**
     - **Validates: Requirements 7.4**
 
-  - [ ] 2.3 Create VPC endpoints for AWS services
+  - [x] 2.3 Create VPC endpoints for AWS services
     - Implement S3 and DynamoDB gateway endpoints (no cost)
     - Create interface endpoints for Bedrock, Textract, and Secrets Manager
     - Configure security groups for VPC endpoint access
@@ -51,8 +63,8 @@ The initial implementation focuses on development and staging environments, with
     - **Property 7: Secure network access**
     - **Validates: Requirements 2.5**
 
-- [ ] 3. Implement core security and IAM infrastructure
-  - [ ] 3.1 Create comprehensive security groups for service communication
+- [x] 3. Implement core security and IAM infrastructure
+  - [x] 3.1 Create comprehensive security groups for service communication
     - Implement Lambda, Aurora, OpenSearch, and VPC endpoint security groups
     - Configure ingress/egress rules for service-to-service communication
     - Set up least-privilege network access patterns
@@ -62,7 +74,7 @@ The initial implementation focuses on development and staging environments, with
     - **Property 2: IAM role and policy consistency**
     - **Validates: Requirements 1.3, 6.1, 7.1**
 
-  - [ ] 3.3 Create KMS encryption keys for data protection
+  - [x] 3.3 Create KMS encryption keys for data protection
     - Set up KMS keys for S3, DynamoDB, Aurora, and other services
     - Configure key policies and rotation
     - _Requirements: 7.2_
@@ -71,14 +83,14 @@ The initial implementation focuses on development and staging environments, with
     - **Property 14: Data encryption compliance**
     - **Validates: Requirements 7.2**
 
-- [ ] 4. Implement S3 storage infrastructure
-  - [ ] 4.1 Create S3StorageConstruct with multiple bucket strategy
+- [x] 4. Implement S3 storage infrastructure
+  - [x] 4.1 Create S3StorageConstruct with multiple bucket strategy
     - Implement website, document, configuration, and backup buckets
     - Configure lifecycle policies and cost optimization
     - Set up CORS and access policies for frontend integration
     - _Requirements: 6.4, 9.1_
 
-  - [ ] 4.2 Configure document bucket partitioning strategy
+  - [x] 4.2 Configure document bucket partitioning strategy
     - Set up prefixes for raw, processing, processed, failed, and archive documents
     - Configure S3 event notifications for document processing pipeline
     - _Requirements: 3.2_
@@ -88,8 +100,8 @@ The initial implementation focuses on development and staging environments, with
     - Test partition prefix configuration
     - _Requirements: 6.4, 3.2_
 
-- [ ] 5. Implement Bedrock AI services infrastructure
-  - [ ] 5.1 Create BedrockAIServicesConstruct for Nova Pro access
+- [x] 5. Implement Bedrock AI services infrastructure
+  - [x] 5.1 Create BedrockAIServicesConstruct for Nova Pro access
     - Configure Bedrock Nova Pro model access and permissions
     - Set up embedding models for document processing
     - Implement cross-region model availability
@@ -103,7 +115,7 @@ The initial implementation focuses on development and staging environments, with
     - **Property 3: Multi-region model availability**
     - **Validates: Requirements 1.4, 11.1**
 
-  - [ ] 5.4 Implement rate limiting and quota management
+  - [x] 5.4 Implement rate limiting and quota management
     - Configure appropriate rate limits and quota handling
     - Set up retry mechanisms and backoff strategies
     - _Requirements: 1.5_
@@ -112,23 +124,35 @@ The initial implementation focuses on development and staging environments, with
     - **Property 4: Rate limiting and quota management**
     - **Validates: Requirements 1.5**
 
-- [ ] 6. Implement vector database infrastructure
-  - [ ] 6.1 Create VectorDatabaseConstruct with OpenSearch Serverless
+- [x] 6. Implement vector database infrastructure
+  - [x] 6.1 Create VectorDatabaseConstruct with OpenSearch Serverless
     - Deploy OpenSearch Serverless collection for vector storage
     - Configure vector index with appropriate dimensions and settings
     - Set up encryption and backup policies
     - _Requirements: 2.1, 2.2, 2.4_
 
+  - [x] 6.1A Configure OpenSearch Lambda access permissions
+    - Create OpenSearch data access policies for Lambda execution roles
+    - Configure network policies for VPC access to OpenSearch Serverless
+    - Implement grantLambdaAccess method in VectorDatabaseConstruct
+    - Add IAM policies for aoss:APIAccessAll and specific OpenSearch operations
+    - Update ApplicationIntegrationConstruct to grant OpenSearch permissions to Lambda roles
+    - _Requirements: 2A.1, 2A.2, 2A.3, 2A.4, 2A.5, 2A.6_
+
   - [ ] 6.2 Write property test for vector database deployment and functionality
     - **Property 5: Vector database deployment and functionality**
     - **Validates: Requirements 2.1, 2.2, 2.3**
+
+  - [ ] 6.2A Write property test for OpenSearch Lambda access permissions
+    - **Property 5A: OpenSearch Lambda access permissions**
+    - **Validates: Requirements 2A.1, 2A.2, 2A.3, 2A.5, 2A.6**
 
   - [ ] 6.3 Write property test for backup and disaster recovery consistency
     - **Property 6: Backup and disaster recovery consistency**
     - **Validates: Requirements 2.4, 11.2**
 
-- [ ] 7. Implement data storage infrastructure
-  - [ ] 7.1 Create DataStorageConstruct with DynamoDB IAM roles
+- [x] 7. Implement data storage infrastructure
+  - [x] 7.1 Create DataStorageConstruct with DynamoDB IAM roles
     - Set up IAM roles for DynamoDB access with table prefix restrictions
     - Configure permissions for application teams to create their own tables
     - _Requirements: 6.2, 7.1_
@@ -146,8 +170,8 @@ The initial implementation focuses on development and staging environments, with
 - [ ] 8. Checkpoint - Ensure core infrastructure tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 9. Implement document processing pipeline
-  - [ ] 9.1 Create DocumentProcessingConstruct with Textract integration
+- [x] 9. Implement document processing pipeline
+  - [x] 9.1 Create DocumentProcessingConstruct with Textract integration
     - Set up Lambda function for document processing orchestration
     - Configure Amazon Textract for text extraction from various formats
     - Implement SQS queue for processing coordination and error handling
@@ -157,7 +181,7 @@ The initial implementation focuses on development and staging environments, with
     - **Property 8: Document processing pipeline with Textract automation**
     - **Validates: Requirements 3.1, 3.2, 3.3, 3.4, 3.5**
 
-  - [ ] 9.3 Configure document processing workflow with S3 partitioning
+  - [x] 9.3 Configure document processing workflow with S3 partitioning
     - Set up S3 event triggers for raw document uploads
     - Implement processing status tracking across partitions
     - Configure dead letter queues for failed processing
@@ -183,8 +207,8 @@ The initial implementation focuses on development and staging environments, with
     - **Property 10: Knowledge base versioning without interruption**
     - **Validates: Requirements 4.4**
 
-- [ ] 11. Implement authentication services
-  - [ ] 11.1 Create CognitoAuthenticationConstruct for user management
+- [x] 11. Implement authentication services
+  - [x] 11.1 Create CognitoAuthenticationConstruct for user management
     - Deploy Cognito User Pool with password policies and OAuth configuration
     - Create User Pool Client for web applications
     - Set up Identity Pool for AWS service access
@@ -194,7 +218,7 @@ The initial implementation focuses on development and staging environments, with
     - **Property 25: Cognito authentication integration**
     - **Validates: Requirements 7.3, 13.1**
 
-  - [ ] 11.3 Configure Cognito integration with API Gateway
+  - [x] 11.3 Configure Cognito integration with API Gateway
     - Set up authorizers and authentication flows
     - Configure callback URLs and logout URLs for applications
     - _Requirements: 6.5_
@@ -203,18 +227,19 @@ The initial implementation focuses on development and staging environments, with
     - **Property 13: End-to-end secure access**
     - **Validates: Requirements 6.5**
 
-- [ ] 12. Implement application integration layer
-  - [ ] 12.1 Create ApplicationIntegrationConstruct for pipeline integration
+- [x] 12. Implement application integration layer
+  - [x] 12.1 Create ApplicationIntegrationConstruct for pipeline integration
     - Set up IAM roles for application Lambda functions with AI service access
     - Configure environment-specific parameters and configuration
     - Create SSM parameters for application configuration
+    - **INCLUDES TEXTRACT ACCESS**: IAM role includes textract:DetectDocumentText and textract:AnalyzeDocument permissions
     - _Requirements: 5.2, 5.3, 6.2_
 
   - [ ] 12.2 Write property test for application pipeline integration
     - **Property 11: Application pipeline integration**
     - **Validates: Requirements 5.2, 5.3, 6.2**
 
-  - [ ] 12.3 Configure environment-specific settings for dev and staging
+  - [x] 12.3 Configure environment-specific settings for dev and staging
     - Set up configuration management for different environments
     - Implement environment promotion patterns
     - _Requirements: 6.3, 6.4, 9.4_
@@ -239,8 +264,8 @@ The initial implementation focuses on development and staging environments, with
     - Set up S3 bucket access for development teams
     - _Requirements: 5.1, 5.4_
 
-- [ ] 14. Implement monitoring and observability
-  - [ ] 14.1 Create comprehensive CloudWatch monitoring for all services
+- [x] 14. Implement monitoring and observability
+  - [x] 14.1 Create comprehensive CloudWatch monitoring for all services
     - Set up CloudWatch dashboards for AI services, databases, and processing
     - Configure metrics collection for latency, throughput, and error rates
     - Implement cost tracking and usage monitoring
@@ -250,7 +275,7 @@ The initial implementation focuses on development and staging environments, with
     - **Property 18: Comprehensive monitoring and alerting**
     - **Validates: Requirements 8.1, 8.2, 8.3, 10.1**
 
-  - [ ] 14.3 Set up alerting and notification system
+  - [x] 14.3 Set up alerting and notification system
     - Configure SNS topics for different alert types
     - Set up CloudWatch alarms for service health and performance
     - Implement cost threshold alerts and notifications

@@ -47,6 +47,19 @@ This document defines the requirements for **RAG Platform Infrastructure** that 
 4. THE Vector_Database SHALL be configured with appropriate backup and disaster recovery policies
 5. THE RAG_Platform_Infrastructure SHALL provide secure network access to the Vector_Database from RAG Applications
 
+### Requirement 2A: OpenSearch Lambda Access Permissions
+
+**User Story:** As an application developer, I want my Lambda functions to have proper write access to the OpenSearch Serverless vector database, so that I can store document embeddings and perform vector operations without encountering 403 Forbidden errors.
+
+#### Acceptance Criteria
+
+1. THE Platform_Team SHALL configure IAM policies that grant Lambda execution roles write access to OpenSearch Serverless collections
+2. WHEN Lambda functions attempt to write embeddings to OpenSearch, THE System SHALL allow the operation without authentication errors
+3. THE Platform_Team SHALL create OpenSearch data access policies that permit Lambda functions to perform index, search, and delete operations
+4. THE RAG_Platform_Infrastructure SHALL configure OpenSearch network policies to allow access from Lambda functions in the VPC
+5. WHEN application developers deploy Lambda functions through the application pipeline, THE System SHALL automatically grant appropriate OpenSearch access permissions
+6. THE Platform_Team SHALL implement least-privilege access patterns for OpenSearch, granting only necessary permissions for vector operations
+
 ### Requirement 3: Document Processing and Embedding Pipeline
 
 **User Story:** As an application developer, I want an automated pipeline for processing documents and generating embeddings provided by the RAG Platform Infrastructure, so that I can easily populate my knowledge base in my RAG Applications without manual preprocessing.

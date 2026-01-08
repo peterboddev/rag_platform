@@ -9,6 +9,7 @@ export interface VectorDatabaseProps {
   readonly environment: string;
   readonly vpc: ec2.IVpc; // Changed from Vpc to IVpc to accept imported VPCs
   readonly accessRoles?: iam.Role[]; // Optional roles to grant access during creation
+  readonly lambdaExecutionRoles?: string[]; // ARNs of Lambda roles that need access
 }
 
 export class VectorDatabaseConstruct extends Construct {
@@ -56,10 +57,13 @@ export class VectorDatabaseConstruct extends Construct {
       ]),
     });
 
-    // Create initial data access policy (simplified like test)
+    // Create initial data access policy with comprehensive permissions for Lambda functions
     const initialPrincipals = [`arn:aws:iam::${cdk.Stack.of(this).account}:root`];
     if (props.accessRoles) {
       initialPrincipals.push(...props.accessRoles.map(role => role.roleArn));
+    }
+    if (props.lambdaExecutionRoles) {
+      initialPrincipals.push(...props.lambdaExecutionRoles);
     }
 
     this.dataAccessPolicy = new opensearchserverless.CfnAccessPolicy(this, 'DataAccessPolicy', {
@@ -69,12 +73,30 @@ export class VectorDatabaseConstruct extends Construct {
         {
           Rules: [
             {
+              ResourceType: 'collection',
+              Resource: [`collection/${collectionName}`],
+              Permission: [
+                'aoss:CreateCollectionItems',
+                'aoss:DeleteCollectionItems', 
+                'aoss:UpdateCollectionItems',
+                'aoss:DescribeCollectionItems',
+              ],
+            },
+            {
               ResourceType: 'index',
               Resource: [`index/${collectionName}/*`],
-              Permission: ['aoss:ReadDocument', 'aoss:WriteDocument'],
+              Permission: [
+                'aoss:CreateIndex',
+                'aoss:DeleteIndex',
+                'aoss:UpdateIndex',
+                'aoss:DescribeIndex',
+                'aoss:ReadDocument',
+                'aoss:WriteDocument',
+              ],
             },
           ],
           Principal: initialPrincipals,
+          Description: 'Data access policy for Lambda functions to write to vector database',
         },
       ]),
     });
@@ -120,21 +142,77 @@ export class VectorDatabaseConstruct extends Construct {
     const newPrincipals = roles.map(role => role.roleArn);
     const allPrincipals = [...existingPrincipals, ...newPrincipals];
 
-    // Update the data access policy with new principals (simplified like test)
+    // Update the data access policy with new principals with comprehensive permissions
     const updatedPolicy = JSON.stringify([
       {
         Rules: [
           {
+            ResourceType: 'collection',
+            Resource: [`collection/${collectionName}`],
+            Permission: [
+              'aoss:CreateCollectionItems',
+              'aoss:DeleteCollectionItems', 
+              'aoss:UpdateCollectionItems',
+              'aoss:DescribeCollectionItems',
+            ],
+          },
+          {
             ResourceType: 'index',
             Resource: [`index/${collectionName}/*`],
-            Permission: ['aoss:ReadDocument', 'aoss:WriteDocument'],
+            Permission: [
+              'aoss:CreateIndex',
+              'aoss:DeleteIndex',
+              'aoss:UpdateIndex',
+              'aoss:DescribeIndex',
+              'aoss:ReadDocument',
+              'aoss:WriteDocument',
+            ],
           },
         ],
         Principal: allPrincipals,
+        Description: 'Data access policy for Lambda functions to write to vector database',
       },
     ]);
 
     // Update the existing policy
     this.dataAccessPolicy.addPropertyOverride('Policy', updatedPolicy);
+  }
+
+  /**
+   * Grant Lambda function access to OpenSearch Serverless collection
+   */
+  public grantLambdaAccess(lambdaRole: iam.Role): void {
+    // Grant IAM permissions for OpenSearch Serverless access
+    lambdaRole.addToPolicy(new iam.PolicyStatement({
+      effect: iam.Effect.ALLOW,
+      actions: [
+        'aoss:APIAccessAll', // Comprehensive access for OpenSearch Serverless
+      ],
+      resources: [this.collectionArn],
+    }));
+    
+    // Grant specific OpenSearch operations
+    lambdaRole.addToPolicy(new iam.PolicyStatement({
+      effect: iam.Effect.ALLOW,
+      actions: [
+        'aoss:CreateCollectionItems',
+        'aoss:DeleteCollectionItems',
+        'aoss:UpdateCollectionItems',
+        'aoss:DescribeCollectionItems',
+        'aoss:CreateIndex',
+        'aoss:DeleteIndex', 
+        'aoss:UpdateIndex',
+        'aoss:DescribeIndex',
+        'aoss:ReadDocument',
+        'aoss:WriteDocument',
+      ],
+      resources: [
+        this.collectionArn,
+        `${this.collectionArn}/*`,
+      ],
+    }));
+
+    // Add the role to the data access policy
+    this.addAccessRoles([lambdaRole]);
   }
 }

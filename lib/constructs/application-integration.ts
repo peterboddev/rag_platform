@@ -5,6 +5,7 @@ import * as cognito from 'aws-cdk-lib/aws-cognito';
 import { Construct } from 'constructs';
 import { KnowledgeBaseConstruct } from './knowledge-base';
 import { DataStorageConstruct } from './data-storage';
+import { VectorDatabaseConstruct } from './vector-database';
 
 export interface ApplicationIntegrationProps {
   readonly applicationName: string;
@@ -14,6 +15,7 @@ export interface ApplicationIntegrationProps {
   readonly knowledgeBase: KnowledgeBaseConstruct;
   readonly cognitoUserPool: cognito.UserPool;
   readonly dataStorage: DataStorageConstruct;
+  readonly vectorDatabase: VectorDatabaseConstruct;
 }
 
 export class ApplicationIntegrationConstruct extends Construct {
@@ -94,6 +96,9 @@ export class ApplicationIntegrationConstruct extends Construct {
       resources: [props.cognitoUserPool.userPoolArn],
     }));
 
+    // Grant OpenSearch Serverless access for vector operations
+    props.vectorDatabase.grantLambdaAccess(this.applicationRole);
+
     // Create configuration parameters for applications
     this.configurationParameters = [
       new ssm.StringParameter(this, 'BedrockModelId', {
@@ -115,6 +120,16 @@ export class ApplicationIntegrationConstruct extends Construct {
         parameterName: `/${props.applicationName}/${props.environment}/iam/application-role-arn`,
         stringValue: this.applicationRole.roleArn,
         description: 'IAM role ARN for application Lambda functions',
+      }),
+      new ssm.StringParameter(this, 'VectorDatabaseEndpoint', {
+        parameterName: `/${props.applicationName}/${props.environment}/opensearch/collection-endpoint`,
+        stringValue: props.vectorDatabase.collectionEndpoint,
+        description: 'OpenSearch Serverless collection endpoint for vector operations',
+      }),
+      new ssm.StringParameter(this, 'VectorDatabaseIndexName', {
+        parameterName: `/${props.applicationName}/${props.environment}/opensearch/index-name`,
+        stringValue: props.vectorDatabase.indexName,
+        description: 'OpenSearch vector index name',
       }),
     ];
 

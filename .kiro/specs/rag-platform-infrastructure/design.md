@@ -234,6 +234,7 @@ Manages the vector storage and similarity search capabilities using Amazon OpenS
 - Automated index creation and management
 - High-performance similarity search capabilities
 - Backup and disaster recovery configuration
+- **Lambda access permissions and data access policies**
 
 **Interface:**
 ```typescript
@@ -248,15 +249,109 @@ export interface VectorDatabaseConfig {
     readonly retentionDays: number;
     readonly crossRegionReplication: boolean;
   };
+  readonly lambdaExecutionRoles: string[]; // ARNs of Lambda roles that need access
 }
 
 export class VectorDatabaseConstruct extends Construct {
   public readonly collection: opensearchserverless.CfnCollection;
   public readonly collectionArn: string;
+  public readonly dataAccessPolicy: opensearchserverless.CfnAccessPolicy;
+  public readonly networkPolicy: opensearchserverless.CfnSecurityPolicy;
   
   constructor(scope: Construct, id: string, config: VectorDatabaseConfig) {
-    // Implementation creates OpenSearch Serverless collection
-    // and configures vector index
+    super(scope, id);
+    
+    // Create OpenSearch Serverless collection
+    this.collection = new opensearchserverless.CfnCollection(this, 'VectorCollection', {
+      name: config.collectionName,
+      type: 'VECTORSEARCH',
+      description: 'Vector database for RAG application embeddings',
+    });
+    
+    this.collectionArn = this.collection.attrArn;
+    
+    // Create network policy for VPC access
+    this.networkPolicy = new opensearchserverless.CfnSecurityPolicy(this, 'NetworkPolicy', {
+      name: `${config.collectionName}-network-policy`,
+      type: 'network',
+      policy: JSON.stringify([{
+        Rules: [{
+          Resource: [`collection/${config.collectionName}`],
+          ResourceType: 'collection',
+        }],
+        AllowFromPublic: false,
+        SourceVPCEs: [
+          // VPC endpoint IDs will be populated during deployment
+        ],
+      }]),
+    });
+    
+    // Create data access policy for Lambda functions
+    this.dataAccessPolicy = new opensearchserverless.CfnAccessPolicy(this, 'DataAccessPolicy', {
+      name: `${config.collectionName}-data-access-policy`,
+      type: 'data',
+      policy: JSON.stringify([{
+        Rules: [{
+          Resource: [`collection/${config.collectionName}`],
+          Permission: [
+            'aoss:CreateCollectionItems',
+            'aoss:DeleteCollectionItems', 
+            'aoss:UpdateCollectionItems',
+            'aoss:DescribeCollectionItems',
+          ],
+          ResourceType: 'collection',
+        }, {
+          Resource: [`index/${config.collectionName}/*`],
+          Permission: [
+            'aoss:CreateIndex',
+            'aoss:DeleteIndex',
+            'aoss:UpdateIndex',
+            'aoss:DescribeIndex',
+            'aoss:ReadDocument',
+            'aoss:WriteDocument',
+          ],
+          ResourceType: 'index',
+        }],
+        Principal: config.lambdaExecutionRoles,
+        Description: 'Data access policy for Lambda functions to write to vector database',
+      }]),
+    });
+    
+    // Ensure collection depends on policies
+    this.collection.addDependency(this.networkPolicy);
+    this.collection.addDependency(this.dataAccessPolicy);
+  }
+  
+  public grantLambdaAccess(lambdaRole: iam.Role): void {
+    // Grant IAM permissions for OpenSearch Serverless access
+    lambdaRole.addToPolicy(new iam.PolicyStatement({
+      effect: iam.Effect.ALLOW,
+      actions: [
+        'aoss:APIAccessAll', // Comprehensive access for OpenSearch Serverless
+      ],
+      resources: [this.collectionArn],
+    }));
+    
+    // Grant specific OpenSearch operations
+    lambdaRole.addToPolicy(new iam.PolicyStatement({
+      effect: iam.Effect.ALLOW,
+      actions: [
+        'aoss:CreateCollectionItems',
+        'aoss:DeleteCollectionItems',
+        'aoss:UpdateCollectionItems',
+        'aoss:DescribeCollectionItems',
+        'aoss:CreateIndex',
+        'aoss:DeleteIndex', 
+        'aoss:UpdateIndex',
+        'aoss:DescribeIndex',
+        'aoss:ReadDocument',
+        'aoss:WriteDocument',
+      ],
+      resources: [
+        this.collectionArn,
+        `${this.collectionArn}/*`,
+      ],
+    }));
   }
 }
 ```
@@ -746,6 +841,36 @@ export class ApplicationIntegrationConstruct extends Construct {
       resources: [props.knowledgeBase.knowledgeBaseArn],
     }));
     
+    // Grant OpenSearch Serverless access for vector operations
+    this.applicationRole.addToPolicy(new iam.PolicyStatement({
+      effect: iam.Effect.ALLOW,
+      actions: [
+        'aoss:APIAccessAll', // Comprehensive access for OpenSearch Serverless
+      ],
+      resources: [props.vectorDatabase.collectionArn],
+    }));
+    
+    // Grant specific OpenSearch operations for Lambda functions
+    this.applicationRole.addToPolicy(new iam.PolicyStatement({
+      effect: iam.Effect.ALLOW,
+      actions: [
+        'aoss:CreateCollectionItems',
+        'aoss:DeleteCollectionItems',
+        'aoss:UpdateCollectionItems',
+        'aoss:DescribeCollectionItems',
+        'aoss:CreateIndex',
+        'aoss:DeleteIndex', 
+        'aoss:UpdateIndex',
+        'aoss:DescribeIndex',
+        'aoss:ReadDocument',
+        'aoss:WriteDocument',
+      ],
+      resources: [
+        props.vectorDatabase.collectionArn,
+        `${props.vectorDatabase.collectionArn}/*`,
+      ],
+    }));
+    
     // Grant Textract access
     this.applicationRole.addToPolicy(new iam.PolicyStatement({
       effect: iam.Effect.ALLOW,
@@ -756,6 +881,9 @@ export class ApplicationIntegrationConstruct extends Construct {
       resources: ['*'],
     }));
     
+    // Grant the Lambda role access to the vector database
+    props.vectorDatabase.grantLambdaAccess(this.applicationRole);
+    
     // Create configuration parameters for applications
     this.configurationParameters = [
       new ssm.StringParameter(this, 'BedrockModelId', {
@@ -765,6 +893,10 @@ export class ApplicationIntegrationConstruct extends Construct {
       new ssm.StringParameter(this, 'KnowledgeBaseId', {
         parameterName: `/${props.applicationName}/${props.environment}/bedrock/knowledge-base-id`,
         stringValue: props.knowledgeBase.knowledgeBaseId,
+      }),
+      new ssm.StringParameter(this, 'VectorDatabaseEndpoint', {
+        parameterName: `/${props.applicationName}/${props.environment}/opensearch/collection-endpoint`,
+        stringValue: props.vectorDatabase.collection.attrCollectionEndpoint,
       }),
     ];
   }
@@ -1322,6 +1454,10 @@ Based on the prework analysis and property reflection, here are the consolidated
 **Property 5: Vector database deployment and functionality**
 *For any* RAG infrastructure deployment, the vector database should support high-dimensional vector storage, similarity search operations, and provide fast indexing and retrieval capabilities.
 **Validates: Requirements 2.1, 2.2, 2.3**
+
+**Property 5A: OpenSearch Lambda access permissions**
+*For any* Lambda function deployed through the application pipeline, it should have proper IAM permissions and OpenSearch data access policies to write embeddings to the OpenSearch Serverless collection without encountering 403 Forbidden errors.
+**Validates: Requirements 2A.1, 2A.2, 2A.3, 2A.5, 2A.6**
 
 **Property 6: Backup and disaster recovery consistency**
 *For any* critical data storage component (vector database, knowledge base), automated backup and restore capabilities should be configured and functional.
