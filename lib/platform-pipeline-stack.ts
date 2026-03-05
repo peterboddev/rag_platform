@@ -142,10 +142,6 @@ export class PlatformPipelineStack extends cdk.Stack {
           
           // Environment variables including secure credential access
           environmentVariables: {
-            'NODE_ENV': {
-              value: 'production',
-              type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
-            },
             'CDK_DEFAULT_REGION': {
               value: cdk.Aws.REGION,
               type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,

@@ -136,7 +136,6 @@ artifacts:
 
 env:
   variables:
-    NODE_ENV: production
     CDK_NEW_BOOTSTRAP: 1
     CDK_DISABLE_VERSION_CHECK: 1
     # Credential validation is enabled by default for security
