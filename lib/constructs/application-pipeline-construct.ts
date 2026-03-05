@@ -64,6 +64,21 @@ export interface ApplicationPipelineConfig {
   readonly artifactBucket?: s3.IBucket;
   readonly pipelineRole?: iam.IRole;
   readonly codeBuildRole?: iam.IRole;
+  
+  /**
+   * Path to CloudFormation template within build artifacts.
+   * Defaults to 'template.yaml' for SAM applications.
+   * CDK applications should specify 'cdk.out/<StackName>.template.json'
+   * 
+   * @example
+   * // For SAM applications (default)
+   * templatePath: 'template.yaml'
+   * 
+   * @example
+   * // For CDK applications
+   * templatePath: 'cdk.out/MyStack.template.json'
+   */
+  readonly templatePath?: string;
 }
 
 /**
@@ -175,6 +190,60 @@ export class ApplicationPipelineConstruct extends Construct {
         throw new Error(`Deployment target at index ${index} is missing required fields (name, account, region, stackName)`);
       }
     });
+
+    // Validate templatePath if specified
+    if (config.templatePath !== undefined) {
+      this.validateTemplatePath(config.templatePath);
+    }
+  }
+
+  /**
+   * Validates the templatePath configuration
+   * 
+   * @param templatePath - Path to CloudFormation template within build artifacts
+   * @throws Error if templatePath is invalid
+   */
+  private validateTemplatePath(templatePath: string): void {
+    // Check if path is empty
+    if (!templatePath || templatePath.trim() === '') {
+      throw new Error('templatePath cannot be empty. Use "template.yaml" for SAM applications or "cdk.out/<StackName>.template.json" for CDK applications.');
+    }
+
+    // Check if path is absolute (should be relative)
+    if (templatePath.startsWith('/') || /^[a-zA-Z]:[\\/]/.test(templatePath)) {
+      throw new Error(`templatePath must be a relative path, not an absolute path: "${templatePath}". Example: "cdk.out/MyStack.template.json"`);
+    }
+
+    // Check for invalid characters that could cause issues
+    const invalidChars = /[<>:"|?*\x00-\x1f]/;
+    if (invalidChars.test(templatePath)) {
+      throw new Error(`templatePath contains invalid characters: "${templatePath}". Use only alphanumeric characters, hyphens, underscores, dots, and forward slashes.`);
+    }
+
+    // Check for path traversal attempts
+    if (templatePath.includes('..')) {
+      throw new Error(`templatePath cannot contain parent directory references (..): "${templatePath}". Use a direct relative path within the build artifacts.`);
+    }
+
+    // Warn about common misconfigurations (using console.warn for non-fatal issues)
+    if (templatePath.endsWith('/')) {
+      console.warn(`[WARNING] templatePath ends with a slash: "${templatePath}". This should be a file path, not a directory. Example: "cdk.out/MyStack.template.json"`);
+    }
+
+    // Check if path looks like it might be missing the file extension
+    if (!templatePath.includes('.')) {
+      console.warn(`[WARNING] templatePath does not contain a file extension: "${templatePath}". CloudFormation templates typically end with .yaml, .yml, or .json. Example: "template.yaml" or "cdk.out/MyStack.template.json"`);
+    }
+
+    // Provide helpful guidance for common patterns
+    if (templatePath.includes('\\')) {
+      console.warn(`[WARNING] templatePath contains backslashes: "${templatePath}". Use forward slashes (/) for cross-platform compatibility. Example: "cdk.out/MyStack.template.json"`);
+    }
+
+    // Check for reasonable path length
+    if (templatePath.length > 255) {
+      throw new Error(`templatePath is too long (${templatePath.length} characters). Maximum length is 255 characters.`);
+    }
   }
 
   /**
@@ -243,8 +312,17 @@ export class ApplicationPipelineConstruct extends Construct {
         },
       },
       artifacts: {
+        // Include all application files and templates
+        // This configuration supports both SAM and CDK applications:
+        // - SAM applications: template.yaml at root
+        // - CDK applications: *.template.json files in cdk.out/ directory
+        // The templatePath configuration determines which template is used for deployment
         files: [
           '**/*',
+          '**/*.template.json',    // CDK CloudFormation templates
+          '**/*.template.yaml',    // Alternative CDK template format
+          'template.yaml',         // SAM template (explicit inclusion)
+          'cdk.out/**/*',          // CDK output directory
         ],
         'exclude-paths': [
           'node_modules/**/*',
@@ -380,11 +458,15 @@ export class ApplicationPipelineConstruct extends Construct {
       }
 
       // Add CloudFormation deployment action
+      // Template path is configurable to support both SAM and CDK applications:
+      // - SAM applications use 'template.yaml' (default)
+      // - CDK applications use 'cdk.out/<StackName>.template.json'
+      // The templatePath configuration allows applications to specify their template location
       stageActions.push(
         new codepipeline_actions.CloudFormationCreateUpdateStackAction({
           actionName: `Deploy_${target.name}`,
           stackName: target.stackName,
-          templatePath: buildOutput.atPath('template.yaml'),
+          templatePath: buildOutput.atPath(config.templatePath || 'template.yaml'),
           adminPermissions: true,
           parameterOverrides: target.parameters || {},
           region: target.region,

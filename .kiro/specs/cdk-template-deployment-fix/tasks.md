@@ -1,0 +1,125 @@
+# Implementation Plan
+
+- [x] 1. Write bug condition exploration test
+  - **Property 1: Fault Condition** - CDK Template Deployment Failure
+  - **CRITICAL**: This test MUST FAIL on unfixed code - failure confirms the bug exists
+  - **DO NOT attempt to fix the test or the code when it fails**
+  - **NOTE**: This test encodes the expected behavior - it will validate the fix when it passes after implementation
+  - **GOAL**: Surface counterexamples that demonstrate the bug exists
+  - **Scoped PBT Approach**: For deterministic bugs, scope the property to the concrete failing case(s) to ensure reproducibility
+  - Create a minimal CDK application that generates a `.template.json` file (e.g., `TestStack.template.json`)
+  - Configure the application in the pipeline without specifying `templatePath` (uses default `template.yaml`)
+  - Test that deployment stage fails with error: "File [template.yaml] does not exist in artifact [BuildOutput]"
+  - Run test on UNFIXED code
+  - **EXPECTED OUTCOME**: Test FAILS (this is correct - it proves the bug exists)
+  - Document counterexamples found:
+    - CDK single stack deployment failure
+    - Error message indicating missing `template.yaml`
+    - Build artifacts contain `.template.json` but deployment looks for `.yaml`
+  - Mark task complete when test is written, run, and failure is documented
+  - _Requirements: 1.1, 1.2, 2.1_
+
+- [x] 2. Write preservation property tests (BEFORE implementing fix)
+  - **Property 2: Preservation** - SAM Template Deployment Behavior
+  - **IMPORTANT**: Follow observation-first methodology
+  - Observe behavior on UNFIXED code for SAM applications using `template.yaml`
+  - Test cases to observe:
+    - SAM application with `template.yaml` deploys successfully
+    - Build phase completes with all tests passing
+    - Multi-environment deployments (dev, staging, prod) work correctly
+    - Manual approval gates function as expected
+  - Write property-based tests capturing observed behavior patterns:
+    - For all applications WITHOUT `templatePath` specified, deployment uses `template.yaml`
+    - For all SAM applications, deployment stage succeeds with status 'SUCCESS'
+    - For all deployment targets, pipeline stages execute in correct order
+  - Property-based testing generates many test cases for stronger guarantees
+  - Run tests on UNFIXED code
+  - **EXPECTED OUTCOME**: Tests PASS (this confirms baseline behavior to preserve)
+  - Mark task complete when tests are written, run, and passing on unfixed code
+  - _Requirements: 3.1, 3.2, 3.3, 3.4_
+
+- [ ] 3. Fix for CDK template deployment issue
+
+  - [x] 3.1 Add templatePath configuration to ApplicationPipelineConfig interface
+    - Open `lib/constructs/application-pipeline-construct.ts`
+    - Add optional `templatePath?: string` field to `ApplicationPipelineConfig` interface
+    - Add JSDoc comment explaining the field: "Path to CloudFormation template within build artifacts. Defaults to 'template.yaml' for SAM applications. CDK applications should specify 'cdk.out/<StackName>.template.json'"
+    - _Bug_Condition: isBugCondition(input) where input.containsFile('*.template.json') AND deploymentAction.templatePath == 'template.yaml'_
+    - _Expected_Behavior: Deployment stage successfully locates and uses the correct template file regardless of format (SAM or CDK)_
+    - _Preservation: SAM applications without templatePath specified continue to use 'template.yaml'_
+    - _Requirements: 2.1, 2.3_
+
+  - [x] 3.2 Update deployment action to use configurable template path
+    - Locate `CloudFormationCreateUpdateStackAction` in `createPipeline()` method (around line 388)
+    - Replace hardcoded `templatePath: buildOutput.atPath('template.yaml')`
+    - Use configurable path: `templatePath: buildOutput.atPath(config.templatePath || 'template.yaml')`
+    - Apply this change to all deployment targets in the loop (dev, staging, prod)
+    - Ensure default value `'template.yaml'` maintains backward compatibility
+    - _Bug_Condition: isBugCondition(input) where deploymentAction.templatePath is hardcoded_
+    - _Expected_Behavior: Deployment action uses config.templatePath when specified, falls back to 'template.yaml'_
+    - _Preservation: SAM applications continue to deploy with 'template.yaml' when templatePath is not specified_
+    - _Requirements: 2.1, 2.2, 3.1_
+
+  - [x] 3.3 Update build artifacts configuration for CDK templates
+    - Locate `createBuildProject()` method in `ApplicationPipelineConstruct`
+    - Update default buildspec artifacts section to include CDK template patterns
+    - Add artifact files patterns: `'**/*.template.json'`, `'**/*.template.yaml'`, `'template.yaml'`
+    - Ensure `cdk.out/` directory is included in artifacts
+    - Verify artifacts configuration captures both SAM and CDK templates
+    - _Bug_Condition: isBugCondition(input) where build artifacts don't include CDK templates_
+    - _Expected_Behavior: Build artifacts include all template formats (SAM and CDK)_
+    - _Preservation: SAM template.yaml files continue to be included in artifacts_
+    - _Requirements: 2.2, 3.2_
+
+  - [x] 3.4 Add configuration validation for templatePath
+    - Locate or create `validateConfiguration()` method in `ApplicationPipelineConstruct`
+    - Add validation for `templatePath` field if specified:
+      - Ensure path is relative (not absolute)
+      - Warn if path contains invalid characters
+      - Validate path format is reasonable
+    - Add helpful error messages for common misconfigurations
+    - _Bug_Condition: Not directly related to bug condition, but prevents future issues_
+    - _Expected_Behavior: Invalid templatePath configurations are caught early with helpful messages_
+    - _Preservation: Validation does not affect existing SAM applications_
+    - _Requirements: 2.3_
+
+  - [x] 3.5 Update documentation and examples
+    - Add JSDoc comments to `ApplicationPipelineConfig` interface explaining `templatePath`
+    - Document default behavior (SAM convention with `template.yaml`)
+    - Provide example for CDK applications: `"templatePath": "cdk.out/MyStack.template.json"`
+    - Update `config/applications/rag-app.json` or create example configuration file
+    - Add inline code comments explaining the template path logic
+    - _Bug_Condition: Not directly related to bug condition, but improves usability_
+    - _Expected_Behavior: Developers understand how to configure templatePath for CDK apps_
+    - _Preservation: Documentation does not change existing behavior_
+    - _Requirements: 2.3_
+
+  - [x] 3.6 Verify bug condition exploration test now passes
+    - **Property 1: Expected Behavior** - CDK Template Deployment Success
+    - **IMPORTANT**: Re-run the SAME test from task 1 - do NOT write a new test
+    - The test from task 1 encodes the expected behavior
+    - Configure the CDK test application with `templatePath: "cdk.out/TestStack.template.json"`
+    - Run bug condition exploration test from step 1
+    - **EXPECTED OUTCOME**: Test PASSES (confirms bug is fixed)
+    - Verify deployment stage successfully locates and uses the CDK template
+    - Verify CloudFormation stack deploys correctly
+    - _Requirements: 2.1, 2.2, 2.3_
+
+  - [x] 3.7 Verify preservation tests still pass
+    - **Property 2: Preservation** - SAM Template Deployment Behavior
+    - **IMPORTANT**: Re-run the SAME tests from task 2 - do NOT write new tests
+    - Run preservation property tests from step 2
+    - **EXPECTED OUTCOME**: Tests PASS (confirms no regressions)
+    - Verify SAM applications still deploy successfully with `template.yaml`
+    - Verify build phase continues to work correctly
+    - Verify multi-environment deployments still function
+    - Verify manual approval gates still work
+    - Confirm all tests still pass after fix (no regressions)
+
+- [x] 4. Checkpoint - Ensure all tests pass
+  - Run all unit tests for `ApplicationPipelineConstruct`
+  - Run all integration tests for full pipeline flow
+  - Verify both CDK and SAM applications deploy successfully
+  - Test deployment to multiple environments (dev, staging, prod)
+  - Verify manual approval gates work correctly
+  - Ensure all tests pass, ask the user if questions arise

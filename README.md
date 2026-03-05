@@ -108,12 +108,51 @@ This project includes **direct EventBridge integration** for immediate pipeline 
 ```
 ├── bin/                    # CDK app entry points
 ├── lib/                    # CDK stack definitions
+├── config/                 # Application configurations
+│   └── applications/       # Application pipeline configurations
+├── docs/                   # Documentation
 ├── test/                   # Unit tests
 ├── buildspec.yml          # CodeBuild specification
 ├── cdk.json               # CDK configuration
 ├── tsconfig.json          # TypeScript configuration
 └── package.json           # Node.js dependencies
 ```
+
+## Application Configuration
+
+Application pipelines are configured using JSON files in `config/applications/`. The platform supports both SAM and CDK-based applications:
+
+### SAM Applications
+
+SAM applications use the default `template.yaml` convention and don't require additional configuration:
+
+```json
+{
+  "applicationName": "my-sam-app",
+  "sourceRepo": { "owner": "org", "repo": "app", "branch": "main" },
+  "buildConfig": { "runtime": "20", "commands": ["npm ci", "sam build"] },
+  "deploymentTargets": ["dev", "staging", "prod"]
+}
+```
+
+### CDK Applications
+
+CDK applications must specify the `templatePath` to their synthesized CloudFormation template:
+
+```json
+{
+  "applicationName": "my-cdk-app",
+  "sourceRepo": { "owner": "org", "repo": "app", "branch": "main" },
+  "buildConfig": { 
+    "runtime": "20", 
+    "commands": ["npm ci", "npm run build", "npx cdk synth"] 
+  },
+  "templatePath": "cdk.out/MyStack.template.json",
+  "deploymentTargets": ["dev", "staging", "prod"]
+}
+```
+
+**See `docs/application-pipeline-configuration.md` for detailed configuration guide.**
 
 ## Security
 
@@ -148,4 +187,10 @@ This project uses **native CodeConnections triggers** to eliminate polling delay
 
 ## Documentation
 
-For detailed architecture and implementation guidance, see the platform pipeline architecture documentation in `.kiro/steering/platform-pipeline-architecture.md`.
+For detailed information, see:
+
+- **Platform Pipeline Architecture**: `.kiro/steering/platform-pipeline-architecture.md` - Detailed architecture and implementation guidance
+- **Application Pipeline Configuration**: `docs/application-pipeline-configuration.md` - Guide for configuring SAM and CDK application pipelines, including the `templatePath` option
+- **Integration Testing**: `docs/integration-testing-guide.md` - Testing strategies and best practices
+- **Credential Management**: `docs/credential-management.md` - Security and credential handling
+- **Monitoring Implementation**: `docs/monitoring-implementation.md` - CloudWatch integration and failure notifications

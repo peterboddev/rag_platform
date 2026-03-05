@@ -4,11 +4,40 @@
 
 This guide provides development teams with everything they need to build **RAG Applications** that integrate with the **RAG Platform Infrastructure**. The platform team has deployed foundational AI/ML services that your applications can consume to provide RAG (Retrieval-Augmented Generation) capabilities.
 
+## RAG Platform Infrastructure Naming Conventions
+
+The platform uses consistent naming patterns for all deployed resources:
+
+### Resource Naming Pattern
+- **Application Name**: `rag-app-v2`
+- **Environment**: `dev` (development), `staging`, `prod`
+- **Resource Format**: `{applicationName}-{resourceType}-{environment}`
+
+### Key Resource Names
+- **Vector Database Collection**: `rag-app-v2-vectors-dev`
+- **Knowledge Base**: `rag-app-v2-kb-dev`
+- **S3 Buckets**:
+  - Documents: `rag-app-v2-documents-dev`
+  - Configuration: `rag-app-v2-config-dev`
+  - Website: `rag-app-v2-website-dev`
+- **Cognito User Pool**: `rag-app-v2-users-dev`
+- **CloudFormation Stacks**:
+  - Vector Database: `rag-app-v2-vector-db-dev`
+  - Authentication: `rag-app-v2-authentication-dev`
+  - Knowledge Base: `rag-app-v2-knowledge-base-dev`
+  - Storage: `rag-app-v2-storage-dev`
+
+### CloudFormation Export Names
+- Vector Database Endpoint: `rag-app-v2-dev-vector-db-endpoint`
+- Cognito User Pool ID: `rag-app-v2-dev-cognito-user-pool-id`
+- Cognito Client ID: `rag-app-v2-dev-cognito-client-id`
+- Knowledge Base ID: `rag-app-v2-dev-knowledge-base-id`
+- Document Bucket: `rag-app-v2-dev-document-bucket`
+
+
 ## Project Distinction
 
 **Important**: Understand the difference between what the platform provides and what you build:
-
-### RAG Platform Infrastructure (Provided by Platform Team)
 - **AWS Bedrock Nova Pro** - Advanced text generation model
 - **Vector Database** - OpenSearch Serverless for document embeddings
 - **Document Processing Pipeline** - Automated text extraction and embedding generation
@@ -58,7 +87,7 @@ const response = await client.send(new InvokeModelCommand({
 ### 2. Vector Database (OpenSearch Serverless)
 
 **Service**: Document embedding storage and similarity search
-**Endpoint**: Available via environment variables in deployed Lambda functions
+**Endpoint**: Retrieved dynamically after deployment (see "How to Retrieve Configuration Values" section)
 **Access**: Through OpenSearch client with provided IAM roles
 
 ```typescript
@@ -71,12 +100,12 @@ const client = new Client({
     region: process.env.AWS_REGION,
     service: 'aoss',
   }),
-  node: process.env.VECTOR_DB_ENDPOINT,
+  node: process.env.VECTOR_DB_ENDPOINT, // Retrieved from CloudFormation/SSM
 });
 
 // Search for similar documents
 const searchResponse = await client.search({
-  index: 'documents',
+  index: 'vector-index', // Standard index name used by platform
   body: {
     query: {
       knn: {
@@ -207,30 +236,192 @@ Amplify.configure({
 When your application is deployed via the application pipeline, these environment variables will be automatically available:
 
 ### Lambda Function Environment Variables
+
+**Note**: The actual values for these environment variables are automatically injected into your Lambda functions when deployed via the application pipeline. The values below show the naming patterns - actual IDs and endpoints are dynamically generated during deployment.
+
 ```bash
 # AI Services
 BEDROCK_REGION=us-east-1
 KNOWLEDGE_BASE_ID=rag-app-v2-kb-dev
-VECTOR_DB_ENDPOINT=https://xxx.us-east-1.aoss.amazonaws.com
+VECTOR_DB_ENDPOINT=[Retrieved from CloudFormation export: rag-app-v2-dev-vector-db-endpoint]
 
 # Document Processing
 DOCUMENTS_BUCKET=rag-app-v2-documents-dev
-PROCESSING_QUEUE_URL=https://sqs.us-east-1.amazonaws.com/xxx/rag-app-v2-document-processing-dev
+PROCESSING_QUEUE_URL=[Retrieved from CloudFormation export: rag-app-v2-dev-processing-queue-url]
 DOCUMENTS_TABLE=rag-app-v2-documents-dev
 
 # Authentication
-USER_POOL_ID=us-east-1_xxxxxxxxx
-USER_POOL_CLIENT_ID=xxxxxxxxxxxxxxxxxxxxxxxxxx
-IDENTITY_POOL_ID=us-east-1:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+USER_POOL_ID=[Retrieved from CloudFormation export: rag-app-v2-dev-cognito-user-pool-id]
+USER_POOL_CLIENT_ID=[Retrieved from CloudFormation export: rag-app-v2-dev-cognito-client-id]
+IDENTITY_POOL_ID=[Retrieved from CloudFormation export: rag-app-v2-dev-cognito-identity-pool-id]
 ```
 
 ### Frontend Environment Variables
+
+**Note**: These values are available from CloudFormation stack outputs after deployment. Replace the bracketed placeholders with actual values from your deployed infrastructure.
+
 ```bash
 # For React/Vue/Angular applications
-REACT_APP_USER_POOL_ID=us-east-1_xxxxxxxxx
-REACT_APP_USER_POOL_CLIENT_ID=xxxxxxxxxxxxxxxxxxxxxxxxxx
-REACT_APP_IDENTITY_POOL_ID=us-east-1:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-REACT_APP_API_GATEWAY_URL=https://xxxxxxxxxx.execute-api.us-east-1.amazonaws.com/prod
+REACT_APP_USER_POOL_ID=[Retrieved from CloudFormation export: rag-app-v2-dev-cognito-user-pool-id]
+REACT_APP_USER_POOL_CLIENT_ID=[Retrieved from CloudFormation export: rag-app-v2-dev-cognito-client-id]
+REACT_APP_IDENTITY_POOL_ID=[Retrieved from CloudFormation export: rag-app-v2-dev-cognito-identity-pool-id]
+REACT_APP_API_GATEWAY_URL=[Retrieved from your deployed API Gateway stack]
+```
+
+## How to Retrieve Actual Configuration Values
+
+Since the RAG platform infrastructure uses dynamically generated AWS resource identifiers, you'll need to retrieve the actual values after deployment. Here are the methods to get the real configuration values:
+
+### Method 1: CloudFormation Stack Outputs (Recommended)
+
+Use the AWS CLI to retrieve exported values from the deployed stacks:
+
+```bash
+# Get vector database endpoint
+aws cloudformation describe-stacks \
+  --stack-name rag-app-v2-vector-db-dev \
+  --query 'Stacks[0].Outputs[?OutputKey==`VectorDatabaseEndpoint`].OutputValue' \
+  --output text
+
+# Get Cognito User Pool ID
+aws cloudformation describe-stacks \
+  --stack-name rag-app-v2-authentication-dev \
+  --query 'Stacks[0].Outputs[?OutputKey==`CognitoUserPoolId`].OutputValue' \
+  --output text
+
+# Get Knowledge Base ID
+aws cloudformation describe-stacks \
+  --stack-name rag-app-v2-knowledge-base-dev \
+  --query 'Stacks[0].Outputs[?OutputKey==`KnowledgeBaseId`].OutputValue' \
+  --output text
+
+# Get S3 bucket names
+aws cloudformation describe-stacks \
+  --stack-name rag-app-v2-storage-dev \
+  --query 'Stacks[0].Outputs[?OutputKey==`DocumentBucketName`].OutputValue' \
+  --output text
+```
+
+### Method 2: SSM Parameter Store
+
+The platform automatically stores configuration values in SSM Parameter Store:
+
+```bash
+# Get vector database endpoint
+aws ssm get-parameter \
+  --name "/rag-app-v2/dev/opensearch/collection-endpoint" \
+  --query 'Parameter.Value' \
+  --output text
+
+# Get Cognito configuration
+aws ssm get-parameter \
+  --name "/rag-app-v2/dev/cognito/user-pool-id" \
+  --query 'Parameter.Value' \
+  --output text
+
+aws ssm get-parameter \
+  --name "/rag-app-v2/dev/cognito/client-id" \
+  --query 'Parameter.Value' \
+  --output text
+
+# Get Knowledge Base ID
+aws ssm get-parameter \
+  --name "/rag-app-v2/dev/bedrock/knowledge-base-id" \
+  --query 'Parameter.Value' \
+  --output text
+```
+
+### Method 3: Configuration Export File (S3)
+
+The platform automatically generates a complete configuration file and stores it in S3:
+
+```bash
+# Download the complete configuration file
+aws s3 cp s3://rag-app-v2-config-dev/config/dev/rag-infrastructure-config.json ./config.json
+
+# View the configuration
+cat config.json
+```
+
+The configuration file contains all service endpoints, IDs, and connection details in JSON format:
+
+```json
+{
+  "applicationName": "rag-app-v2",
+  "environment": "dev",
+  "region": "us-east-1",
+  "services": {
+    "vectorDatabase": {
+      "endpoint": "https://[actual-collection-id].us-east-1.aoss.amazonaws.com",
+      "indexName": "vector-index"
+    },
+    "authentication": {
+      "userPoolId": "us-east-1_[actual-id]",
+      "clientId": "[actual-client-id]",
+      "identityPoolId": "us-east-1:[actual-identity-pool-id]"
+    },
+    "knowledgeBase": {
+      "knowledgeBaseId": "[actual-kb-id]"
+    }
+  }
+}
+```
+
+### Method 4: AWS Console
+
+1. **CloudFormation Console**:
+   - Go to AWS CloudFormation console
+   - Find stacks with names like `rag-app-v2-*-dev`
+   - Click on each stack and view the "Outputs" tab
+
+2. **OpenSearch Serverless Console**:
+   - Go to Amazon OpenSearch Service console
+   - Click "Serverless" in the left navigation
+   - Find collection named `rag-app-v2-vectors-dev`
+   - Copy the endpoint URL
+
+3. **Cognito Console**:
+   - Go to Amazon Cognito console
+   - Find user pool named `rag-app-v2-users-dev`
+   - Copy the User Pool ID and App Client ID
+
+### Method 5: Automated Script
+
+Create a script to retrieve all configuration values at once:
+
+```bash
+#!/bin/bash
+# get-rag-config.sh
+
+echo "🔍 Retrieving RAG Platform Configuration..."
+echo "=========================================="
+
+# Vector Database
+VECTOR_ENDPOINT=$(aws ssm get-parameter --name "/rag-app-v2/dev/opensearch/collection-endpoint" --query 'Parameter.Value' --output text 2>/dev/null)
+echo "Vector Database Endpoint: ${VECTOR_ENDPOINT:-'Not found'}"
+
+# Cognito
+USER_POOL_ID=$(aws ssm get-parameter --name "/rag-app-v2/dev/cognito/user-pool-id" --query 'Parameter.Value' --output text 2>/dev/null)
+CLIENT_ID=$(aws ssm get-parameter --name "/rag-app-v2/dev/cognito/client-id" --query 'Parameter.Value' --output text 2>/dev/null)
+echo "Cognito User Pool ID: ${USER_POOL_ID:-'Not found'}"
+echo "Cognito Client ID: ${CLIENT_ID:-'Not found'}"
+
+# Knowledge Base
+KB_ID=$(aws ssm get-parameter --name "/rag-app-v2/dev/bedrock/knowledge-base-id" --query 'Parameter.Value' --output text 2>/dev/null)
+echo "Knowledge Base ID: ${KB_ID:-'Not found'}"
+
+# S3 Buckets
+DOCS_BUCKET=$(aws cloudformation describe-stacks --stack-name rag-app-v2-storage-dev --query 'Stacks[0].Outputs[?OutputKey==`DocumentBucketName`].OutputValue' --output text 2>/dev/null)
+echo "Documents Bucket: ${DOCS_BUCKET:-'Not found'}"
+
+echo "=========================================="
+echo "✅ Configuration retrieval complete"
+```
+
+Make it executable and run:
+```bash
+chmod +x get-rag-config.sh
+./get-rag-config.sh
 ```
 
 ## Common Integration Patterns
@@ -610,16 +801,33 @@ console.log(JSON.stringify({
 ## Getting Started Checklist
 
 - [ ] Review this integration guide
+- [ ] **Retrieve actual configuration values** using one of the methods in "How to Retrieve Configuration Values" section
 - [ ] Set up your development environment with required dependencies
 - [ ] Create a simple Lambda function that calls Bedrock Nova Pro
 - [ ] Test document upload and processing pipeline
 - [ ] Test Textract integration for document text extraction
-- [ ] Implement basic authentication with Cognito
+- [ ] Implement basic authentication with Cognito (using actual User Pool IDs)
 - [ ] Build a simple frontend interface
 - [ ] Deploy via application pipeline and test integration
 - [ ] Add monitoring and logging to your application
 - [ ] Review security best practices
 - [ ] Contact platform team with any infrastructure questions
+
+## Quick Start: Get Your Configuration
+
+Before you start development, run this command to get your actual configuration values:
+
+```bash
+# Method 1: Download complete configuration file
+aws s3 cp s3://rag-app-v2-config-dev/config/dev/rag-infrastructure-config.json ./rag-config.json
+
+# Method 2: Get individual values via SSM
+aws ssm get-parameter --name "/rag-app-v2/dev/opensearch/collection-endpoint" --query 'Parameter.Value' --output text
+aws ssm get-parameter --name "/rag-app-v2/dev/cognito/user-pool-id" --query 'Parameter.Value' --output text
+aws ssm get-parameter --name "/rag-app-v2/dev/bedrock/knowledge-base-id" --query 'Parameter.Value' --output text
+```
+
+**Important**: Replace all placeholder values in your code with the actual values retrieved from these commands.
 
 ## Example Applications
 

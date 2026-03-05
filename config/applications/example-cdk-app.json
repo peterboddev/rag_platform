@@ -1,0 +1,40 @@
+{
+  "$schema": "../../lib/constructs/application-pipeline-construct.ts#ApplicationPipelineConfig",
+  "_comment": "Example configuration for a CDK-based application",
+  
+  "applicationName": "example-cdk-app",
+  "team": "platform-team",
+  
+  "sourceRepo": {
+    "owner": "your-github-org",
+    "repo": "your-cdk-app",
+    "branch": "main"
+  },
+  
+  "buildConfig": {
+    "runtime": "20",
+    "commands": [
+      "echo 'Installing dependencies...'",
+      "npm ci",
+      "echo 'Running tests...'",
+      "npm run test --if-present",
+      "echo 'Building CDK application...'",
+      "npm run build",
+      "echo 'Synthesizing CDK stacks...'",
+      "npx cdk synth",
+      "echo 'CDK synthesis completed successfully'"
+    ],
+    "environment": {
+      "NODE_ENV": "production",
+      "NPM_CONFIG_CACHE": "/tmp/.npm"
+    }
+  },
+  
+  "templatePath": "cdk.out/MyApplicationStack.template.json",
+  "_templatePathComment": "For CDK applications, specify the path to the synthesized CloudFormation template. The path should be relative to the build output root and typically follows the pattern 'cdk.out/<StackName>.template.json'. For SAM applications, omit this field to use the default 'template.yaml'.",
+  
+  "deploymentTargets": ["dev", "staging", "prod"],
+  "_deploymentTargetsComment": "List of environment names to deploy to. These must match environment names defined in cdk.json or config/environments/. The pipeline will automatically resolve account, region, and other environment-specific settings from the environment configuration.",
+  
+  "enabled": true
+}
