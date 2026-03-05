@@ -4,6 +4,7 @@ This project implements a platform-owned CI/CD pipeline system using AWS CDK wit
 
 ## Key Features
 
+- **CDK and SAM Application Support**: Deploy both CDK and SAM applications with configurable template paths
 - **Immediate Pipeline Triggering**: Native CodeConnections triggers automatically eliminate polling delays
 - **Self-Mutating Pipeline**: Platform pipeline updates itself automatically
 - **Two-Tier Architecture**: Platform pipeline manages application pipelines
