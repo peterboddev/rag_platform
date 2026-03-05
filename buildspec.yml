@@ -16,7 +16,7 @@ phases:
       - npm install -g aws-cdk@2.100.0
       - echo "CDK version installed: $(cdk --version)"
       - echo "Installing project dependencies..."
-      - npm install
+      - npm ci
       
   pre_build:
     commands:
@@ -90,7 +90,7 @@ phases:
         
         echo "✅ Configuration validation completed successfully"
       - echo "Installing project dependencies..."
-      - npm install
+      - npm ci
       - echo "Validating TypeScript configuration..."
       - npx tsc --noEmit --skipLibCheck
       - echo "Compiling TypeScript..."
