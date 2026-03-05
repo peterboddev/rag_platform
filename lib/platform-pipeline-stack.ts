@@ -96,7 +96,7 @@ export class PlatformPipelineStack extends cdk.Stack {
           
           // Install dependencies (now includes TypeScript and @types/node)
           'echo "Installing dependencies..."',
-          'npm install',
+          'npm ci',
           
           // Debug: Check what was installed
           'echo "Checking node_modules structure..."',
