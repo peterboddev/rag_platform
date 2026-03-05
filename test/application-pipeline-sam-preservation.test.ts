@@ -376,7 +376,15 @@ describe('Preservation Property Tests: SAM Template Deployment', () => {
           stackName: fc.stringMatching(/^[A-Z][a-zA-Z0-9]{3,20}Stack$/),
           requiresApproval: fc.boolean()
         }),
-        (config) => {
+        (config: {
+          applicationName: string;
+          owner: string;
+          repo: string;
+          branch: string;
+          targetName: string;
+          stackName: string;
+          requiresApproval: boolean;
+        }) => {
           // GIVEN: A random SAM application configuration
           const app = new cdk.App();
           
@@ -462,10 +470,10 @@ describe('Preservation Property Tests: SAM Template Deployment', () => {
           }),
           { minLength: 1, maxLength: 5 }
         ),
-        (targets) => {
+        (targets: Array<{ name: string; stackName: string; requiresApproval: boolean }>) => {
           // Ensure unique target names
           const uniqueTargets = Array.from(
-            new Map(targets.map(t => [t.name, t])).values()
+            new Map(targets.map((t: { name: string; stackName: string; requiresApproval: boolean }) => [t.name, t])).values()
           );
           
           if (uniqueTargets.length === 0) {
@@ -482,7 +490,7 @@ describe('Preservation Property Tests: SAM Template Deployment', () => {
               repo: 'test-repo',
               branch: 'main'
             },
-            deploymentTargets: uniqueTargets.map(target => ({
+            deploymentTargets: uniqueTargets.map((target: { name: string; stackName: string; requiresApproval: boolean }) => ({
               name: target.name,
               account: '123456789012',
               region: 'us-east-1',
