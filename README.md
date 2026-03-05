@@ -20,7 +20,8 @@ The system implements a two-tier pipeline structure:
 
 ## Prerequisites
 
-- Node.js 18 or later
+- Node.js 20 or later (LTS recommended)
+- npm 10.8+ (comes with Node.js 20)
 - AWS CLI configured with appropriate credentials
 - AWS CDK CLI installed globally (`npm install -g aws-cdk`)
 
