@@ -49,7 +49,7 @@
     "reset": "npm run clean && npm install && npm run build"
   },
   "devDependencies": {
-    "@types/jest": "^30.0.0",
+    "@types/jest": "^29.5.0",
     "@types/node": "^25.3.3",
     "aws-cdk": "2.1100.1",
     "fast-check": "^4.5.3",
