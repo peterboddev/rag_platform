@@ -172,7 +172,50 @@ The platform pipeline validates the `templatePath` configuration:
 
 ## Complete Examples
 
-### Example 1: Simple SAM Application
+### Example 1: RAG Application (Real Production Example)
+
+This is the actual configuration used for the RAG (Retrieval-Augmented Generation) platform application:
+
+```json
+{
+  "applicationName": "rag-app",
+  "team": "ai-team",
+  "sourceRepo": {
+    "owner": "peterboddev",
+    "repo": "rag",
+    "branch": "main"
+  },
+  "buildConfig": {
+    "runtime": "20",
+    "commands": [
+      "echo 'Installing dependencies...'",
+      "npm ci",
+      "echo 'Running tests...'",
+      "npm run test --if-present",
+      "echo 'Building application...'",
+      "npm run build --if-present",
+      "echo 'Synthesizing CDK stacks...'",
+      "npx cdk synth --if-present",
+      "echo 'Build completed successfully'"
+    ],
+    "environment": {
+      "NODE_ENV": "production",
+      "NPM_CONFIG_CACHE": "/tmp/.npm"
+    }
+  },
+  "templatePath": "cdk.out/RAGInfrastructureStack.template.json",
+  "deploymentTargets": ["dev", "staging", "prod"],
+  "enabled": true
+}
+```
+
+**Key Points:**
+- Uses `templatePath` to point to the CDK-generated template
+- Includes `npx cdk synth` in build commands to generate the template
+- Uses `--if-present` flags for optional commands (test, build, synth)
+- Deploys the `RAGInfrastructureStack` which contains all RAG platform components
+
+### Example 2: Simple SAM Application
 
 ```json
 {
@@ -204,7 +247,7 @@ The platform pipeline validates the `templatePath` configuration:
 }
 ```
 
-### Example 2: CDK Application with TypeScript
+### Example 3: CDK Application with TypeScript
 
 ```json
 {
