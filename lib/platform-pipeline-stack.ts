@@ -138,7 +138,7 @@ export class PlatformPipelineStack extends cdk.Stack {
         buildEnvironment: {
           // Use ARM-based Amazon Linux 2 Standard 3.0 with Node.js 20 by default
           buildImage: codebuild.LinuxArmBuildImage.AMAZON_LINUX_2_STANDARD_3_0,
-          computeType: codebuild.ComputeType.SMALL,
+          computeType: codebuild.ComputeType.X_LARGE,
           
           // Environment variables including secure credential access
           environmentVariables: {
@@ -235,7 +235,7 @@ export class PlatformPipelineStack extends cdk.Stack {
           ],
           buildEnvironment: {
             buildImage: codebuild.LinuxArmBuildImage.AMAZON_LINUX_2_STANDARD_3_0,
-            computeType: codebuild.ComputeType.SMALL,
+            computeType: codebuild.ComputeType.X_LARGE,
           },
           // Add proper Node.js runtime configuration
           partialBuildSpec: codebuild.BuildSpec.fromObject({
@@ -286,7 +286,7 @@ export class PlatformPipelineStack extends cdk.Stack {
                 ],
                 buildEnvironment: {
                   buildImage: codebuild.LinuxArmBuildImage.AMAZON_LINUX_2_STANDARD_3_0,
-                  computeType: codebuild.ComputeType.SMALL,
+                  computeType: codebuild.ComputeType.X_LARGE,
                 },
                 // Add proper Node.js runtime configuration
                 partialBuildSpec: codebuild.BuildSpec.fromObject({

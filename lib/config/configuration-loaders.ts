@@ -120,7 +120,7 @@ export class FileBasedConfigurationLoader implements ConfigurationLoader {
         environments: context.environments || {},
         defaults: context.defaults || {
           buildRuntime: '20',
-          computeType: 'BUILD_GENERAL1_SMALL',
+          computeType: 'BUILD_GENERAL1_XLARGE',
           buildImage: 'AMAZON_LINUX_2_STANDARD_3_0_ARM',
           cacheEnabled: true,
         },
@@ -340,7 +340,7 @@ export class CdkContextConfigurationLoader implements ConfigurationLoader {
         environments: context.environments || {},
         defaults: context.defaults || {
           buildRuntime: '20',
-          computeType: 'BUILD_GENERAL1_SMALL',
+          computeType: 'BUILD_GENERAL1_XLARGE',
           buildImage: 'AMAZON_LINUX_2_STANDARD_3_0_ARM',
           cacheEnabled: true,
         },

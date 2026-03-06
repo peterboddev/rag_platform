@@ -350,7 +350,7 @@ export class ApplicationPipelineConstruct extends Construct {
       
       environment: {
         buildImage: buildConfig.buildImage || codebuild.LinuxArmBuildImage.AMAZON_LINUX_2_STANDARD_3_0,
-        computeType: buildConfig.computeType || codebuild.ComputeType.SMALL,
+        computeType: buildConfig.computeType || codebuild.ComputeType.X_LARGE,
         environmentVariables: {
           'APPLICATION_NAME': {
             value: config.applicationName,

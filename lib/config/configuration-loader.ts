@@ -93,7 +93,7 @@ export class ConfigurationLoader {
     if (process.env.DEFAULT_BUILD_RUNTIME || process.env.DEFAULT_COMPUTE_TYPE) {
       config.defaults = {
         buildRuntime: process.env.DEFAULT_BUILD_RUNTIME || '20',
-        computeType: process.env.DEFAULT_COMPUTE_TYPE || 'BUILD_GENERAL1_SMALL',
+        computeType: process.env.DEFAULT_COMPUTE_TYPE || 'BUILD_GENERAL1_XLARGE',
         buildImage: process.env.DEFAULT_BUILD_IMAGE || 'AMAZON_LINUX_2_STANDARD_3_0_ARM',
         cacheEnabled: process.env.DEFAULT_CACHE_ENABLED !== 'false',
       };
@@ -302,7 +302,7 @@ export class ConfigurationLoader {
       applications: {},
       defaults: {
         buildRuntime: '20',
-        computeType: 'BUILD_GENERAL1_SMALL',
+        computeType: 'BUILD_GENERAL1_XLARGE',
         buildImage: 'AMAZON_LINUX_2_STANDARD_3_0_ARM',
         cacheEnabled: true,
       },

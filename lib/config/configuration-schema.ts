@@ -201,6 +201,7 @@ export const ConfigurationSchemas = {
           'BUILD_GENERAL1_SMALL',
           'BUILD_GENERAL1_MEDIUM',
           'BUILD_GENERAL1_LARGE',
+          'BUILD_GENERAL1_XLARGE',
           'BUILD_GENERAL1_2XLARGE',
         ],
         description: 'Default CodeBuild compute type',
@@ -504,7 +505,7 @@ export class ConfigurationSchemaValidator {
       case 'defaults':
         return {
           buildRuntime: '20',
-          computeType: 'BUILD_GENERAL1_SMALL',
+          computeType: 'BUILD_GENERAL1_XLARGE',
           buildImage: 'AMAZON_LINUX_2_STANDARD_3_0_ARM',
           cacheEnabled: true,
         };
