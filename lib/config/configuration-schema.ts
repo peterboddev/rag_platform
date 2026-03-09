@@ -492,7 +492,7 @@ export class ConfigurationSchemaValidator {
             runtime: '20',
             commands: ['npm ci', 'npm run test', 'npm run build'],
             environment: {
-              NODE_ENV: 'production',
+              NPM_CONFIG_CACHE: '/tmp/.npm',
             },
           },
           deploymentTargets: ['dev', 'staging', 'prod'],

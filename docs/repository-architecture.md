@@ -255,7 +255,7 @@ However, for production use, consider:
 
 1. **Choose static stack IDs** - No timestamps or random suffixes
 2. **Match templatePath to stack ID** - Run `cdk synth` locally to verify
-3. **Don't set NODE_ENV=production** - If your build runs tests
+3. **Don't set NODE_ENV** - Let npm use default behavior (includes devDependencies)
 4. **Include cdk synth in build** - Required for CDK applications
 5. **Test locally first** - Run `npm run build && npx cdk synth` before pushing
 
@@ -267,7 +267,4 @@ However, for production use, consider:
 
 **The Primary Fix**: Removed timestamp from RAG application stack ID to match the templatePath configuration, ensuring consistent template filenames.
 
-**NODE_ENV=production**: Can be used in application builds if:
-- The application doesn't run tests during build (uses `--if-present` flags)
-- OR the application explicitly installs devDependencies with `npm ci --include=dev`
-- The RAG app uses `--if-present` for tests, so NODE_ENV=production is acceptable
+**NODE_ENV Best Practice**: Do NOT set `NODE_ENV=production` in build stages that run tests or require devDependencies. The `--include=dev` flag does NOT work reliably with `NODE_ENV=production`. Let npm use its default behavior which includes devDependencies.

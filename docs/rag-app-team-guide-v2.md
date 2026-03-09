@@ -659,6 +659,134 @@ aws dynamodb scan \
 
 ## Troubleshooting
 
+### Issue: Pipeline Build Fails - "template.yaml not found"
+
+**Symptom**: Application pipeline deployment stage fails with:
+```
+File [template.yaml] does not exist in artifact [BuildOutput]
+```
+
+**Root Cause**: Build failed before CDK synthesis could create the template file.
+
+**Common Causes**:
+1. **NODE_ENV=production is set** - This causes npm to skip devDependencies
+2. **Missing devDependencies** - CDK and test frameworks not installed
+3. **Build commands fail** - Tests or compilation errors
+
+**Solution**:
+
+#### Step 1: Check Your Application Configuration
+
+Your application pipeline configuration should NOT set `NODE_ENV=production` in the build stage:
+
+```json
+{
+  "buildConfig": {
+    "commands": [
+      "npm ci",                    // ✅ Installs all dependencies
+      "npm run test --if-present",
+      "npm run build --if-present",
+      "npx cdk synth --if-present"
+    ],
+    "environment": {
+      // ❌ DO NOT set NODE_ENV: "production" here
+      "NPM_CONFIG_CACHE": "/tmp/.npm"
+    }
+  }
+}
+```
+
+#### Step 2: Verify Your package.json
+
+Ensure CDK is in dependencies or devDependencies:
+
+```json
+{
+  "dependencies": {
+    "aws-cdk-lib": "^2.100.0",
+    "constructs": "^10.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0"
+  }
+}
+```
+
+#### Step 3: Check Your CDK App
+
+Ensure your CDK app synthesizes correctly:
+
+```bash
+# Test locally
+npm ci
+npx cdk synth
+
+# Should create cdk.out/ directory with .template.json files
+ls cdk.out/
+```
+
+#### Step 4: Update templatePath in Pipeline Config
+
+If using CDK, specify the correct template path:
+
+```json
+{
+  "templatePath": "cdk.out/YourStackName.template.json"
+}
+```
+
+For SAM applications, use:
+```json
+{
+  "templatePath": "template.yaml"
+}
+```
+
+### Issue: NODE_ENV=production Breaks Builds
+
+**Symptom**: Build fails with missing devDependencies even though they're in package.json
+
+**Root Cause**: When `NODE_ENV=production` is set, npm automatically skips devDependencies
+
+**Why This Happens**:
+```bash
+# When NODE_ENV=production is set:
+npm ci              # Implicitly runs: npm ci --omit=dev
+npm install         # Implicitly runs: npm install --omit=dev
+
+# Result: devDependencies are NOT installed
+# CDK, TypeScript, test frameworks are missing
+# Build fails before template can be created
+```
+
+**Solution**: Remove `NODE_ENV=production` from build configuration
+
+**❌ WRONG Configuration**:
+```json
+{
+  "buildConfig": {
+    "environment": {
+      "NODE_ENV": "production"  // ❌ Breaks builds
+    }
+  }
+}
+```
+
+**✅ CORRECT Configuration**:
+```json
+{
+  "buildConfig": {
+    "environment": {
+      // Do not set NODE_ENV in build stages
+      "NPM_CONFIG_CACHE": "/tmp/.npm"
+    }
+  }
+}
+```
+
+**Note**: The `--include=dev` flag does NOT work reliably with `NODE_ENV=production` due to inconsistent npm behavior across versions.
+
 ### Issue: IAM Permission Denied
 
 **Symptom**: `AccessDenied` or `UnauthorizedOperation` errors

@@ -78,7 +78,6 @@ To `config/applications/rag-app.json`:
       "echo 'Build completed successfully'"
     ],
     "environment": {
-      "NODE_ENV": "production",
       "NPM_CONFIG_CACHE": "/tmp/.npm"
     }
   },

@@ -252,7 +252,6 @@ The platform uses a hybrid configuration approach:
       "npx cdk synth --if-present"
     ],
     "environment": {
-      "NODE_ENV": "production",
       "NPM_CONFIG_CACHE": "/tmp/.npm"
     }
   },
@@ -486,7 +485,7 @@ export const handler = async (event) => {
 **Build failures**:
 - Check CodeBuild logs: `/aws/codebuild/PlatformPipeline-Synth`
 - Verify Node.js 20 and npm 11+ are being used
-- Ensure `NODE_ENV=production` is NOT set in test stages
+- Ensure `NODE_ENV` is NOT set in build/test stages (let npm use default behavior)
 - Verify repository contains all necessary files
 
 **Template not found errors**:

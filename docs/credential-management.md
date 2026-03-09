@@ -47,9 +47,9 @@ CodeBuild projects receive minimal configuration via environment variables:
 
 ```yaml
 # Environment variables for CodeBuild
-NODE_ENV: production
 CDK_DEFAULT_REGION: us-east-1
 CDK_DEFAULT_ACCOUNT: 123456789012
+# Do NOT set NODE_ENV - let npm use default behavior
 ```
 
 ### Connection Authorization Process
@@ -171,7 +171,7 @@ env:
     GITHUB_ORG: "your-organization"
     GITHUB_REPO: "platform-pipeline"
     BRANCH: "main"
-    NODE_ENV: "production"
+    # Do NOT set NODE_ENV in build stages
 ```
 
 **No Secrets Manager Required**: CodeConnections handles all GitHub authentication automatically.

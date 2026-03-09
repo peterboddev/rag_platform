@@ -214,7 +214,7 @@ This is the actual configuration used for the RAG (Retrieval-Augmented Generatio
 - Includes `npx cdk synth` in build commands to generate the template
 - Uses `--if-present` flags for optional commands (test, build, synth)
 - Deploys the `RAGInfrastructureStack` which contains all RAG platform components
-- **NODE_ENV=production**: Can be used if the application doesn't run tests in the build, or uses `npm ci --include=dev` to explicitly install devDependencies
+- **NODE_ENV**: Do NOT set `NODE_ENV=production` in build stages - it breaks devDependencies installation
 
 ### Example 2: Simple SAM Application
 
@@ -363,7 +363,7 @@ This is the actual configuration used for the RAG (Retrieval-Augmented Generatio
 1. **Stack ID mismatch**: CDK stack ID doesn't match templatePath configuration
 2. **Missing cdk synth**: Build commands don't include `npx cdk synth`
 3. **Build failure**: Tests or build failed, preventing CDK synthesis
-4. **NODE_ENV=production**: Causes npm ci to skip devDependencies, breaking tests
+4. **NODE_ENV set incorrectly**: Setting NODE_ENV breaks devDependencies installation
 
 **Solutions**:
 
@@ -393,10 +393,17 @@ This is the actual configuration used for the RAG (Retrieval-Augmented Generatio
    }
    ```
 
-3. **If using NODE_ENV=production with tests**:
-   - Either remove `NODE_ENV=production` from buildConfig.environment
-   - OR use `npm ci --include=dev` to explicitly install devDependencies
-   - OR skip tests in the build (use `--if-present` flag)
+3. **Do NOT set NODE_ENV in build stages**:
+   ```json
+   "buildConfig": {
+     "environment": {
+       "NPM_CONFIG_CACHE": "/tmp/.npm"
+       // ❌ Do NOT set NODE_ENV here - it breaks devDependencies
+     }
+   }
+   ```
+   
+   **Why**: The `--include=dev` flag does NOT work reliably with `NODE_ENV=production`. Let npm use its default behavior.
 
 ### Pipeline fails at deployment stage
 
