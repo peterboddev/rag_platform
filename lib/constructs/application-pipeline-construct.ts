@@ -336,7 +336,7 @@ export class ApplicationPipelineConstruct extends Construct {
       },
     });
 
-    return new codebuild.Project(this, 'BuildProject', {
+    const buildProject = new codebuild.Project(this, 'BuildProject', {
       projectName: `${config.applicationName}-build`,
       description: `Build project for ${config.applicationName} application`,
       
@@ -396,6 +396,24 @@ export class ApplicationPipelineConstruct extends Construct {
       
       timeout: cdk.Duration.minutes(30),
     });
+
+    // Grant SSM parameter read permissions for CDK valueFromLookup()
+    // This allows CDK synthesis to retrieve platform configuration during build
+    // Pattern: /{applicationName}/{environment}/* for application-specific parameters
+    buildProject.addToRolePolicy(new iam.PolicyStatement({
+      effect: iam.Effect.ALLOW,
+      actions: [
+        'ssm:GetParameter',
+        'ssm:GetParameters',
+        'ssm:GetParametersByPath',
+      ],
+      resources: [
+        // Allow access to application-specific SSM parameters
+        `arn:aws:ssm:${cdk.Aws.REGION}:${cdk.Aws.ACCOUNT_ID}:parameter/${config.applicationName}/*`,
+      ],
+    }));
+
+    return buildProject;
   }
 
   /**
