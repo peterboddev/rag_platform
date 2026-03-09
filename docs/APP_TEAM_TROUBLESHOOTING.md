@@ -215,11 +215,72 @@ const roleArn = ssm.StringParameter.valueFromLookup(
 - [ ] `cdk synth` works locally
 - [ ] Platform team has deployed SSM permissions fix
 
+## Special Case: Build Succeeds But Template Not Found
+
+If your build shows **SUCCESS** but you still get "template.yaml does not exist", the template is being created with a **different name** than expected.
+
+### Diagnosis Steps
+
+1. **Check CodeBuild artifacts**:
+   - Go to CodeBuild → Build History → Successful build
+   - Click "Artifacts" tab
+   - Download the BuildOutput artifact
+   - Unzip and look at what files exist
+
+2. **Check `cdk synth` output in logs**:
+   ```
+   [Container] Running command npx cdk synth
+   Successfully synthesized to cdk.out/MyActualStackName.template.json
+   ```
+   
+   The actual filename is shown here!
+
+3. **Common mismatches**:
+   ```
+   Pipeline expects: cdk.out/RAGApplicationStack.template.json
+   CDK creates:      cdk.out/RagAppStack.template.json
+   ```
+
+### Solution: Update templatePath
+
+**Option 1: Update pipeline configuration** (Recommended)
+
+Edit `config/applications/rag-app.json`:
+```json
+{
+  "templatePath": "cdk.out/YourActualStackName.template.json"
+}
+```
+
+Ask platform team to redeploy the pipeline.
+
+**Option 2: Update CDK stack name**
+
+In your CDK app code:
+```typescript
+// Make sure this matches the templatePath
+new RAGApplicationStack(app, 'RAGApplicationStack', {
+  // ...
+});
+```
+
+### Quick Fix: List All Templates
+
+If you have multiple stacks, you can use a wildcard pattern or specify the exact stack:
+
+```bash
+# In your cdk.out directory after synth
+ls *.template.json
+```
+
+Then update `templatePath` to match the actual filename.
+
 ## Still Stuck?
 
-1. **Share CodeBuild logs** - The actual error is in the build logs, not the deploy stage
-2. **Check platform deployment** - Has the platform team deployed the SSM permissions fix?
-3. **Review the guide** - See `docs/rag-app-team-guide-v2.md` for complete examples
+1. **Share CodeBuild logs** - Look for the `cdk synth` output showing actual filename
+2. **Download build artifacts** - Check what files actually exist in BuildOutput
+3. **Check stack name** - Verify CDK stack ID matches templatePath
+4. **Review the guide** - See `docs/rag-app-team-guide-v2.md` for complete examples
 
 ## Platform Team Status
 
