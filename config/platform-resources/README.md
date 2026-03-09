@@ -16,9 +16,37 @@ These configuration files document:
 ```
 config/platform-resources/
 ├── README.md                      # This file
-├── rag-app-resources.json         # RAG application resources
-└── [app-name]-resources.json      # Other application resources
+├── rag-app-resources.json         # RAG application resources (detailed spec)
+└── [app-name]-resources.json      # Other application resources (detailed spec)
 ```
+
+**Related Files:**
+- `config/applications/[app-name]-requirements.json` - Simple, readable list of requested resources
+- `config/applications/[app-name].json` - Application pipeline configuration
+
+## Two-File Approach
+
+### 1. Requirements File (Simple)
+**Location**: `config/applications/[app-name]-requirements.json`
+
+**Purpose**: Quick reference for what app teams requested and what was deployed
+- Simple, readable format
+- Just resource names and basic info
+- Easy to scan and understand
+- Updated when app teams make requests
+
+**Example**: `config/applications/rag-app-requirements.json`
+
+### 2. Resources File (Detailed)
+**Location**: `config/platform-resources/[app-name]-resources.json`
+
+**Purpose**: Complete technical specification of deployed resources
+- Full schemas, permissions, and configuration
+- SSM parameter paths and CloudFormation exports
+- Detailed access patterns and capabilities
+- Used for integration and troubleshooting
+
+**Example**: `config/platform-resources/rag-app-resources.json`
 
 ## Resource Specification Format
 

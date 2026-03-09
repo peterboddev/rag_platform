@@ -1,0 +1,42 @@
+{
+  "applicationName": "rag-app",
+  "environment": "dev",
+  "requestedBy": "ai-team",
+  "lastUpdated": "2026-03-09",
+  "platformResources": {
+    "dynamodb": {
+      "tables": [
+        {
+          "name": "rag-app-customers-dev",
+          "purpose": "Customer/tenant management",
+          "primaryKey": "customerId",
+          "gsi": ["emailIndex"]
+        },
+        {
+          "name": "rag-app-documents-dev",
+          "purpose": "Document metadata and processing status",
+          "primaryKey": "documentId",
+          "gsi": ["customerIdIndex", "statusIndex"]
+        }
+      ]
+    },
+    "cognito": {
+      "userPool": "rag-app-users-dev",
+      "purpose": "User authentication"
+    },
+    "opensearch": {
+      "collection": "rag-app-vectors-dev",
+      "purpose": "Vector database for embeddings"
+    },
+    "apiGateway": {
+      "api": "rag-app-api-dev",
+      "purpose": "REST API endpoints"
+    },
+    "bedrock": {
+      "models": ["amazon.nova-pro-v1:0", "amazon.titan-embed-text-v1"],
+      "purpose": "AI text generation and embeddings"
+    }
+  },
+  "status": "deployed",
+  "deploymentDate": "2026-03-06"
+}
