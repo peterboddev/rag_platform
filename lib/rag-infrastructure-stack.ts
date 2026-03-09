@@ -116,8 +116,8 @@ export class RAGInfrastructureStack extends cdk.Stack {
       apiGatewayRootResourceId: apiGateway.api.root.resourceId,
       apiGatewayUrl: apiGateway.api.url,
       vpcId: networkInfrastructure.vpc.vpcId,
-      customersTableName: dataStorage.customersTable.tableName,
-      customersTableArn: dataStorage.customersTable.tableArn,
+      customersTableName: dataStorage.conversationsTable.tableName, // conversationsTable is actually the customers table
+      customersTableArn: dataStorage.conversationsTable.tableArn,
       documentsTableName: dataStorage.documentsTable.tableName,
       documentsTableArn: dataStorage.documentsTable.tableArn,
     });
