@@ -274,67 +274,10 @@ export class ApplicationPipelineConstruct extends Construct {
   private createBuildProject(config: ApplicationPipelineConfig): codebuild.Project {
     const buildConfig = config.buildConfig || {};
     
-    // Default build commands if not specified
-    const defaultCommands = [
-      'echo "Build started on `date`"',
-      'echo "Installing dependencies..."',
-      'npm ci',
-      'echo "Running tests..."',
-      'npm run test',
-      'echo "Building application..."',
-      'npm run build',
-      'echo "Build completed on `date`"',
-    ];
-
-    // Default build specification
-    const buildSpec = buildConfig.buildSpec || codebuild.BuildSpec.fromObject({
-      version: '0.2',
-      phases: {
-        install: {
-          'runtime-versions': {
-            nodejs: buildConfig.runtime || '20',
-          },
-        },
-        pre_build: {
-          commands: [
-            'echo "Pre-build phase started on `date`"',
-            'echo "Node.js version: $(node --version)"',
-            'echo "NPM version: $(npm --version)"',
-          ],
-        },
-        build: {
-          commands: buildConfig.commands || defaultCommands,
-        },
-        post_build: {
-          commands: [
-            'echo "Post-build phase completed on `date`"',
-          ],
-        },
-      },
-      artifacts: {
-        // Include all application files and templates
-        // This configuration supports both SAM and CDK applications:
-        // - SAM applications: template.yaml at root
-        // - CDK applications: *.template.json files in cdk.out/ directory
-        // The templatePath configuration determines which template is used for deployment
-        files: [
-          '**/*',
-          '**/*.template.json',    // CDK CloudFormation templates
-          '**/*.template.yaml',    // Alternative CDK template format
-          'template.yaml',         // SAM template (explicit inclusion)
-          'cdk.out/**/*',          // CDK output directory
-        ],
-        'exclude-paths': [
-          'node_modules/**/*',
-          '.git/**/*',
-        ],
-      },
-      cache: {
-        paths: [
-          'node_modules/**/*',
-        ],
-      },
-    });
+    // Use buildspec.yml from application team's repository
+    // This allows app teams to control their build process and troubleshoot issues
+    // Platform team provides SSM permissions and environment variables
+    const buildSpec = buildConfig.buildSpec || codebuild.BuildSpec.fromSourceFilename('buildspec.yml');
 
     const buildProject = new codebuild.Project(this, 'BuildProject', {
       projectName: `${config.applicationName}-build`,

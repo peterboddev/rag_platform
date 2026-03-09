@@ -4,6 +4,102 @@
 
 This guide explains how to build RAG applications using the platform-provided foundational infrastructure. The platform provides core AI/ML services, while you create application-specific resources and business logic.
 
+## Application Pipeline Build Process
+
+### Your buildspec.yml File
+
+**IMPORTANT**: Your application repository MUST contain a `buildspec.yml` file at the root. This file controls how your application is built and deployed.
+
+The platform pipeline uses your buildspec.yml to:
+- Install dependencies
+- Run tests
+- Build your application
+- Generate CloudFormation templates (for CDK apps) or package artifacts (for SAM apps)
+
+#### Example buildspec.yml for CDK Applications
+
+```yaml
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      nodejs: 20
+    commands:
+      - echo "Installing dependencies..."
+      - npm ci
+  
+  pre_build:
+    commands:
+      - echo "Running tests..."
+      - npm run test
+  
+  build:
+    commands:
+      - echo "Building application..."
+      - npm run build
+      - echo "Synthesizing CDK stack..."
+      - npx cdk synth --if-present
+  
+  post_build:
+    commands:
+      - echo "Build completed successfully"
+
+artifacts:
+  files:
+    - '**/*'
+  # IMPORTANT: Do NOT use base-directory for CDK apps
+  # The platform expects templates at cdk.out/<StackName>.template.json
+
+cache:
+  paths:
+    - 'node_modules/**/*'
+```
+
+#### Example buildspec.yml for SAM Applications
+
+```yaml
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      nodejs: 20
+      python: 3.11
+    commands:
+      - pip install aws-sam-cli
+  
+  build:
+    commands:
+      - sam build
+      - sam package --output-template-file packaged.yaml --s3-bucket $ARTIFACT_BUCKET
+  
+artifacts:
+  files:
+    - template.yaml
+    - packaged.yaml
+```
+
+#### Critical buildspec.yml Rules
+
+1. **Do NOT set `NODE_ENV=production`** in environment variables - it breaks devDependencies installation
+2. **Do NOT use `base-directory: cdk.out`** in artifacts - it causes double-nested paths
+3. **Use `nodejs: 20`** for Node.js runtime (compatible with npm 11+)
+4. **Include all necessary files** in artifacts section
+5. **Cache node_modules** for faster builds
+
+#### Troubleshooting Your buildspec.yml
+
+If your build fails, check:
+- [ ] buildspec.yml exists at repository root
+- [ ] Runtime versions are specified correctly
+- [ ] All required commands are present
+- [ ] Artifacts section includes necessary files
+- [ ] No `NODE_ENV=production` in env variables
+- [ ] No `base-directory` in artifacts section (for CDK apps)
+
+See [Application Team Troubleshooting Guide](./APP_TEAM_TROUBLESHOOTING.md) for detailed debugging steps.
+
 ## Architecture: Platform vs Application Responsibilities
 
 ### What Platform Provides (Read-Only for App Teams)

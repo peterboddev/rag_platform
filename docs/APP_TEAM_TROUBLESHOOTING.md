@@ -24,13 +24,59 @@ But this file doesn't exist because `cdk synth` either:
 
 ## How to Debug
 
+### Step 0: Check Your buildspec.yml
+
+**CRITICAL**: Your repository MUST have a `buildspec.yml` file at the root.
+
+The platform pipeline uses YOUR buildspec.yml to control the build process. If it's missing or incorrect, the build will fail.
+
+#### Required buildspec.yml Structure
+
+```yaml
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      nodejs: 20  # Use Node.js 20 (compatible with npm 11+)
+  
+  build:
+    commands:
+      - npm ci  # Install dependencies
+      - npm run test  # Run tests
+      - npm run build  # Build application
+      - npx cdk synth  # Generate CloudFormation templates
+
+artifacts:
+  files:
+    - '**/*'
+  # Do NOT use base-directory: cdk.out (causes double-nested paths)
+```
+
+#### Common buildspec.yml Mistakes
+
+1. **Missing buildspec.yml**: Pipeline fails immediately
+2. **Wrong runtime version**: Use `nodejs: 20` (not 18 or 16)
+3. **NODE_ENV=production**: Breaks devDependencies installation
+4. **base-directory: cdk.out**: Causes double-nested artifact paths
+5. **Missing cdk synth**: CloudFormation templates never generated
+
+See: `docs/rag-app-team-guide-v2.md` → "Application Pipeline Build Process" for complete examples.
+
 ### Step 1: Check CodeBuild Logs
 
 Go to AWS Console → CodeBuild → Build History → Click on the failed build
 
 Look for the **actual error** in the build logs. Common errors:
 
-#### Error 1: SSM Permission Denied
+#### Error 1: buildspec.yml Not Found
+```
+YAML_FILE_ERROR Message: buildspec.yml does not exist
+```
+
+**Solution**: Create `buildspec.yml` at the root of your repository. See examples in the app team guide.
+
+#### Error 2: SSM Permission Denied
 ```
 User is not authorized to perform: ssm:GetParameter on resource: 
 arn:aws:ssm:us-east-1:450683699755:parameter/rag-app/dev/*
@@ -38,7 +84,7 @@ arn:aws:ssm:us-east-1:450683699755:parameter/rag-app/dev/*
 
 **Solution**: Platform team needs to deploy the updated pipeline with SSM permissions (already fixed in platform code, waiting for deployment)
 
-#### Error 2: CDK Synthesis Fails
+#### Error 3: CDK Synthesis Fails
 ```
 Error: SSM parameter /rag-app/dev/iam/application-role-arn not found
 ```
@@ -47,7 +93,7 @@ Error: SSM parameter /rag-app/dev/iam/application-role-arn not found
 
 See: `docs/rag-app-team-guide-v2.md` → "Quick Start: CDK Application Setup"
 
-#### Error 3: Tests Failing
+#### Error 4: Tests Failing
 ```
 npm run test
 FAIL src/handlers/chat.test.ts

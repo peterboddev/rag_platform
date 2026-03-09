@@ -2,11 +2,33 @@
 
 ## Overview
 
-This guide explains how to configure application pipelines for both SAM and CDK-based applications, with a focus on the `templatePath` configuration option that enables CDK application deployments.
+This guide explains how to configure application pipelines for both SAM and CDK-based applications. Application teams control their build process through a `buildspec.yml` file in their repository, while the platform team configures deployment settings.
+
+## Build Process Control
+
+### Application Team Responsibility: buildspec.yml
+
+**IMPORTANT**: Your application repository MUST contain a `buildspec.yml` file at the root. This file controls how your application is built.
+
+The platform pipeline executes YOUR buildspec.yml to:
+- Install dependencies
+- Run tests
+- Build your application
+- Generate CloudFormation templates (CDK) or package artifacts (SAM)
+
+See `docs/rag-app-team-guide-v2.md` → "Application Pipeline Build Process" for complete buildspec.yml examples.
+
+### Platform Team Responsibility: Deployment Configuration
+
+The platform team configures deployment settings in `config/applications/` JSON files:
+- Source repository location
+- Deployment targets (dev, staging, prod)
+- Template path (for CDK apps)
+- Environment variables
 
 ## Configuration File Structure
 
-Application pipeline configurations are stored in `config/applications/` directory as JSON files. Each configuration defines how the platform pipeline should build and deploy your application.
+Application pipeline configurations are stored in `config/applications/` directory as JSON files. Each configuration defines deployment settings for your application.
 
 ## Template Path Configuration
 
@@ -29,16 +51,11 @@ SAM applications follow the convention of generating a `template.yaml` file at t
     "repo": "my-sam-app",
     "branch": "main"
   },
-  "buildConfig": {
-    "runtime": "20",
-    "commands": [
-      "npm ci",
-      "sam build"
-    ]
-  },
   "deploymentTargets": ["dev", "staging", "prod"]
 }
 ```
+
+**Note**: Build commands are controlled by YOUR `buildspec.yml` file in the repository, not by this configuration.
 
 ### CDK Applications
 
@@ -55,18 +72,12 @@ CDK applications synthesize CloudFormation templates with the naming pattern `<S
     "repo": "my-cdk-app",
     "branch": "main"
   },
-  "buildConfig": {
-    "runtime": "20",
-    "commands": [
-      "npm ci",
-      "npm run build",
-      "npx cdk synth"
-    ]
-  },
   "templatePath": "cdk.out/MyApplicationStack.template.json",
   "deploymentTargets": ["dev", "staging", "prod"]
 }
 ```
+
+**Note**: Your repository's `buildspec.yml` must include `npx cdk synth` to generate the template.
 
 ### How to Determine Your Template Path
 
