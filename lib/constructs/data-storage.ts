@@ -1,5 +1,6 @@
 import * as cdk from 'aws-cdk-lib';
 import * as iam from 'aws-cdk-lib/aws-iam';
+import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
 import * as rds from 'aws-cdk-lib/aws-rds';
 import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import { Construct } from 'constructs';
@@ -7,7 +8,7 @@ import { Construct } from 'constructs';
 export interface DataStorageProps {
   readonly applicationName: string;
   readonly environment: string;
-  readonly vpc: ec2.Vpc;
+  readonly vpc: ec2.IVpc;
   readonly account: string;
   readonly region: string;
   readonly enableRDS?: boolean;
@@ -15,13 +16,55 @@ export interface DataStorageProps {
 
 export class DataStorageConstruct extends Construct {
   public readonly dynamoDBRole: iam.Role;
+  public readonly conversationsTable: dynamodb.Table;
+  public readonly documentsTable: dynamodb.Table;
   public readonly auroraCluster?: rds.DatabaseCluster;
   public readonly databaseEndpoints: { [key: string]: string };
 
   constructor(scope: Construct, id: string, props: DataStorageProps) {
     super(scope, id);
 
-    // Create IAM role for DynamoDB access (application teams will create their own tables)
+    // Create DynamoDB table for customers/tenants
+    this.conversationsTable = new dynamodb.Table(this, 'CustomersTable', {
+      tableName: `${props.applicationName}-customers-${props.environment}`,
+      partitionKey: { name: 'customerId', type: dynamodb.AttributeType.STRING },
+      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+      removalPolicy: props.environment === 'prod' ? cdk.RemovalPolicy.RETAIN : cdk.RemovalPolicy.DESTROY,
+      pointInTimeRecovery: props.environment === 'prod',
+      encryption: dynamodb.TableEncryption.AWS_MANAGED,
+    });
+
+    // Add GSI for querying by email
+    this.conversationsTable.addGlobalSecondaryIndex({
+      indexName: 'emailIndex',
+      partitionKey: { name: 'email', type: dynamodb.AttributeType.STRING },
+    });
+
+    // Create DynamoDB table for document metadata
+    this.documentsTable = new dynamodb.Table(this, 'DocumentsTable', {
+      tableName: `${props.applicationName}-documents-${props.environment}`,
+      partitionKey: { name: 'documentId', type: dynamodb.AttributeType.STRING },
+      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+      removalPolicy: props.environment === 'prod' ? cdk.RemovalPolicy.RETAIN : cdk.RemovalPolicy.DESTROY,
+      pointInTimeRecovery: props.environment === 'prod',
+      encryption: dynamodb.TableEncryption.AWS_MANAGED,
+    });
+
+    // Add GSI for querying documents by customer
+    this.documentsTable.addGlobalSecondaryIndex({
+      indexName: 'customerIdIndex',
+      partitionKey: { name: 'customerId', type: dynamodb.AttributeType.STRING },
+      sortKey: { name: 'uploadedAt', type: dynamodb.AttributeType.NUMBER },
+    });
+
+    // Add GSI for querying by status
+    this.documentsTable.addGlobalSecondaryIndex({
+      indexName: 'statusIndex',
+      partitionKey: { name: 'status', type: dynamodb.AttributeType.STRING },
+      sortKey: { name: 'uploadedAt', type: dynamodb.AttributeType.NUMBER },
+    });
+
+    // Create IAM role for DynamoDB access (kept for backward compatibility)
     this.dynamoDBRole = new iam.Role(this, 'DynamoDBRole', {
       roleName: `${props.applicationName}-dynamodb-role-${props.environment}`,
       assumedBy: new iam.ServicePrincipal('lambda.amazonaws.com'),
@@ -30,27 +73,15 @@ export class DataStorageConstruct extends Construct {
       ],
     });
 
-    // Grant DynamoDB permissions (application teams will specify table names)
-    this.dynamoDBRole.addToPolicy(new iam.PolicyStatement({
-      effect: iam.Effect.ALLOW,
-      actions: [
-        'dynamodb:GetItem',
-        'dynamodb:PutItem',
-        'dynamodb:UpdateItem',
-        'dynamodb:DeleteItem',
-        'dynamodb:Query',
-        'dynamodb:Scan',
-        'dynamodb:BatchGetItem',
-        'dynamodb:BatchWriteItem',
-      ],
-      resources: [
-        `arn:aws:dynamodb:${props.region}:${props.account}:table/${props.applicationName}-*`,
-      ],
-    }));
+    // Grant DynamoDB permissions to the role
+    this.conversationsTable.grantReadWriteData(this.dynamoDBRole);
+    this.documentsTable.grantReadWriteData(this.dynamoDBRole);
 
     // Initialize database endpoints
     this.databaseEndpoints = {
       dynamoDBRegion: props.region,
+      conversationsTableName: this.conversationsTable.tableName,
+      documentsTableName: this.documentsTable.tableName,
     };
 
     // Optional Aurora PostgreSQL Serverless v2 for complex analytics
@@ -125,7 +156,8 @@ export class DataStorageConstruct extends Construct {
       dynamodb: {
         region: this.databaseEndpoints.dynamoDBRegion,
         roleArn: this.dynamoDBRole.roleArn,
-        tablePrefix: `${this.node.tryGetContext('applicationName') || 'rag-app'}-`,
+        conversationsTable: this.conversationsTable.tableName,
+        documentsTable: this.documentsTable.tableName,
       },
       rds: this.auroraCluster ? {
         writerEndpoint: this.databaseEndpoints.auroraEndpoint!,
@@ -138,5 +170,11 @@ export class DataStorageConstruct extends Construct {
         maxCapacity: 16,
       } : undefined,
     };
+  }
+
+  // Grant read/write access to tables for application Lambda role
+  public grantTableAccess(role: iam.IRole) {
+    this.conversationsTable.grantReadWriteData(role);
+    this.documentsTable.grantReadWriteData(role);
   }
 }

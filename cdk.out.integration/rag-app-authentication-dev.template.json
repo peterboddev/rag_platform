@@ -1,0 +1,271 @@
+{
+ "Description": "Cognito user pools and identity pools",
+ "Resources": {
+  "CognitoAuthenticationUserPoolC62A0661": {
+   "Type": "AWS::Cognito::UserPool",
+   "Properties": {
+    "AccountRecoverySetting": {
+     "RecoveryMechanisms": [
+      {
+       "Name": "verified_email",
+       "Priority": 1
+      }
+     ]
+    },
+    "AdminCreateUserConfig": {
+     "AllowAdminCreateUserOnly": false
+    },
+    "AliasAttributes": [
+     "email"
+    ],
+    "AutoVerifiedAttributes": [
+     "email"
+    ],
+    "EmailVerificationMessage": "The verification code to your new account is {####}",
+    "EmailVerificationSubject": "Verify your new account",
+    "Policies": {
+     "PasswordPolicy": {
+      "MinimumLength": 8,
+      "RequireLowercase": true,
+      "RequireNumbers": true,
+      "RequireSymbols": true,
+      "RequireUppercase": true
+     }
+    },
+    "SmsVerificationMessage": "The verification code to your new account is {####}",
+    "UserPoolName": "rag-app-users-dev",
+    "UserPoolTags": {
+     "Architecture": "Modular",
+     "DeployedBy": "CDK",
+     "ManagedBy": "PlatformTeam",
+     "Project": "RAGInfrastructure"
+    },
+    "VerificationMessageTemplate": {
+     "DefaultEmailOption": "CONFIRM_WITH_CODE",
+     "EmailMessage": "The verification code to your new account is {####}",
+     "EmailSubject": "Verify your new account",
+     "SmsMessage": "The verification code to your new account is {####}"
+    }
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "rag-app-authentication-dev/CognitoAuthentication/UserPool/Resource"
+   }
+  },
+  "CognitoAuthenticationUserPoolClientDBF67243": {
+   "Type": "AWS::Cognito::UserPoolClient",
+   "Properties": {
+    "AllowedOAuthFlows": [
+     "code"
+    ],
+    "AllowedOAuthFlowsUserPoolClient": true,
+    "AllowedOAuthScopes": [
+     "email",
+     "openid",
+     "profile"
+    ],
+    "CallbackURLs": [
+     "https://rag-app-website-dev.s3-website-us-east-1.amazonaws.com"
+    ],
+    "ClientName": "rag-app-web-client-dev",
+    "ExplicitAuthFlows": [
+     "ALLOW_USER_PASSWORD_AUTH",
+     "ALLOW_USER_SRP_AUTH",
+     "ALLOW_REFRESH_TOKEN_AUTH"
+    ],
+    "GenerateSecret": false,
+    "LogoutURLs": [
+     "https://rag-app-website-dev.s3-website-us-east-1.amazonaws.com"
+    ],
+    "SupportedIdentityProviders": [
+     "COGNITO"
+    ],
+    "UserPoolId": {
+     "Ref": "CognitoAuthenticationUserPoolC62A0661"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "rag-app-authentication-dev/CognitoAuthentication/UserPoolClient/Resource"
+   }
+  },
+  "CognitoAuthenticationIdentityPool678780D2": {
+   "Type": "AWS::Cognito::IdentityPool",
+   "Properties": {
+    "AllowUnauthenticatedIdentities": false,
+    "CognitoIdentityProviders": [
+     {
+      "ClientId": {
+       "Ref": "CognitoAuthenticationUserPoolClientDBF67243"
+      },
+      "ProviderName": {
+       "Fn::GetAtt": [
+        "CognitoAuthenticationUserPoolC62A0661",
+        "ProviderName"
+       ]
+      }
+     }
+    ],
+    "IdentityPoolName": "rag-app_identity_pool_dev",
+    "IdentityPoolTags": [
+     {
+      "Key": "Architecture",
+      "Value": "Modular"
+     },
+     {
+      "Key": "DeployedBy",
+      "Value": "CDK"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "PlatformTeam"
+     },
+     {
+      "Key": "Project",
+      "Value": "RAGInfrastructure"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "rag-app-authentication-dev/CognitoAuthentication/IdentityPool"
+   }
+  },
+  "CDKMetadata": {
+   "Type": "AWS::CDK::Metadata",
+   "Properties": {
+    "Analytics": "v2:deflate64:H4sIAAAAAAAA/zPSMzI21jNQTCwv1k1OydbNyUzSqw4uSUzO1kksL45Pzk/PyyzJ16sOLU4tCsjPz9FxTsuDs2EM55zM1LwSZCmEiGdKal5JZkklSLQWJOBfWlJQWlKrk5efkqqXVaxfZmSgZ2iuZ6CYVZyZqVtUmleSmZuqFwShAVtAzYifAAAA"
+   },
+   "Metadata": {
+    "aws:cdk:path": "rag-app-authentication-dev/CDKMetadata/Default"
+   }
+  }
+ },
+ "Outputs": {
+  "CognitoAuthenticationUserPoolId4071213B": {
+   "Description": "Cognito User Pool ID",
+   "Value": {
+    "Ref": "CognitoAuthenticationUserPoolC62A0661"
+   }
+  },
+  "CognitoAuthenticationUserPoolClientIdCE7296C2": {
+   "Description": "Cognito User Pool Client ID",
+   "Value": {
+    "Ref": "CognitoAuthenticationUserPoolClientDBF67243"
+   }
+  },
+  "CognitoAuthenticationIdentityPoolId7E9D9183": {
+   "Description": "Cognito Identity Pool ID",
+   "Value": {
+    "Ref": "CognitoAuthenticationIdentityPool678780D2"
+   }
+  },
+  "CognitoUserPoolId": {
+   "Description": "Cognito User Pool ID",
+   "Value": {
+    "Ref": "CognitoAuthenticationUserPoolC62A0661"
+   },
+   "Export": {
+    "Name": "rag-app-dev-cognito-user-pool-id"
+   }
+  },
+  "CognitoUserPoolArn": {
+   "Description": "Cognito User Pool ARN",
+   "Value": {
+    "Fn::GetAtt": [
+     "CognitoAuthenticationUserPoolC62A0661",
+     "Arn"
+    ]
+   },
+   "Export": {
+    "Name": "rag-app-dev-cognito-user-pool-arn"
+   }
+  },
+  "CognitoClientId": {
+   "Description": "Cognito User Pool Client ID",
+   "Value": {
+    "Ref": "CognitoAuthenticationUserPoolClientDBF67243"
+   },
+   "Export": {
+    "Name": "rag-app-dev-cognito-client-id"
+   }
+  },
+  "CognitoIdentityPoolId": {
+   "Description": "Cognito Identity Pool ID",
+   "Value": {
+    "Ref": "CognitoAuthenticationIdentityPool678780D2"
+   },
+   "Export": {
+    "Name": "rag-app-dev-cognito-identity-pool-id"
+   }
+  },
+  "ExportsOutputRefCognitoAuthenticationUserPoolC62A0661EC659836": {
+   "Value": {
+    "Ref": "CognitoAuthenticationUserPoolC62A0661"
+   },
+   "Export": {
+    "Name": "rag-app-authentication-dev:ExportsOutputRefCognitoAuthenticationUserPoolC62A0661EC659836"
+   }
+  },
+  "ExportsOutputFnGetAttCognitoAuthenticationUserPoolC62A0661Arn484FA80F": {
+   "Value": {
+    "Fn::GetAtt": [
+     "CognitoAuthenticationUserPoolC62A0661",
+     "Arn"
+    ]
+   },
+   "Export": {
+    "Name": "rag-app-authentication-dev:ExportsOutputFnGetAttCognitoAuthenticationUserPoolC62A0661Arn484FA80F"
+   }
+  },
+  "ExportsOutputRefCognitoAuthenticationUserPoolClientDBF67243F2403DF4": {
+   "Value": {
+    "Ref": "CognitoAuthenticationUserPoolClientDBF67243"
+   },
+   "Export": {
+    "Name": "rag-app-authentication-dev:ExportsOutputRefCognitoAuthenticationUserPoolClientDBF67243F2403DF4"
+   }
+  },
+  "ExportsOutputRefCognitoAuthenticationIdentityPool678780D2AC73CB1B": {
+   "Value": {
+    "Ref": "CognitoAuthenticationIdentityPool678780D2"
+   },
+   "Export": {
+    "Name": "rag-app-authentication-dev:ExportsOutputRefCognitoAuthenticationIdentityPool678780D2AC73CB1B"
+   }
+  }
+ },
+ "Parameters": {
+  "BootstrapVersion": {
+   "Type": "AWS::SSM::Parameter::Value<String>",
+   "Default": "/cdk-bootstrap/hnb659fds/version",
+   "Description": "Version of the CDK Bootstrap resources in this environment, automatically retrieved from SSM Parameter Store. [cdk:skip]"
+  }
+ },
+ "Rules": {
+  "CheckBootstrapVersion": {
+   "Assertions": [
+    {
+     "Assert": {
+      "Fn::Not": [
+       {
+        "Fn::Contains": [
+         [
+          "1",
+          "2",
+          "3",
+          "4",
+          "5"
+         ],
+         {
+          "Ref": "BootstrapVersion"
+         }
+        ]
+       }
+      ]
+     },
+     "AssertDescription": "CDK bootstrap stack version 6 required. Please run 'cdk bootstrap' with a recent version of the CDK CLI."
+    }
+   ]
+  }
+ }
+}

@@ -1,0 +1,935 @@
+{
+ "Description": "IAM roles, SSM parameters, and application integration",
+ "Resources": {
+  "BedrockAIServicesBedrockModelAccessRole97A7E546": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "lambda.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "ManagedPolicyArns": [
+     {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+       ]
+      ]
+     }
+    ],
+    "RoleName": "rag-app-bedrock-access-dev",
+    "Tags": [
+     {
+      "Key": "Architecture",
+      "Value": "Modular"
+     },
+     {
+      "Key": "DeployedBy",
+      "Value": "CDK"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "PlatformTeam"
+     },
+     {
+      "Key": "Project",
+      "Value": "RAGInfrastructure"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "rag-app-integration-dev/BedrockAIServices/BedrockModelAccessRole/Resource"
+   }
+  },
+  "BedrockAIServicesBedrockModelAccessRoleDefaultPolicy03B751F4": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": [
+        "bedrock:InvokeModel",
+        "bedrock:InvokeModelWithResponseStream"
+       ],
+       "Effect": "Allow",
+       "Resource": "arn:aws:bedrock:us-east-1::foundation-model/amazon.nova-pro-v1:0"
+      },
+      {
+       "Action": "bedrock:InvokeModel",
+       "Effect": "Allow",
+       "Resource": "arn:aws:bedrock:us-east-1::foundation-model/amazon.titan-embed-text-v1"
+      },
+      {
+       "Action": [
+        "bedrock:Retrieve",
+        "bedrock:RetrieveAndGenerate"
+       ],
+       "Effect": "Allow",
+       "Resource": "arn:aws:bedrock:us-east-1:450683699755:knowledge-base/*"
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "BedrockAIServicesBedrockModelAccessRoleDefaultPolicy03B751F4",
+    "Roles": [
+     {
+      "Ref": "BedrockAIServicesBedrockModelAccessRole97A7E546"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "rag-app-integration-dev/BedrockAIServices/BedrockModelAccessRole/DefaultPolicy/Resource"
+   }
+  },
+  "ApplicationIntegrationApplicationRoleF25E046C": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "lambda.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "ManagedPolicyArns": [
+     {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+       ]
+      ]
+     }
+    ],
+    "RoleName": "rag-app-rag-role-dev",
+    "Tags": [
+     {
+      "Key": "Architecture",
+      "Value": "Modular"
+     },
+     {
+      "Key": "DeployedBy",
+      "Value": "CDK"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "PlatformTeam"
+     },
+     {
+      "Key": "Project",
+      "Value": "RAGInfrastructure"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "rag-app-integration-dev/ApplicationIntegration/ApplicationRole/Resource"
+   }
+  },
+  "ApplicationIntegrationApplicationRoleDefaultPolicyC4E52CB0": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": [
+        "bedrock:InvokeModel",
+        "bedrock:InvokeModelWithResponseStream"
+       ],
+       "Effect": "Allow",
+       "Resource": "arn:aws:bedrock:us-east-1::foundation-model/amazon.nova-pro-v1:0"
+      },
+      {
+       "Action": [
+        "bedrock:Retrieve",
+        "bedrock:RetrieveAndGenerate",
+        "textract:AnalyzeDocument",
+        "textract:DetectDocumentText"
+       ],
+       "Effect": "Allow",
+       "Resource": "*"
+      },
+      {
+       "Action": [
+        "cognito-idp:AdminCreateUser",
+        "cognito-idp:AdminGetUser",
+        "cognito-idp:AdminUpdateUserAttributes",
+        "cognito-idp:ListUsers"
+       ],
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::ImportValue": "rag-app-authentication-dev:ExportsOutputFnGetAttCognitoAuthenticationUserPoolC62A0661Arn484FA80F"
+       }
+      },
+      {
+       "Action": [
+        "dynamodb:BatchGetItem",
+        "dynamodb:BatchWriteItem",
+        "dynamodb:DeleteItem",
+        "dynamodb:DescribeGlobalSecondaryIndexes",
+        "dynamodb:DescribeTable",
+        "dynamodb:GetItem",
+        "dynamodb:PutItem",
+        "dynamodb:Query",
+        "dynamodb:Scan",
+        "dynamodb:UpdateItem",
+        "dynamodb:UpdateTable"
+       ],
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::ImportValue": "rag-app-data-storage-dev:ExportsOutputFnGetAttDataStorageCustomersTableC59D3D47ArnC08109B4"
+        },
+        {
+         "Fn::ImportValue": "rag-app-data-storage-dev:ExportsOutputFnGetAttDataStorageDocumentsTableB8D5B713ArnBF9C1370"
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Fn::ImportValue": "rag-app-data-storage-dev:ExportsOutputFnGetAttDataStorageCustomersTableC59D3D47ArnC08109B4"
+           },
+           "/index/*"
+          ]
+         ]
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Fn::ImportValue": "rag-app-data-storage-dev:ExportsOutputFnGetAttDataStorageDocumentsTableB8D5B713ArnBF9C1370"
+           },
+           "/index/*"
+          ]
+         ]
+        }
+       ]
+      },
+      {
+       "Action": "aoss:APIAccessAll",
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::ImportValue": "rag-app-vector-db-dev:ExportsOutputFnGetAttVectorDatabaseVectorCollection327D215AArnC2B73074"
+       }
+      },
+      {
+       "Action": [
+        "aoss:CreateCollectionItems",
+        "aoss:CreateIndex",
+        "aoss:DeleteCollectionItems",
+        "aoss:DeleteIndex",
+        "aoss:DescribeCollectionItems",
+        "aoss:DescribeIndex",
+        "aoss:ReadDocument",
+        "aoss:UpdateCollectionItems",
+        "aoss:UpdateIndex",
+        "aoss:WriteDocument"
+       ],
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::ImportValue": "rag-app-vector-db-dev:ExportsOutputFnGetAttVectorDatabaseVectorCollection327D215AArnC2B73074"
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Fn::ImportValue": "rag-app-vector-db-dev:ExportsOutputFnGetAttVectorDatabaseVectorCollection327D215AArnC2B73074"
+           },
+           "/*"
+          ]
+         ]
+        }
+       ]
+      },
+      {
+       "Action": [
+        "s3:CreateBucket",
+        "s3:DeleteBucket",
+        "s3:DeleteObject",
+        "s3:GetBucketLocation",
+        "s3:GetBucketPolicy",
+        "s3:GetObject",
+        "s3:ListBucket",
+        "s3:PutBucketCORS",
+        "s3:PutBucketLifecycleConfiguration",
+        "s3:PutBucketPolicy",
+        "s3:PutBucketTagging",
+        "s3:PutBucketVersioning",
+        "s3:PutObject"
+       ],
+       "Effect": "Allow",
+       "Resource": [
+        "arn:aws:s3:::rag-app-*",
+        "arn:aws:s3:::rag-app-*/*"
+       ]
+      },
+      {
+       "Action": [
+        "sqs:ChangeMessageVisibility",
+        "sqs:CreateQueue",
+        "sqs:DeleteMessage",
+        "sqs:DeleteQueue",
+        "sqs:GetQueueAttributes",
+        "sqs:GetQueueUrl",
+        "sqs:ListQueues",
+        "sqs:PurgeQueue",
+        "sqs:ReceiveMessage",
+        "sqs:SendMessage",
+        "sqs:SetQueueAttributes",
+        "sqs:TagQueue",
+        "sqs:UntagQueue"
+       ],
+       "Effect": "Allow",
+       "Resource": "arn:aws:sqs:us-east-1:450683699755:rag-app-*"
+      },
+      {
+       "Action": [
+        "events:DeleteRule",
+        "events:DescribeRule",
+        "events:DisableRule",
+        "events:EnableRule",
+        "events:ListRules",
+        "events:ListTargetsByRule",
+        "events:PutRule",
+        "events:PutTargets",
+        "events:RemoveTargets",
+        "events:TagResource",
+        "events:UntagResource"
+       ],
+       "Effect": "Allow",
+       "Resource": "arn:aws:events:us-east-1:450683699755:rule/rag-app-*"
+      },
+      {
+       "Action": [
+        "states:CreateStateMachine",
+        "states:DeleteStateMachine",
+        "states:DescribeExecution",
+        "states:DescribeStateMachine",
+        "states:ListExecutions",
+        "states:ListStateMachines",
+        "states:StartExecution",
+        "states:StopExecution",
+        "states:TagResource",
+        "states:UntagResource",
+        "states:UpdateStateMachine"
+       ],
+       "Effect": "Allow",
+       "Resource": [
+        "arn:aws:states:us-east-1:450683699755:execution:rag-app-*:*",
+        "arn:aws:states:us-east-1:450683699755:stateMachine:rag-app-*"
+       ]
+      },
+      {
+       "Action": [
+        "lambda:AddPermission",
+        "lambda:CreateFunction",
+        "lambda:DeleteFunction",
+        "lambda:GetFunction",
+        "lambda:InvokeFunction",
+        "lambda:ListFunctions",
+        "lambda:RemovePermission",
+        "lambda:TagResource",
+        "lambda:UntagResource",
+        "lambda:UpdateFunctionCode",
+        "lambda:UpdateFunctionConfiguration"
+       ],
+       "Effect": "Allow",
+       "Resource": "arn:aws:lambda:us-east-1:450683699755:function:rag-app-*"
+      },
+      {
+       "Action": "iam:PassRole",
+       "Condition": {
+        "StringEquals": {
+         "iam:PassedToService": [
+          "lambda.amazonaws.com",
+          "states.amazonaws.com",
+          "events.amazonaws.com"
+         ]
+        }
+       },
+       "Effect": "Allow",
+       "Resource": "arn:aws:iam::450683699755:role/rag-app-*"
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "ApplicationIntegrationApplicationRoleDefaultPolicyC4E52CB0",
+    "Roles": [
+     {
+      "Ref": "ApplicationIntegrationApplicationRoleF25E046C"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "rag-app-integration-dev/ApplicationIntegration/ApplicationRole/DefaultPolicy/Resource"
+   }
+  },
+  "ApplicationIntegrationBedrockModelIdB1A3D92C": {
+   "Type": "AWS::SSM::Parameter",
+   "Properties": {
+    "Description": "Bedrock Nova Pro model ID for RAG applications",
+    "Name": "/rag-app/dev/bedrock/nova-pro-model-id",
+    "Tags": {
+     "Architecture": "Modular",
+     "DeployedBy": "CDK",
+     "ManagedBy": "PlatformTeam",
+     "Project": "RAGInfrastructure"
+    },
+    "Tier": "Standard",
+    "Type": "String",
+    "Value": "amazon.nova-pro-v1:0"
+   },
+   "Metadata": {
+    "aws:cdk:path": "rag-app-integration-dev/ApplicationIntegration/BedrockModelId/Resource"
+   }
+  },
+  "ApplicationIntegrationCognitoUserPoolId76B9613F": {
+   "Type": "AWS::SSM::Parameter",
+   "Properties": {
+    "Description": "Cognito User Pool ID for authentication",
+    "Name": "/rag-app/dev/cognito/user-pool-id",
+    "Tags": {
+     "Architecture": "Modular",
+     "DeployedBy": "CDK",
+     "ManagedBy": "PlatformTeam",
+     "Project": "RAGInfrastructure"
+    },
+    "Tier": "Standard",
+    "Type": "String",
+    "Value": {
+     "Fn::Select": [
+      1,
+      {
+       "Fn::Split": [
+        "/",
+        {
+         "Fn::Select": [
+          5,
+          {
+           "Fn::Split": [
+            ":",
+            {
+             "Fn::ImportValue": "rag-app-authentication-dev:ExportsOutputFnGetAttCognitoAuthenticationUserPoolC62A0661Arn484FA80F"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "rag-app-integration-dev/ApplicationIntegration/CognitoUserPoolId/Resource"
+   }
+  },
+  "ApplicationIntegrationCognitoUserPoolClientId7FBD14F5": {
+   "Type": "AWS::SSM::Parameter",
+   "Properties": {
+    "Description": "Cognito User Pool Client ID",
+    "Name": "/rag-app/dev/cognito/client-id",
+    "Tags": {
+     "Architecture": "Modular",
+     "DeployedBy": "CDK",
+     "ManagedBy": "PlatformTeam",
+     "Project": "RAGInfrastructure"
+    },
+    "Tier": "Standard",
+    "Type": "String",
+    "Value": {
+     "Fn::ImportValue": "rag-app-authentication-dev:ExportsOutputRefCognitoAuthenticationUserPoolClientDBF67243F2403DF4"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "rag-app-integration-dev/ApplicationIntegration/CognitoUserPoolClientId/Resource"
+   }
+  },
+  "ApplicationIntegrationCognitoUserPoolArnC2A48876": {
+   "Type": "AWS::SSM::Parameter",
+   "Properties": {
+    "Description": "Cognito User Pool ARN",
+    "Name": "/rag-app/dev/cognito/user-pool-arn",
+    "Tags": {
+     "Architecture": "Modular",
+     "DeployedBy": "CDK",
+     "ManagedBy": "PlatformTeam",
+     "Project": "RAGInfrastructure"
+    },
+    "Tier": "Standard",
+    "Type": "String",
+    "Value": {
+     "Fn::ImportValue": "rag-app-authentication-dev:ExportsOutputFnGetAttCognitoAuthenticationUserPoolC62A0661Arn484FA80F"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "rag-app-integration-dev/ApplicationIntegration/CognitoUserPoolArn/Resource"
+   }
+  },
+  "ApplicationIntegrationApplicationRoleArnFA00401D": {
+   "Type": "AWS::SSM::Parameter",
+   "Properties": {
+    "Description": "IAM role ARN for application Lambda functions",
+    "Name": "/rag-app/dev/iam/application-role-arn",
+    "Tags": {
+     "Architecture": "Modular",
+     "DeployedBy": "CDK",
+     "ManagedBy": "PlatformTeam",
+     "Project": "RAGInfrastructure"
+    },
+    "Tier": "Standard",
+    "Type": "String",
+    "Value": {
+     "Fn::GetAtt": [
+      "ApplicationIntegrationApplicationRoleF25E046C",
+      "Arn"
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "rag-app-integration-dev/ApplicationIntegration/ApplicationRoleArn/Resource"
+   }
+  },
+  "ApplicationIntegrationApplicationRoleName2EDB0085": {
+   "Type": "AWS::SSM::Parameter",
+   "Properties": {
+    "Description": "IAM role name for application Lambda functions",
+    "Name": "/rag-app/dev/iam/application-role-name",
+    "Tags": {
+     "Architecture": "Modular",
+     "DeployedBy": "CDK",
+     "ManagedBy": "PlatformTeam",
+     "Project": "RAGInfrastructure"
+    },
+    "Tier": "Standard",
+    "Type": "String",
+    "Value": {
+     "Ref": "ApplicationIntegrationApplicationRoleF25E046C"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "rag-app-integration-dev/ApplicationIntegration/ApplicationRoleName/Resource"
+   }
+  },
+  "ApplicationIntegrationVectorDatabaseEndpointEAB0F7C1": {
+   "Type": "AWS::SSM::Parameter",
+   "Properties": {
+    "Description": "OpenSearch Serverless collection endpoint for vector operations",
+    "Name": "/rag-app/dev/opensearch/collection-endpoint",
+    "Tags": {
+     "Architecture": "Modular",
+     "DeployedBy": "CDK",
+     "ManagedBy": "PlatformTeam",
+     "Project": "RAGInfrastructure"
+    },
+    "Tier": "Standard",
+    "Type": "String",
+    "Value": {
+     "Fn::ImportValue": "rag-app-vector-db-dev:ExportsOutputFnGetAttVectorDatabaseVectorCollection327D215ACollectionEndpoint292994E4"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "rag-app-integration-dev/ApplicationIntegration/VectorDatabaseEndpoint/Resource"
+   }
+  },
+  "ApplicationIntegrationVectorDatabaseIndexName304A572A": {
+   "Type": "AWS::SSM::Parameter",
+   "Properties": {
+    "Description": "OpenSearch vector index name",
+    "Name": "/rag-app/dev/opensearch/index-name",
+    "Tags": {
+     "Architecture": "Modular",
+     "DeployedBy": "CDK",
+     "ManagedBy": "PlatformTeam",
+     "Project": "RAGInfrastructure"
+    },
+    "Tier": "Standard",
+    "Type": "String",
+    "Value": "vector-index"
+   },
+   "Metadata": {
+    "aws:cdk:path": "rag-app-integration-dev/ApplicationIntegration/VectorDatabaseIndexName/Resource"
+   }
+  },
+  "ApplicationIntegrationVectorDatabaseCollectionNameB6110CB7": {
+   "Type": "AWS::SSM::Parameter",
+   "Properties": {
+    "Description": "OpenSearch Serverless collection name",
+    "Name": "/rag-app/dev/opensearch/collection-name",
+    "Tags": {
+     "Architecture": "Modular",
+     "DeployedBy": "CDK",
+     "ManagedBy": "PlatformTeam",
+     "Project": "RAGInfrastructure"
+    },
+    "Tier": "Standard",
+    "Type": "String",
+    "Value": "rag-app-vectors-dev"
+   },
+   "Metadata": {
+    "aws:cdk:path": "rag-app-integration-dev/ApplicationIntegration/VectorDatabaseCollectionName/Resource"
+   }
+  },
+  "ApplicationIntegrationApiGatewayId91BDF4E8": {
+   "Type": "AWS::SSM::Parameter",
+   "Properties": {
+    "Description": "API Gateway REST API ID",
+    "Name": "/rag-app/dev/apigateway/api-id",
+    "Tags": {
+     "Architecture": "Modular",
+     "DeployedBy": "CDK",
+     "ManagedBy": "PlatformTeam",
+     "Project": "RAGInfrastructure"
+    },
+    "Tier": "Standard",
+    "Type": "String",
+    "Value": {
+     "Fn::ImportValue": "rag-app-api-gateway-dev:ExportsOutputRefApiGatewayApiE27D440837C29F13"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "rag-app-integration-dev/ApplicationIntegration/ApiGatewayId/Resource"
+   }
+  },
+  "ApplicationIntegrationApiGatewayRootResourceId29DA52AC": {
+   "Type": "AWS::SSM::Parameter",
+   "Properties": {
+    "Description": "API Gateway root resource ID for creating methods",
+    "Name": "/rag-app/dev/apigateway/root-resource-id",
+    "Tags": {
+     "Architecture": "Modular",
+     "DeployedBy": "CDK",
+     "ManagedBy": "PlatformTeam",
+     "Project": "RAGInfrastructure"
+    },
+    "Tier": "Standard",
+    "Type": "String",
+    "Value": {
+     "Fn::ImportValue": "rag-app-api-gateway-dev:ExportsOutputFnGetAttApiGatewayApiE27D4408RootResourceIdEA619544"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "rag-app-integration-dev/ApplicationIntegration/ApiGatewayRootResourceId/Resource"
+   }
+  },
+  "ApplicationIntegrationApiGatewayUrl908EB451": {
+   "Type": "AWS::SSM::Parameter",
+   "Properties": {
+    "Description": "API Gateway endpoint URL",
+    "Name": "/rag-app/dev/apigateway/url",
+    "Tags": {
+     "Architecture": "Modular",
+     "DeployedBy": "CDK",
+     "ManagedBy": "PlatformTeam",
+     "Project": "RAGInfrastructure"
+    },
+    "Tier": "Standard",
+    "Type": "String",
+    "Value": {
+     "Fn::Join": [
+      "",
+      [
+       "https://",
+       {
+        "Fn::ImportValue": "rag-app-api-gateway-dev:ExportsOutputRefApiGatewayApiE27D440837C29F13"
+       },
+       ".execute-api.us-east-1.",
+       {
+        "Ref": "AWS::URLSuffix"
+       },
+       "/",
+       {
+        "Fn::ImportValue": "rag-app-api-gateway-dev:ExportsOutputRefApiGatewayApiDeploymentStagedev8A1DF551B88DB0CC"
+       },
+       "/"
+      ]
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "rag-app-integration-dev/ApplicationIntegration/ApiGatewayUrl/Resource"
+   }
+  },
+  "ApplicationIntegrationVpcId058A0F52": {
+   "Type": "AWS::SSM::Parameter",
+   "Properties": {
+    "Description": "VPC ID for the RAG infrastructure",
+    "Name": "/rag-app/dev/network/vpc-id",
+    "Tags": {
+     "Architecture": "Modular",
+     "DeployedBy": "CDK",
+     "ManagedBy": "PlatformTeam",
+     "Project": "RAGInfrastructure"
+    },
+    "Tier": "Standard",
+    "Type": "String",
+    "Value": {
+     "Fn::ImportValue": "rag-app-network-dev:ExportsOutputRefNetworkInfrastructureRAGApplicationVPC4B5BF382014985D3"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "rag-app-integration-dev/ApplicationIntegration/VpcId/Resource"
+   }
+  },
+  "ApplicationIntegrationRegionBD00EE2F": {
+   "Type": "AWS::SSM::Parameter",
+   "Properties": {
+    "Description": "AWS region for the infrastructure",
+    "Name": "/rag-app/dev/region",
+    "Tags": {
+     "Architecture": "Modular",
+     "DeployedBy": "CDK",
+     "ManagedBy": "PlatformTeam",
+     "Project": "RAGInfrastructure"
+    },
+    "Tier": "Standard",
+    "Type": "String",
+    "Value": "us-east-1"
+   },
+   "Metadata": {
+    "aws:cdk:path": "rag-app-integration-dev/ApplicationIntegration/Region/Resource"
+   }
+  },
+  "ApplicationIntegrationCustomersTableNameB81EFD41": {
+   "Type": "AWS::SSM::Parameter",
+   "Properties": {
+    "Description": "DynamoDB customers table name",
+    "Name": "/rag-app/dev/dynamodb/customers-table-name",
+    "Tags": {
+     "Architecture": "Modular",
+     "DeployedBy": "CDK",
+     "ManagedBy": "PlatformTeam",
+     "Project": "RAGInfrastructure"
+    },
+    "Tier": "Standard",
+    "Type": "String",
+    "Value": {
+     "Fn::ImportValue": "rag-app-data-storage-dev:ExportsOutputRefDataStorageCustomersTableC59D3D47BC162845"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "rag-app-integration-dev/ApplicationIntegration/CustomersTableName/Resource"
+   }
+  },
+  "ApplicationIntegrationCustomersTableArn790C1E24": {
+   "Type": "AWS::SSM::Parameter",
+   "Properties": {
+    "Description": "DynamoDB customers table ARN",
+    "Name": "/rag-app/dev/dynamodb/customers-table-arn",
+    "Tags": {
+     "Architecture": "Modular",
+     "DeployedBy": "CDK",
+     "ManagedBy": "PlatformTeam",
+     "Project": "RAGInfrastructure"
+    },
+    "Tier": "Standard",
+    "Type": "String",
+    "Value": {
+     "Fn::ImportValue": "rag-app-data-storage-dev:ExportsOutputFnGetAttDataStorageCustomersTableC59D3D47ArnC08109B4"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "rag-app-integration-dev/ApplicationIntegration/CustomersTableArn/Resource"
+   }
+  },
+  "ApplicationIntegrationDocumentsTableName2329DC03": {
+   "Type": "AWS::SSM::Parameter",
+   "Properties": {
+    "Description": "DynamoDB documents table name",
+    "Name": "/rag-app/dev/dynamodb/documents-table-name",
+    "Tags": {
+     "Architecture": "Modular",
+     "DeployedBy": "CDK",
+     "ManagedBy": "PlatformTeam",
+     "Project": "RAGInfrastructure"
+    },
+    "Tier": "Standard",
+    "Type": "String",
+    "Value": {
+     "Fn::ImportValue": "rag-app-data-storage-dev:ExportsOutputRefDataStorageDocumentsTableB8D5B7139B39008D"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "rag-app-integration-dev/ApplicationIntegration/DocumentsTableName/Resource"
+   }
+  },
+  "ApplicationIntegrationDocumentsTableArn528203C0": {
+   "Type": "AWS::SSM::Parameter",
+   "Properties": {
+    "Description": "DynamoDB documents table ARN",
+    "Name": "/rag-app/dev/dynamodb/documents-table-arn",
+    "Tags": {
+     "Architecture": "Modular",
+     "DeployedBy": "CDK",
+     "ManagedBy": "PlatformTeam",
+     "Project": "RAGInfrastructure"
+    },
+    "Tier": "Standard",
+    "Type": "String",
+    "Value": {
+     "Fn::ImportValue": "rag-app-data-storage-dev:ExportsOutputFnGetAttDataStorageDocumentsTableB8D5B713ArnBF9C1370"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "rag-app-integration-dev/ApplicationIntegration/DocumentsTableArn/Resource"
+   }
+  },
+  "ApplicationIntegrationEmbeddingModelIdE02843DA": {
+   "Type": "AWS::SSM::Parameter",
+   "Properties": {
+    "Description": "Bedrock embedding model ID",
+    "Name": "/rag-app/dev/bedrock/embedding-model-id",
+    "Tags": {
+     "Architecture": "Modular",
+     "DeployedBy": "CDK",
+     "ManagedBy": "PlatformTeam",
+     "Project": "RAGInfrastructure"
+    },
+    "Tier": "Standard",
+    "Type": "String",
+    "Value": "amazon.titan-embed-text-v1"
+   },
+   "Metadata": {
+    "aws:cdk:path": "rag-app-integration-dev/ApplicationIntegration/EmbeddingModelId/Resource"
+   }
+  },
+  "ApplicationIntegrationCognitoIdentityPoolIdBF651EEE": {
+   "Type": "AWS::SSM::Parameter",
+   "Properties": {
+    "Description": "Cognito Identity Pool ID",
+    "Name": "/rag-app/dev/cognito/identity-pool-id",
+    "Tags": {
+     "Architecture": "Modular",
+     "DeployedBy": "CDK",
+     "ManagedBy": "PlatformTeam",
+     "Project": "RAGInfrastructure"
+    },
+    "Tier": "Standard",
+    "Type": "String",
+    "Value": {
+     "Fn::ImportValue": "rag-app-authentication-dev:ExportsOutputRefCognitoAuthenticationIdentityPool678780D2AC73CB1B"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "rag-app-integration-dev/ApplicationIntegration/CognitoIdentityPoolId/Resource"
+   }
+  },
+  "CDKMetadata": {
+   "Type": "AWS::CDK::Metadata",
+   "Properties": {
+    "Analytics": "v2:deflate64:H4sIAAAAAAAA/zWMWw7CIBRE19J/ekX64QJcgA0uoEGK5rY8DBdsDGHvpjR+nTmZzAgQwwC8Uxv1el57iw8o96T0ytRGU0HloMhgDbs+feMYLOrvrkeqjMjtm4j+NaqonEkmtv4vtTJpKOSo280tp3dOlfkwG1jo9BEczhfg3UKIfcw+oTMgD/4AcnzSfKEAAAA="
+   },
+   "Metadata": {
+    "aws:cdk:path": "rag-app-integration-dev/CDKMetadata/Default"
+   }
+  }
+ },
+ "Outputs": {
+  "BedrockAIServicesNovaProModelIdFF24ECC8": {
+   "Description": "Bedrock Nova Pro model ID",
+   "Value": "amazon.nova-pro-v1:0"
+  },
+  "BedrockAIServicesEmbeddingModelIdA8ED6BBB": {
+   "Description": "Bedrock embedding model ID",
+   "Value": "amazon.titan-embed-text-v1"
+  },
+  "ApplicationIntegrationParameterPrefix19453D5C": {
+   "Description": "SSM parameter prefix for application configuration - use with get-parameters-by-path",
+   "Value": "/rag-app/dev/",
+   "Export": {
+    "Name": "rag-app-dev-param-prefix"
+   }
+  },
+  "ApplicationIntegrationParameterCountC1A5ECA1": {
+   "Description": "Number of SSM parameters created for application configuration",
+   "Value": "20"
+  },
+  "ApplicationRoleArn": {
+   "Description": "IAM role ARN for application Lambda functions",
+   "Value": {
+    "Fn::GetAtt": [
+     "ApplicationIntegrationApplicationRoleF25E046C",
+     "Arn"
+    ]
+   },
+   "Export": {
+    "Name": "rag-app-dev-application-role-arn"
+   }
+  },
+  "ApplicationRoleName": {
+   "Description": "IAM role name for application Lambda functions",
+   "Value": {
+    "Ref": "ApplicationIntegrationApplicationRoleF25E046C"
+   },
+   "Export": {
+    "Name": "rag-app-dev-application-role-name"
+   }
+  },
+  "BedrockNovaProModelId": {
+   "Description": "Bedrock Nova Pro model ID",
+   "Value": "amazon.nova-pro-v1:0",
+   "Export": {
+    "Name": "rag-app-dev-bedrock-nova-pro-model-id"
+   }
+  }
+ },
+ "Parameters": {
+  "BootstrapVersion": {
+   "Type": "AWS::SSM::Parameter::Value<String>",
+   "Default": "/cdk-bootstrap/hnb659fds/version",
+   "Description": "Version of the CDK Bootstrap resources in this environment, automatically retrieved from SSM Parameter Store. [cdk:skip]"
+  }
+ },
+ "Rules": {
+  "CheckBootstrapVersion": {
+   "Assertions": [
+    {
+     "Assert": {
+      "Fn::Not": [
+       {
+        "Fn::Contains": [
+         [
+          "1",
+          "2",
+          "3",
+          "4",
+          "5"
+         ],
+         {
+          "Ref": "BootstrapVersion"
+         }
+        ]
+       }
+      ]
+     },
+     "AssertDescription": "CDK bootstrap stack version 6 required. Please run 'cdk bootstrap' with a recent version of the CDK CLI."
+    }
+   ]
+  }
+ }
+}

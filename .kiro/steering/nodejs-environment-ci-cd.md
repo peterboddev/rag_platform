@@ -45,7 +45,9 @@ When `NODE_ENV=production`:
 
 ### Solution
 
-**DO NOT set `NODE_ENV=production` in CI/CD builds that run tests.**
+**DO NOT set `NODE_ENV=production` in CI/CD builds that run tests or require devDependencies.**
+
+The `--include=dev` flag does NOT work reliably when `NODE_ENV=production` is set because npm's behavior is inconsistent across versions. The only reliable solution is to not set `NODE_ENV` during build/test phases.
 
 #### Platform Pipeline (lib/platform-pipeline-stack.ts)
 
@@ -125,19 +127,21 @@ environment: {
 }
 ```
 
-### Alternative: Explicit devDependencies Installation
+### Alternative: Explicit devDependencies Installation (NOT RELIABLE)
 
-If you must use `NODE_ENV=production` but need devDependencies:
+**WARNING**: The `--include=dev` flag does NOT work reliably when `NODE_ENV=production` is set.
 
 ```bash
-# Force installation of devDependencies
-npm ci --include=dev
-
-# Or
-npm install --include=dev
+# ❌ DOES NOT WORK RELIABLY
+npm ci --include=dev  # Still skips devDependencies when NODE_ENV=production
 ```
 
-However, this is NOT recommended. It's better to not set `NODE_ENV=production` in test/build stages.
+**Why it doesn't work**:
+- npm's behavior with `NODE_ENV=production` overrides the `--include=dev` flag in many versions
+- The interaction between environment variables and CLI flags is inconsistent
+- Different npm versions handle this differently
+
+**CORRECT SOLUTION**: Do not set `NODE_ENV=production` in build/test stages. Only set it in runtime/deployment stages that don't need devDependencies.
 
 ### Verification Checklist
 

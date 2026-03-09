@@ -8,7 +8,9 @@ export interface StorageStackProps extends cdk.StackProps {
 }
 
 export class StorageStack extends cdk.Stack {
-  public readonly s3Storage: S3StorageConstruct;
+  public readonly documentBucket: cdk.aws_s3.Bucket;
+  public readonly websiteBucket: cdk.aws_s3.Bucket;
+  public readonly configurationBucket: cdk.aws_s3.Bucket;
 
   constructor(scope: Construct, id: string, props: StorageStackProps) {
     super(scope, id, props);
@@ -16,35 +18,33 @@ export class StorageStack extends cdk.Stack {
     const { applicationName, environment } = props;
 
     // S3 Storage Infrastructure
-    this.s3Storage = new S3StorageConstruct(this, 'S3Storage', {
+    const s3Storage = new S3StorageConstruct(this, 'S3Storage', {
       applicationName,
       environment,
       allowedOrigins: ['*'], // Configure based on your frontend domains
     });
 
+    this.documentBucket = s3Storage.documentBucket;
+    this.websiteBucket = s3Storage.websiteBucket;
+    this.configurationBucket = s3Storage.configurationBucket;
+
     // Stack Outputs
     new cdk.CfnOutput(this, 'DocumentBucketName', {
-      value: this.s3Storage.documentBucket.bucketName,
+      value: this.documentBucket.bucketName,
       description: 'S3 bucket for document storage',
       exportName: `${applicationName}-${environment}-document-bucket`,
     });
 
     new cdk.CfnOutput(this, 'WebsiteBucketName', {
-      value: this.s3Storage.websiteBucket.bucketName,
+      value: this.websiteBucket.bucketName,
       description: 'S3 bucket for website hosting',
       exportName: `${applicationName}-${environment}-website-bucket`,
     });
 
     new cdk.CfnOutput(this, 'ConfigurationBucketName', {
-      value: this.s3Storage.configurationBucket.bucketName,
+      value: this.configurationBucket.bucketName,
       description: 'S3 bucket for configuration export',
       exportName: `${applicationName}-${environment}-config-bucket`,
-    });
-
-    new cdk.CfnOutput(this, 'BackupBucketName', {
-      value: this.s3Storage.backupBucket.bucketName,
-      description: 'S3 bucket for backups',
-      exportName: `${applicationName}-${environment}-backup-bucket`,
     });
   }
 }

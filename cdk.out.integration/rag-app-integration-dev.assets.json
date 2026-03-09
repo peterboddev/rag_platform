@@ -1,0 +1,21 @@
+{
+  "version": "48.0.0",
+  "files": {
+    "6b1f3395afd025ca99229130b79d1dc2a9b09a8d81ed325bf1f75de628ae8a2e": {
+      "displayName": "rag-app-integration-dev Template",
+      "source": {
+        "path": "rag-app-integration-dev.template.json",
+        "packaging": "file"
+      },
+      "destinations": {
+        "450683699755-us-east-1-006deb4c": {
+          "bucketName": "cdk-hnb659fds-assets-450683699755-us-east-1",
+          "objectKey": "6b1f3395afd025ca99229130b79d1dc2a9b09a8d81ed325bf1f75de628ae8a2e.json",
+          "region": "us-east-1",
+          "assumeRoleArn": "arn:${AWS::Partition}:iam::450683699755:role/cdk-hnb659fds-file-publishing-role-450683699755-us-east-1"
+        }
+      }
+    }
+  },
+  "dockerImages": {}
+}

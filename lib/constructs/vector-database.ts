@@ -16,6 +16,7 @@ export class VectorDatabaseConstruct extends Construct {
   public readonly collection: opensearchserverless.CfnCollection;
   public readonly collectionArn: string;
   public readonly collectionEndpoint: string;
+  public readonly collectionName: string; // Store the logical collection name
   public readonly indexName: string;
   public readonly dataAccessPolicy: opensearchserverless.CfnAccessPolicy;
 
@@ -23,6 +24,7 @@ export class VectorDatabaseConstruct extends Construct {
     super(scope, id);
 
     const collectionName = `${props.applicationName}-vectors-${props.environment}`;
+    this.collectionName = collectionName; // Store for later use
     this.indexName = 'vector-index';
 
     // Create encryption policy for the collection (simplified like test)
@@ -101,7 +103,7 @@ export class VectorDatabaseConstruct extends Construct {
       ]),
     });
 
-    // Create the OpenSearch Serverless collection (simplified like test)
+    // Create the OpenSearch Serverless collection
     this.collection = new opensearchserverless.CfnCollection(this, 'VectorCollection', {
       name: collectionName,
       type: 'VECTORSEARCH',
@@ -137,7 +139,7 @@ export class VectorDatabaseConstruct extends Construct {
    * Add IAM roles to the data access policy
    */
   public addAccessRoles(roles: iam.Role[]): void {
-    const collectionName = this.collection.name!;
+    const collectionName = this.collectionName; // Use stored collection name
     const existingPrincipals = [`arn:aws:iam::${cdk.Stack.of(this).account}:root`];
     const newPrincipals = roles.map(role => role.roleArn);
     const allPrincipals = [...existingPrincipals, ...newPrincipals];

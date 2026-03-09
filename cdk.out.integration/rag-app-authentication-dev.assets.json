@@ -1,0 +1,21 @@
+{
+  "version": "48.0.0",
+  "files": {
+    "57c19684a3e219d154784e130335fdc5628c620813399b8f780343c078c4335b": {
+      "displayName": "rag-app-authentication-dev Template",
+      "source": {
+        "path": "rag-app-authentication-dev.template.json",
+        "packaging": "file"
+      },
+      "destinations": {
+        "450683699755-us-east-1-1adeb420": {
+          "bucketName": "cdk-hnb659fds-assets-450683699755-us-east-1",
+          "objectKey": "57c19684a3e219d154784e130335fdc5628c620813399b8f780343c078c4335b.json",
+          "region": "us-east-1",
+          "assumeRoleArn": "arn:${AWS::Partition}:iam::450683699755:role/cdk-hnb659fds-file-publishing-role-450683699755-us-east-1"
+        }
+      }
+    }
+  },
+  "dockerImages": {}
+}

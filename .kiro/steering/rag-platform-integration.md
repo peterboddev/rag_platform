@@ -9,30 +9,30 @@ This guide provides development teams with everything they need to build **RAG A
 The platform uses consistent naming patterns for all deployed resources:
 
 ### Resource Naming Pattern
-- **Application Name**: `rag-app-v2`
+- **Application Name**: `rag-app`
 - **Environment**: `dev` (development), `staging`, `prod`
 - **Resource Format**: `{applicationName}-{resourceType}-{environment}`
 
 ### Key Resource Names
-- **Vector Database Collection**: `rag-app-v2-vectors-dev`
-- **Knowledge Base**: `rag-app-v2-kb-dev`
+- **Vector Database Collection**: `rag-app-vectors-dev`
+- **Knowledge Base**: `rag-app-kb-dev`
 - **S3 Buckets**:
-  - Documents: `rag-app-v2-documents-dev`
-  - Configuration: `rag-app-v2-config-dev`
-  - Website: `rag-app-v2-website-dev`
-- **Cognito User Pool**: `rag-app-v2-users-dev`
+  - Documents: `rag-app-documents-dev`
+  - Configuration: `rag-app-config-dev`
+  - Website: `rag-app-website-dev`
+- **Cognito User Pool**: `rag-app-users-dev`
 - **CloudFormation Stacks**:
-  - Vector Database: `rag-app-v2-vector-db-dev`
-  - Authentication: `rag-app-v2-authentication-dev`
-  - Knowledge Base: `rag-app-v2-knowledge-base-dev`
-  - Storage: `rag-app-v2-storage-dev`
+  - Vector Database: `rag-app-vector-db-dev`
+  - Authentication: `rag-app-authentication-dev`
+  - Knowledge Base: `rag-app-knowledge-base-dev`
+  - Storage: `rag-app-storage-dev`
 
 ### CloudFormation Export Names
-- Vector Database Endpoint: `rag-app-v2-dev-vector-db-endpoint`
-- Cognito User Pool ID: `rag-app-v2-dev-cognito-user-pool-id`
-- Cognito Client ID: `rag-app-v2-dev-cognito-client-id`
-- Knowledge Base ID: `rag-app-v2-dev-knowledge-base-id`
-- Document Bucket: `rag-app-v2-dev-document-bucket`
+- Vector Database Endpoint: `rag-app-dev-vector-db-endpoint`
+- Cognito User Pool ID: `rag-app-dev-cognito-user-pool-id`
+- Cognito Client ID: `rag-app-dev-cognito-client-id`
+- Knowledge Base ID: `rag-app-dev-knowledge-base-id`
+- Document Bucket: `rag-app-dev-document-bucket`
 
 
 ## Project Distinction
@@ -302,90 +302,85 @@ aws cloudformation describe-stacks \
   --output text
 ```
 
-### Method 2: SSM Parameter Store
+## How to Retrieve Actual Configuration Values
 
-The platform automatically stores configuration values in SSM Parameter Store:
+The platform stores all configuration in SSM Parameter Store using a standardized prefix pattern: `/rag-app/{environment}/`
+
+### Method 1: Retrieve All Parameters (Recommended)
+
+Get all platform configuration with a single command:
 
 ```bash
-# Get vector database endpoint
+# Get all parameters for dev environment
+aws ssm get-parameters-by-path \
+  --path "/rag-app/dev/" \
+  --recursive \
+  --query 'Parameters[*].[Name,Value]' \
+  --output table
+
+# Get all parameters as JSON
+aws ssm get-parameters-by-path \
+  --path "/rag-app/dev/" \
+  --recursive \
+  --output json
+```
+
+This returns all configuration values organized by service category:
+- `/rag-app/dev/bedrock/*` - AI model IDs
+- `/rag-app/dev/cognito/*` - Authentication configuration
+- `/rag-app/dev/iam/*` - Role ARNs and names
+- `/rag-app/dev/opensearch/*` - Vector database configuration
+- `/rag-app/dev/apigateway/*` - API Gateway IDs and URLs
+- `/rag-app/dev/s3/*` - Bucket names
+- `/rag-app/dev/network/*` - VPC configuration
+
+### Method 2: Individual Parameter Retrieval
+
+```bash
+# Get specific parameter
 aws ssm get-parameter \
-  --name "/rag-app-v2/dev/opensearch/collection-endpoint" \
+  --name "/rag-app/dev/opensearch/collection-endpoint" \
   --query 'Parameter.Value' \
   --output text
 
 # Get Cognito configuration
 aws ssm get-parameter \
-  --name "/rag-app-v2/dev/cognito/user-pool-id" \
+  --name "/rag-app/dev/cognito/user-pool-id" \
   --query 'Parameter.Value' \
   --output text
 
+# Get IAM role ARN
 aws ssm get-parameter \
-  --name "/rag-app-v2/dev/cognito/client-id" \
+  --name "/rag-app/dev/iam/application-role-arn" \
   --query 'Parameter.Value' \
+  --output text
+```
+
+### Method 3: CloudFormation Stack Outputs
+
+Use the AWS CLI to retrieve exported values from the deployed stacks:
+
+```bash
+# Get vector database endpoint
+aws cloudformation describe-stacks \
+  --stack-name rag-app-vector-db-dev \
+  --query 'Stacks[0].Outputs[?OutputKey==`VectorDatabaseEndpoint`].OutputValue' \
+  --output text
+
+# Get Cognito User Pool ID
+aws cloudformation describe-stacks \
+  --stack-name rag-app-authentication-dev \
+  --query 'Stacks[0].Outputs[?OutputKey==`CognitoUserPoolId`].OutputValue' \
   --output text
 
 # Get Knowledge Base ID
-aws ssm get-parameter \
-  --name "/rag-app-v2/dev/bedrock/knowledge-base-id" \
-  --query 'Parameter.Value' \
+aws cloudformation describe-stacks \
+  --stack-name rag-app-knowledge-base-dev \
+  --query 'Stacks[0].Outputs[?OutputKey==`KnowledgeBaseId`].OutputValue' \
   --output text
 ```
 
-### Method 3: Configuration Export File (S3)
-
-The platform automatically generates a complete configuration file and stores it in S3:
-
-```bash
-# Download the complete configuration file
-aws s3 cp s3://rag-app-v2-config-dev/config/dev/rag-infrastructure-config.json ./config.json
-
-# View the configuration
-cat config.json
-```
-
-The configuration file contains all service endpoints, IDs, and connection details in JSON format:
-
-```json
-{
-  "applicationName": "rag-app-v2",
-  "environment": "dev",
-  "region": "us-east-1",
-  "services": {
-    "vectorDatabase": {
-      "endpoint": "https://[actual-collection-id].us-east-1.aoss.amazonaws.com",
-      "indexName": "vector-index"
-    },
-    "authentication": {
-      "userPoolId": "us-east-1_[actual-id]",
-      "clientId": "[actual-client-id]",
-      "identityPoolId": "us-east-1:[actual-identity-pool-id]"
-    },
-    "knowledgeBase": {
-      "knowledgeBaseId": "[actual-kb-id]"
-    }
-  }
-}
-```
-
-### Method 4: AWS Console
-
-1. **CloudFormation Console**:
-   - Go to AWS CloudFormation console
-   - Find stacks with names like `rag-app-v2-*-dev`
-   - Click on each stack and view the "Outputs" tab
-
-2. **OpenSearch Serverless Console**:
-   - Go to Amazon OpenSearch Service console
-   - Click "Serverless" in the left navigation
-   - Find collection named `rag-app-v2-vectors-dev`
-   - Copy the endpoint URL
-
-3. **Cognito Console**:
-   - Go to Amazon Cognito console
-   - Find user pool named `rag-app-v2-users-dev`
-   - Copy the User Pool ID and App Client ID
-
-### Method 5: Automated Script
+### Method 4: Automated Script
 
 Create a script to retrieve all configuration values at once:
 
@@ -396,23 +391,18 @@ Create a script to retrieve all configuration values at once:
 echo "🔍 Retrieving RAG Platform Configuration..."
 echo "=========================================="
 
-# Vector Database
-VECTOR_ENDPOINT=$(aws ssm get-parameter --name "/rag-app-v2/dev/opensearch/collection-endpoint" --query 'Parameter.Value' --output text 2>/dev/null)
-echo "Vector Database Endpoint: ${VECTOR_ENDPOINT:-'Not found'}"
+# Get all parameters using get-parameters-by-path
+PARAMS=$(aws ssm get-parameters-by-path \
+  --path "/rag-app/dev/" \
+  --recursive \
+  --query 'Parameters[*].[Name,Value]' \
+  --output text)
 
-# Cognito
-USER_POOL_ID=$(aws ssm get-parameter --name "/rag-app-v2/dev/cognito/user-pool-id" --query 'Parameter.Value' --output text 2>/dev/null)
-CLIENT_ID=$(aws ssm get-parameter --name "/rag-app-v2/dev/cognito/client-id" --query 'Parameter.Value' --output text 2>/dev/null)
-echo "Cognito User Pool ID: ${USER_POOL_ID:-'Not found'}"
-echo "Cognito Client ID: ${CLIENT_ID:-'Not found'}"
-
-# Knowledge Base
-KB_ID=$(aws ssm get-parameter --name "/rag-app-v2/dev/bedrock/knowledge-base-id" --query 'Parameter.Value' --output text 2>/dev/null)
-echo "Knowledge Base ID: ${KB_ID:-'Not found'}"
-
-# S3 Buckets
-DOCS_BUCKET=$(aws cloudformation describe-stacks --stack-name rag-app-v2-storage-dev --query 'Stacks[0].Outputs[?OutputKey==`DocumentBucketName`].OutputValue' --output text 2>/dev/null)
-echo "Documents Bucket: ${DOCS_BUCKET:-'Not found'}"
+echo "$PARAMS" | while read -r name value; do
+  # Extract the parameter key (last part after final /)
+  key=$(echo "$name" | awk -F'/' '{print $(NF-1)"/"$NF}')
+  echo "$key: $value"
+done
 
 echo "=========================================="
 echo "✅ Configuration retrieval complete"
@@ -423,6 +413,30 @@ Make it executable and run:
 chmod +x get-rag-config.sh
 ./get-rag-config.sh
 ```
+
+### Method 5: AWS Console
+
+1. **SSM Parameter Store Console** (Recommended):
+   - Go to AWS Systems Manager console
+   - Click "Parameter Store" in the left navigation
+   - Filter by prefix: `/rag-app/dev/`
+   - View all parameters and their values
+
+2. **CloudFormation Console**:
+   - Go to AWS CloudFormation console
+   - Find stacks with names like `rag-app-*-dev`
+   - Click on each stack and view the "Outputs" tab
+
+3. **OpenSearch Serverless Console**:
+   - Go to Amazon OpenSearch Service console
+   - Click "Serverless" in the left navigation
+   - Find collection named `rag-app-vectors-dev`
+   - Copy the endpoint URL
+
+4. **Cognito Console**:
+   - Go to Amazon Cognito console
+   - Find user pool named `rag-app-users-dev`
+   - Copy the User Pool ID and App Client ID
 
 ## Common Integration Patterns
 
@@ -815,16 +829,20 @@ console.log(JSON.stringify({
 
 ## Quick Start: Get Your Configuration
 
-Before you start development, run this command to get your actual configuration values:
+Before you start development, retrieve all configuration values with a single command:
 
 ```bash
-# Method 1: Download complete configuration file
-aws s3 cp s3://rag-app-v2-config-dev/config/dev/rag-infrastructure-config.json ./rag-config.json
+# Method 1: Get all parameters (Recommended)
+aws ssm get-parameters-by-path \
+  --path "/rag-app/dev/" \
+  --recursive \
+  --query 'Parameters[*].[Name,Value]' \
+  --output table
 
-# Method 2: Get individual values via SSM
-aws ssm get-parameter --name "/rag-app-v2/dev/opensearch/collection-endpoint" --query 'Parameter.Value' --output text
-aws ssm get-parameter --name "/rag-app-v2/dev/cognito/user-pool-id" --query 'Parameter.Value' --output text
-aws ssm get-parameter --name "/rag-app-v2/dev/bedrock/knowledge-base-id" --query 'Parameter.Value' --output text
+# Method 2: Get individual values
+aws ssm get-parameter --name "/rag-app/dev/opensearch/collection-endpoint" --query 'Parameter.Value' --output text
+aws ssm get-parameter --name "/rag-app/dev/cognito/user-pool-id" --query 'Parameter.Value' --output text
+aws ssm get-parameter --name "/rag-app/dev/iam/application-role-arn" --query 'Parameter.Value' --output text
 ```
 
 **Important**: Replace all placeholder values in your code with the actual values retrieved from these commands.

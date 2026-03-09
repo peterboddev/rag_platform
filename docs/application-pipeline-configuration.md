@@ -199,7 +199,6 @@ This is the actual configuration used for the RAG (Retrieval-Augmented Generatio
       "echo 'Build completed successfully'"
     ],
     "environment": {
-      "NODE_ENV": "production",
       "NPM_CONFIG_CACHE": "/tmp/.npm"
     }
   },
@@ -211,9 +210,11 @@ This is the actual configuration used for the RAG (Retrieval-Augmented Generatio
 
 **Key Points:**
 - Uses `templatePath` to point to the CDK-generated template
+- Stack ID in CDK app must match the template filename (without `.template.json`)
 - Includes `npx cdk synth` in build commands to generate the template
 - Uses `--if-present` flags for optional commands (test, build, synth)
 - Deploys the `RAGInfrastructureStack` which contains all RAG platform components
+- **NODE_ENV=production**: Can be used if the application doesn't run tests in the build, or uses `npm ci --include=dev` to explicitly install devDependencies
 
 ### Example 2: Simple SAM Application
 
@@ -265,10 +266,7 @@ This is the actual configuration used for the RAG (Retrieval-Augmented Generatio
       "npm run test",
       "npm run build",
       "npx cdk synth"
-    ],
-    "environment": {
-      "NODE_ENV": "production"
-    }
+    ]
   },
   "templatePath": "cdk.out/TypeScriptApplicationStack.template.json",
   "deploymentTargets": [
@@ -290,6 +288,8 @@ This is the actual configuration used for the RAG (Retrieval-Augmented Generatio
   "enabled": true
 }
 ```
+
+**Important**: Do NOT set `NODE_ENV=production` in buildConfig.environment if your build runs tests.
 
 ### Example 3: Multi-Stack CDK Application
 
@@ -354,6 +354,49 @@ This is the actual configuration used for the RAG (Retrieval-Augmented Generatio
 6. **Document your template path** in your application's README for other team members
 
 ## Troubleshooting
+
+### Pipeline fails with "File [template.yaml] does not exist in artifact"
+
+**Symptoms**: Deployment stage fails with error message about missing template.yaml
+
+**Root Causes**:
+1. **Stack ID mismatch**: CDK stack ID doesn't match templatePath configuration
+2. **Missing cdk synth**: Build commands don't include `npx cdk synth`
+3. **Build failure**: Tests or build failed, preventing CDK synthesis
+4. **NODE_ENV=production**: Causes npm ci to skip devDependencies, breaking tests
+
+**Solutions**:
+
+1. **Verify Stack ID matches template filename**:
+   ```typescript
+   // In your CDK app (e.g., bin/app.ts)
+   // ❌ WRONG - Dynamic stack ID with timestamp
+   new MyStack(app, `MyStack-${timestamp}`, { ... });
+   
+   // ✅ CORRECT - Static stack ID matching config
+   new MyStack(app, 'MyStack', { ... });
+   ```
+   
+   Then in config:
+   ```json
+   "templatePath": "cdk.out/MyStack.template.json"
+   ```
+
+2. **Ensure cdk synth runs in build**:
+   ```json
+   "buildConfig": {
+     "commands": [
+       "npm ci",
+       "npm run test --if-present",
+       "npx cdk synth"
+     ]
+   }
+   ```
+
+3. **If using NODE_ENV=production with tests**:
+   - Either remove `NODE_ENV=production` from buildConfig.environment
+   - OR use `npm ci --include=dev` to explicitly install devDependencies
+   - OR skip tests in the build (use `--if-present` flag)
 
 ### Pipeline fails at deployment stage
 

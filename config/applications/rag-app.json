@@ -9,7 +9,7 @@
   "buildConfig": {
     "runtime": "20",
     "commands": [
-      "echo 'Installing dependencies...'",
+      "echo 'Installing dependencies (including devDependencies)...'",
       "npm ci",
       "echo 'Running tests...'",
       "npm run test --if-present",

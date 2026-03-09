@@ -16,7 +16,7 @@ const account = process.env.CDK_DEFAULT_ACCOUNT || '450683699755';
 const region = process.env.CDK_DEFAULT_REGION || 'us-east-1';
 
 // Application configuration
-const applicationName = 'rag-app-v2';
+const applicationName = 'rag-app';
 const environment = 'dev'; // Start with dev environment
 
 console.log('🚀 Deploying RAG Infrastructure:');
@@ -25,9 +25,8 @@ console.log(`   Environment: ${environment}`);
 console.log(`   Account: ${account}`);
 console.log(`   Region: ${region}`);
 
-// Create the RAG infrastructure stack with unique name to avoid conflicts
-const timestamp = Date.now();
-const ragInfrastructureStack = new RAGInfrastructureStack(app, `RAGInfrastructureStack-v2-${timestamp}`, {
+// Create the RAG infrastructure stack
+const ragInfrastructureStack = new RAGInfrastructureStack(app, 'RAGInfrastructureStack', {
   env: {
     account: account,
     region: region,

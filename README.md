@@ -1,22 +1,39 @@
-# Platform Pipeline CDK System
+# Platform Pipeline and Infrastructure System
 
-This project implements a platform-owned CI/CD pipeline system using AWS CDK with TypeScript. The system follows a two-tier pipeline architecture where platform engineers manage a self-mutating platform pipeline that creates and controls application pipelines for various application teams.
+This repository serves a **dual purpose**: it provides both a CI/CD pipeline management system for application teams AND foundational AWS infrastructure services that applications consume.
 
-## Key Features
+**See `docs/PLATFORM_ARCHITECTURE.md` for comprehensive architecture documentation.**
 
-- **CDK and SAM Application Support**: Deploy both CDK and SAM applications with configurable template paths
-- **Immediate Pipeline Triggering**: Native CodeConnections triggers automatically eliminate polling delays
-- **Self-Mutating Pipeline**: Platform pipeline updates itself automatically
-- **Two-Tier Architecture**: Platform pipeline manages application pipelines
-- **Comprehensive Monitoring**: CloudWatch integration with failure notifications
-- **Secure Credential Management**: Local development and CI/CD credential handling
+## What This Repository Provides
 
-## Architecture
+### 1. Pipeline Management System
+- **Platform Pipeline**: Self-managing pipeline that deploys application pipelines
+- **Application Pipelines**: Standardized CI/CD pipelines for each application team
+- **Configuration Management**: Hybrid loader supporting file-based and CDK context configs
+- **CodeConnections Integration**: Immediate triggering on push events
+- **Monitoring**: CloudWatch integration with failure notifications
 
-The system implements a two-tier pipeline structure:
+### 2. Platform Infrastructure Services
+- **Network Infrastructure**: VPC, subnets, security groups, VPC endpoints
+- **AI Services**: AWS Bedrock Nova Pro, embedding models
+- **Vector Database**: OpenSearch Serverless for document embeddings
+- **Authentication**: Cognito user pools and identity management
+- **Storage**: S3 buckets, DynamoDB IAM roles
+- **API Gateway**: Platform-provided REST API with Cognito authorizer
+- **Application Integration**: IAM roles with Bedrock, Textract, OpenSearch, S3, DynamoDB access
 
-1. **Platform Pipeline** - Managed by platform engineers, controls application pipeline infrastructure
-2. **Application Pipelines** - Created and managed by the platform pipeline, used by application teams
+### Architecture Overview
+
+**Two-Tier Pipeline System**:
+1. **Platform Pipeline** → Manages application pipeline infrastructure
+2. **Application Pipelines** → Build and deploy application code
+
+**Platform Infrastructure**:
+- Platform team deploys foundational services (VPC, Bedrock, Vector DB, Cognito, API Gateway)
+- Application teams write Lambda functions and API Gateway methods
+- Applications automatically get IAM roles with access to platform services
+
+**See `docs/PLATFORM_ARCHITECTURE.md` for detailed architecture diagrams and patterns.**
 
 ## Prerequisites
 
@@ -189,10 +206,23 @@ This project uses **native CodeConnections triggers** to eliminate polling delay
 
 ## Documentation
 
-For detailed information, see:
+### For Platform Engineers
 
-- **Platform Pipeline Architecture**: `.kiro/steering/platform-pipeline-architecture.md` - Detailed architecture and implementation guidance
-- **Application Pipeline Configuration**: `docs/application-pipeline-configuration.md` - Guide for configuring SAM and CDK application pipelines, including the `templatePath` option
-- **Integration Testing**: `docs/integration-testing-guide.md` - Testing strategies and best practices
-- **Credential Management**: `docs/credential-management.md` - Security and credential handling
-- **Monitoring Implementation**: `docs/monitoring-implementation.md` - CloudWatch integration and failure notifications
+- **📖 Platform Architecture**: `docs/PLATFORM_ARCHITECTURE.md` - **START HERE** - Comprehensive architecture guide
+- **🔧 Platform Pipeline Architecture**: `.kiro/steering/platform-pipeline-architecture.md` - Detailed implementation guidance
+- **⚙️ Node.js Environment**: `.kiro/steering/nodejs-environment-ci-cd.md` - Critical NODE_ENV guidance
+- **📋 Active Specs**: `.kiro/specs/README.md` - Current and planned specifications
+- **🗄️ Archived Specs**: `.kiro/specs/_archive/README.md` - Completed specifications
+
+### For Application Teams
+
+- **🚀 Application Team Guide**: `docs/rag-app-team-guide.md` - Complete guide for building RAG applications
+- **🔌 RAG Platform Integration**: `.kiro/steering/rag-platform-integration.md` - Integration patterns and examples
+- **⚙️ Pipeline Configuration**: `docs/application-pipeline-configuration.md` - Configure SAM and CDK applications
+
+### Additional Resources
+
+- **🔐 Credential Management**: `docs/credential-management.md` - Security and credential handling
+- **📊 Monitoring**: `docs/monitoring-implementation.md` - CloudWatch integration
+- **🧪 Integration Testing**: `docs/integration-testing-guide.md` - Testing strategies
+- **🏗️ Repository Architecture**: `docs/repository-architecture.md` - Detailed architecture documentation

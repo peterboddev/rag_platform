@@ -6,12 +6,9 @@ import { BedrockAIServicesConstruct } from './constructs/bedrock-ai-services';
 import { VectorDatabaseConstruct } from './constructs/vector-database';
 import { S3StorageConstruct } from './constructs/s3-storage';
 import { DataStorageConstruct } from './constructs/data-storage';
-import { DocumentProcessingConstruct } from './constructs/document-processing';
-import { KnowledgeBaseConstruct } from './constructs/knowledge-base';
 import { CognitoAuthenticationConstruct } from './constructs/cognito-authentication';
 import { ApplicationIntegrationConstruct } from './constructs/application-integration';
-import { ConfigurationExportConstruct } from './constructs/configuration-export';
-import { MonitoringConstruct } from './constructs/monitoring';
+import { ApiGatewayConstruct } from './constructs/api-gateway';
 
 export interface RAGInfrastructureStackProps extends cdk.StackProps {
   readonly applicationName: string;
@@ -96,19 +93,39 @@ export class RAGInfrastructureStack extends cdk.Stack {
       logoutUrls: [`https://${s3Storage.websiteBucket.bucketName}.s3-website-${this.region}.amazonaws.com`],
     });
 
-    // 10. Application Integration Layer
-    // const applicationIntegration = new ApplicationIntegrationConstruct(this, 'ApplicationIntegration', {
-    //   applicationName,
-    //   environment,
-    //   region: this.region,
-    //   novaProModelId: bedrockServices.novaProModelId,
-    //   knowledgeBase: knowledgeBase,
-    //   cognitoUserPool: cognitoAuth.userPool,
-    //   dataStorage: dataStorage,
-    // });
+    // 10. API Gateway (Platform-provided for application teams)
+    const apiGateway = new ApiGatewayConstruct(this, 'ApiGateway', {
+      applicationName,
+      environment,
+      userPool: cognitoAuth.userPool,
+      userPoolClient: cognitoAuth.userPoolClient,
+    });
 
-    // Add application role to vector database access policy (if needed later)
-    // vectorDatabase.addAccessRoles([applicationIntegration.applicationRole]);
+    // 11. Application Integration Layer (IAM roles and SSM parameters)
+    const applicationIntegration = new ApplicationIntegrationConstruct(this, 'ApplicationIntegration', {
+      applicationName,
+      environment,
+      region: this.region,
+      novaProModelId: bedrockServices.novaProModelId,
+      embeddingModelId: bedrockServices.embeddingModelId,
+      cognitoUserPool: cognitoAuth.userPool,
+      cognitoUserPoolClient: cognitoAuth.userPoolClient,
+      cognitoIdentityPool: cognitoAuth.identityPool,
+      dataStorage: dataStorage,
+      vectorDatabase: vectorDatabase,
+      apiGatewayId: apiGateway.api.restApiId,
+      apiGatewayRootResourceId: apiGateway.api.root.resourceId,
+      apiGatewayUrl: apiGateway.api.url,
+      documentBucketName: s3Storage.documentBucket.bucketName,
+      websiteBucketName: s3Storage.websiteBucket.bucketName,
+      configBucketName: s3Storage.configurationBucket.bucketName,
+      vpcId: networkInfrastructure.vpc.vpcId,
+      conversationsTableName: dataStorage.conversationsTable.tableName,
+      documentsTableName: dataStorage.documentsTable.tableName,
+    });
+
+    // Add application role to vector database access policy
+    vectorDatabase.addAccessRoles([applicationIntegration.applicationRole]);
 
     // 11. Configuration Export Service
     // const configurationExport = new ConfigurationExportConstruct(this, 'ConfigurationExport', {
@@ -190,10 +207,22 @@ export class RAGInfrastructureStack extends cdk.Stack {
       exportName: `${applicationName}-${environment}-cognito-client-id`,
     });
 
-    // new cdk.CfnOutput(this, 'ApplicationRoleArn', {
-    //   value: applicationIntegration.applicationRole.roleArn,
-    //   description: 'IAM role ARN for application Lambda functions',
-    //   exportName: `${applicationName}-${environment}-application-role-arn`,
-    // });
+    new cdk.CfnOutput(this, 'ApplicationRoleArn', {
+      value: applicationIntegration.applicationRole.roleArn,
+      description: 'IAM role ARN for application Lambda functions',
+      exportName: `${applicationName}-${environment}-application-role-arn`,
+    });
+
+    new cdk.CfnOutput(this, 'ConversationsTableName', {
+      value: dataStorage.conversationsTable.tableName,
+      description: 'DynamoDB table for user conversations',
+      exportName: `${applicationName}-${environment}-conversations-table`,
+    });
+
+    new cdk.CfnOutput(this, 'DocumentsTableName', {
+      value: dataStorage.documentsTable.tableName,
+      description: 'DynamoDB table for document metadata',
+      exportName: `${applicationName}-${environment}-documents-table`,
+    });
   }
 }

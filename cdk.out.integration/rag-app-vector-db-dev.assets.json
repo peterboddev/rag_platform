@@ -1,0 +1,21 @@
+{
+  "version": "48.0.0",
+  "files": {
+    "da69ef622b676947329e9bcba637884e66d07f45884714dd7274741925cf43f6": {
+      "displayName": "rag-app-vector-db-dev Template",
+      "source": {
+        "path": "rag-app-vector-db-dev.template.json",
+        "packaging": "file"
+      },
+      "destinations": {
+        "450683699755-us-east-1-b8038c7c": {
+          "bucketName": "cdk-hnb659fds-assets-450683699755-us-east-1",
+          "objectKey": "da69ef622b676947329e9bcba637884e66d07f45884714dd7274741925cf43f6.json",
+          "region": "us-east-1",
+          "assumeRoleArn": "arn:${AWS::Partition}:iam::450683699755:role/cdk-hnb659fds-file-publishing-role-450683699755-us-east-1"
+        }
+      }
+    }
+  },
+  "dockerImages": {}
+}
