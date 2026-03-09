@@ -419,11 +419,14 @@ export class ApplicationPipelineConstruct extends Construct {
       }
 
       // For CDK applications: Add asset publishing step before CloudFormation deployment
-      // This uploads Lambda code, Docker images, and other assets to S3
+      // This uploads Lambda code, Docker images, and other assets to S3/ECR
       // CDK applications are identified by templatePath containing 'cdk.out/'
       const isCdkApplication = (config.templatePath || '').includes('cdk.out/');
       
       if (isCdkApplication) {
+        // Extract stack name from templatePath (e.g., "cdk.out/MyStack.template.json" -> "MyStack")
+        const stackName = config.templatePath?.split('/').pop()?.replace('.template.json', '') || 'Stack';
+        
         // Create CodeBuild project for CDK asset publishing
         const assetPublishProject = new codebuild.Project(this, `AssetPublish-${target.name}`, {
           projectName: `${config.applicationName}-asset-publish-${target.name}`,
@@ -436,12 +439,22 @@ export class ApplicationPipelineConstruct extends Construct {
                 'runtime-versions': {
                   nodejs: '20',
                 },
+                commands: [
+                  'echo "Installing cdk-assets CLI..."',
+                  'npm install -g cdk-assets@latest',
+                ],
+              },
+              pre_build: {
+                commands: [
+                  'echo "Verifying CDK assets metadata..."',
+                  `ls -la cdk.out/${stackName}.assets.json || echo "Asset file not found"`,
+                  `cat cdk.out/${stackName}.assets.json || echo "Cannot read asset file"`,
+                ],
               },
               build: {
                 commands: [
-                  'echo "Publishing CDK assets..."',
-                  'npm ci --production=false',  // Install CDK dependencies
-                  `npx cdk-assets --path cdk.out/*.assets.json --verbose publish`,
+                  'echo "Publishing CDK assets to S3 and ECR..."',
+                  `cdk-assets --path cdk.out/${stackName}.assets.json --verbose publish`,
                 ],
               },
             },
@@ -463,22 +476,54 @@ export class ApplicationPipelineConstruct extends Construct {
           },
           
           role: config.codeBuildRole,
-          timeout: cdk.Duration.minutes(10),
+          timeout: cdk.Duration.minutes(15),
         });
 
-        // Grant permissions to publish assets to CDK bootstrap bucket
+        // Grant permissions to publish assets to CDK bootstrap bucket (S3)
         assetPublishProject.addToRolePolicy(new iam.PolicyStatement({
           effect: iam.Effect.ALLOW,
           actions: [
             's3:PutObject',
             's3:GetObject',
             's3:ListBucket',
+            's3:GetBucketLocation',
+            's3:GetBucketVersioning',
           ],
           resources: [
             `arn:aws:s3:::cdk-*-assets-${target.account}-${target.region}`,
             `arn:aws:s3:::cdk-*-assets-${target.account}-${target.region}/*`,
           ],
         }));
+
+        // Grant permissions to publish Docker images to ECR (if any)
+        assetPublishProject.addToRolePolicy(new iam.PolicyStatement({
+          effect: iam.Effect.ALLOW,
+          actions: [
+            'ecr:GetAuthorizationToken',
+            'ecr:BatchCheckLayerAvailability',
+            'ecr:GetDownloadUrlForLayer',
+            'ecr:BatchGetImage',
+            'ecr:PutImage',
+            'ecr:InitiateLayerUpload',
+            'ecr:UploadLayerPart',
+            'ecr:CompleteLayerUpload',
+            'ecr:DescribeRepositories',
+            'ecr:CreateRepository',
+          ],
+          resources: ['*'],  // ECR requires wildcard for GetAuthorizationToken
+        }));
+
+        // Grant permissions to assume roles in target account (for cross-account deployments)
+        if (target.account !== cdk.Aws.ACCOUNT_ID) {
+          assetPublishProject.addToRolePolicy(new iam.PolicyStatement({
+            effect: iam.Effect.ALLOW,
+            actions: ['sts:AssumeRole'],
+            resources: [
+              `arn:aws:iam::${target.account}:role/cdk-*-file-publishing-role-${target.account}-${target.region}`,
+              `arn:aws:iam::${target.account}:role/cdk-*-image-publishing-role-${target.account}-${target.region}`,
+            ],
+          }));
+        }
 
         // Add asset publishing action before CloudFormation deployment
         stageActions.push(
