@@ -103,6 +103,7 @@ dist
 .cdk.staging
 cdk.out
 cdk.out2
+cdk.out.*
 cdk-deploy*
 
 # Compiled JavaScript files
