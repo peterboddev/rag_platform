@@ -55,6 +55,7 @@ const vectorDatabaseArn = cdk.Fn.importValue(`${applicationName}-${environment}-
 const authenticationStack = new AuthenticationStack(app, `${applicationName}-authentication-${environment}`, {
   ...commonProps,
   description: 'RAG application authentication - Cognito user pools and identity pools',
+  websiteBucketName: `${applicationName}-website-${environment}`, // Placeholder - will be created by storage stack
 });
 
 // 2. Knowledge Base Stack - Bedrock Knowledge Base

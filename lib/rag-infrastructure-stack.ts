@@ -111,17 +111,15 @@ export class RAGInfrastructureStack extends cdk.Stack {
       cognitoUserPool: cognitoAuth.userPool,
       cognitoUserPoolClient: cognitoAuth.userPoolClient,
       cognitoIdentityPool: cognitoAuth.identityPool,
-      dataStorage: dataStorage,
       vectorDatabase: vectorDatabase,
       apiGatewayId: apiGateway.api.restApiId,
       apiGatewayRootResourceId: apiGateway.api.root.resourceId,
       apiGatewayUrl: apiGateway.api.url,
-      documentBucketName: s3Storage.documentBucket.bucketName,
-      websiteBucketName: s3Storage.websiteBucket.bucketName,
-      configBucketName: s3Storage.configurationBucket.bucketName,
       vpcId: networkInfrastructure.vpc.vpcId,
-      conversationsTableName: dataStorage.conversationsTable.tableName,
+      customersTableName: dataStorage.customersTable.tableName,
+      customersTableArn: dataStorage.customersTable.tableArn,
       documentsTableName: dataStorage.documentsTable.tableName,
+      documentsTableArn: dataStorage.documentsTable.tableArn,
     });
 
     // Add application role to vector database access policy

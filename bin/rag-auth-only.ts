@@ -41,6 +41,7 @@ const commonProps = {
 const authenticationStack = new AuthenticationStack(app, `${applicationName}-authentication-${environment}`, {
   ...commonProps,
   description: 'RAG application authentication - Cognito user pools and identity pools',
+  websiteBucketName: `${applicationName}-website-${environment}`, // Placeholder - not actually used in this standalone deployment
 });
 
 // Add global tags to all resources
