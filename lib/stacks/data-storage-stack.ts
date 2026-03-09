@@ -29,7 +29,7 @@ export class DataStorageStack extends cdk.Stack {
       enableRDS: false, // Disable Aurora Serverless v2 for now
     });
 
-    this.customersTable = dataStorage.conversationsTable;
+    this.customersTable = dataStorage.customersTable;
     this.documentsTable = dataStorage.documentsTable;
     this.dynamoDBRole = dataStorage.dynamoDBRole;
 

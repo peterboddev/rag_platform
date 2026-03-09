@@ -116,8 +116,8 @@ export class RAGInfrastructureStack extends cdk.Stack {
       apiGatewayRootResourceId: apiGateway.api.root.resourceId,
       apiGatewayUrl: apiGateway.api.url,
       vpcId: networkInfrastructure.vpc.vpcId,
-      customersTableName: dataStorage.conversationsTable.tableName, // conversationsTable is actually the customers table
-      customersTableArn: dataStorage.conversationsTable.tableArn,
+      customersTableName: dataStorage.customersTable.tableName, // Now using correct property name
+      customersTableArn: dataStorage.customersTable.tableArn,
       documentsTableName: dataStorage.documentsTable.tableName,
       documentsTableArn: dataStorage.documentsTable.tableArn,
     });
@@ -211,10 +211,10 @@ export class RAGInfrastructureStack extends cdk.Stack {
       exportName: `${applicationName}-${environment}-application-role-arn`,
     });
 
-    new cdk.CfnOutput(this, 'ConversationsTableName', {
-      value: dataStorage.conversationsTable.tableName,
-      description: 'DynamoDB table for user conversations',
-      exportName: `${applicationName}-${environment}-conversations-table`,
+    new cdk.CfnOutput(this, 'CustomersTableName', {
+      value: dataStorage.customersTable.tableName,
+      description: 'DynamoDB table for customer/tenant management',
+      exportName: `${applicationName}-${environment}-customers-table`,
     });
 
     new cdk.CfnOutput(this, 'DocumentsTableName', {

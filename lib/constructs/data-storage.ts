@@ -16,7 +16,7 @@ export interface DataStorageProps {
 
 export class DataStorageConstruct extends Construct {
   public readonly dynamoDBRole: iam.Role;
-  public readonly conversationsTable: dynamodb.Table;
+  public readonly customersTable: dynamodb.Table;
   public readonly documentsTable: dynamodb.Table;
   public readonly auroraCluster?: rds.DatabaseCluster;
   public readonly databaseEndpoints: { [key: string]: string };
@@ -25,7 +25,7 @@ export class DataStorageConstruct extends Construct {
     super(scope, id);
 
     // Create DynamoDB table for customers/tenants
-    this.conversationsTable = new dynamodb.Table(this, 'CustomersTable', {
+    this.customersTable = new dynamodb.Table(this, 'CustomersTable', {
       tableName: `${props.applicationName}-customers-${props.environment}`,
       partitionKey: { name: 'customerId', type: dynamodb.AttributeType.STRING },
       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
@@ -35,7 +35,7 @@ export class DataStorageConstruct extends Construct {
     });
 
     // Add GSI for querying by email
-    this.conversationsTable.addGlobalSecondaryIndex({
+    this.customersTable.addGlobalSecondaryIndex({
       indexName: 'emailIndex',
       partitionKey: { name: 'email', type: dynamodb.AttributeType.STRING },
     });
@@ -74,13 +74,13 @@ export class DataStorageConstruct extends Construct {
     });
 
     // Grant DynamoDB permissions to the role
-    this.conversationsTable.grantReadWriteData(this.dynamoDBRole);
+    this.customersTable.grantReadWriteData(this.dynamoDBRole);
     this.documentsTable.grantReadWriteData(this.dynamoDBRole);
 
     // Initialize database endpoints
     this.databaseEndpoints = {
       dynamoDBRegion: props.region,
-      conversationsTableName: this.conversationsTable.tableName,
+      customersTableName: this.customersTable.tableName,
       documentsTableName: this.documentsTable.tableName,
     };
 
