@@ -156,7 +156,7 @@ export class DataStorageConstruct extends Construct {
       dynamodb: {
         region: this.databaseEndpoints.dynamoDBRegion,
         roleArn: this.dynamoDBRole.roleArn,
-        conversationsTable: this.conversationsTable.tableName,
+        customersTable: this.customersTable.tableName,
         documentsTable: this.documentsTable.tableName,
       },
       rds: this.auroraCluster ? {
@@ -174,7 +174,7 @@ export class DataStorageConstruct extends Construct {
 
   // Grant read/write access to tables for application Lambda role
   public grantTableAccess(role: iam.IRole) {
-    this.conversationsTable.grantReadWriteData(role);
+    this.customersTable.grantReadWriteData(role);
     this.documentsTable.grantReadWriteData(role);
   }
 }

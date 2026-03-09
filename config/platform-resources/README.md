@@ -15,67 +15,72 @@ These configuration files document:
 
 ```
 config/platform-resources/
-├── README.md                      # This file
-├── rag-app-resources.json         # RAG application resources (detailed spec)
-└── [app-name]-resources.json      # Other application resources (detailed spec)
+└── README.md                      # This file (guidance only)
+
+config/applications/
+├── [app-name].json                # Application pipeline configuration
+└── [app-name]-requirements.json   # Simple resource requirements
 ```
 
-**Related Files:**
-- `config/applications/[app-name]-requirements.json` - Simple, readable list of requested resources
-- `config/applications/[app-name].json` - Application pipeline configuration
+## Resource Management Approach
 
-## Two-File Approach
+### Single Source of Truth: CDK Code
 
-### 1. Requirements File (Simple)
+All platform resources are defined in CDK code:
+- `lib/constructs/data-storage.ts` - DynamoDB tables
+- `lib/constructs/cognito-authentication.ts` - Cognito resources
+- `lib/constructs/vector-database.ts` - OpenSearch collections
+- `lib/constructs/application-integration.ts` - IAM roles and permissions
+
+### Simple Requirements Tracking
+
 **Location**: `config/applications/[app-name]-requirements.json`
 
-**Purpose**: Quick reference for what app teams requested and what was deployed
+**Purpose**: Track what app teams requested
 - Simple, readable format
 - Just resource names and basic info
-- Easy to scan and understand
 - Updated when app teams make requests
+- Does NOT duplicate CDK code or deployment details
 
 **Example**: `config/applications/rag-app-requirements.json`
 
-### 2. Resources File (Detailed)
-**Location**: `config/platform-resources/[app-name]-resources.json`
+### Runtime Configuration: SSM Parameter Store
 
-**Purpose**: Complete technical specification of deployed resources
-- Full schemas, permissions, and configuration
-- SSM parameter paths and CloudFormation exports
-- Detailed access patterns and capabilities
-- Used for integration and troubleshooting
+All deployed resource values are stored in SSM Parameter Store:
+```bash
+# Get all configuration for an application
+aws ssm get-parameters-by-path --path "/rag-app/dev/" --recursive
+```
 
-**Example**: `config/platform-resources/rag-app-resources.json`
+**Why SSM Parameter Store?**
+- ✅ Automatically populated by CDK during deployment
+- ✅ Always up-to-date with actual deployed resources
+- ✅ No manual maintenance required
+- ✅ Programmatically accessible by app teams
+- ✅ Single source of truth for runtime configuration
 
 ## Resource Specification Format
 
-Each application resource file contains:
+### Requirements File (Simple)
 
-### 1. Application Metadata
-- Application name and environment
-- Description and last updated date
+Each application requirements file contains:
+- Application metadata (name, environment, team)
+- List of requested platform resources
+- Basic purpose for each resource
 - Deployment status
 
-### 2. Platform-Provided Resources
-Organized by AWS service:
-- **DynamoDB**: Tables with schemas, GSIs, and permissions
-- **Cognito**: User pools, clients, and identity pools
-- **OpenSearch**: Vector database collections
-- **Bedrock**: AI model IDs and permissions
-- **API Gateway**: REST APIs and permissions
-- **VPC**: Network infrastructure
-- **IAM**: Application roles with detailed permissions
+**This file does NOT contain:**
+- Detailed schemas (see CDK code)
+- SSM parameter paths (retrieved at runtime)
+- CloudFormation exports (managed by CDK)
+- Detailed permissions (see CDK IAM policies)
 
-### 3. App Team Responsibilities
-- Resources app teams must create
-- Resources app teams cannot create
-- Resources app teams can manage
+### Where to Find Detailed Information
 
-### 4. Configuration Retrieval
-- SSM Parameter Store commands
-- CloudFormation export commands
-- Individual parameter retrieval examples
+1. **Resource Definitions**: CDK code in `lib/constructs/`
+2. **Deployed Values**: SSM Parameter Store
+3. **Permissions**: CDK IAM policies in `lib/constructs/application-integration.ts`
+4. **Usage Guide**: `docs/rag-app-team-guide-v2.md`
 
 ## Usage
 
