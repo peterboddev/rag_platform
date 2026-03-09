@@ -264,6 +264,32 @@ new RAGApplicationStack(app, 'RAGApplicationStack', {
 });
 ```
 
+**Option 3: Remove base-directory from buildspec** (Common Fix)
+
+If you have `base-directory: cdk.out` in your buildspec.yml artifacts section, **remove it**:
+
+```yaml
+# ❌ WRONG - Makes paths relative to cdk.out
+artifacts:
+  base-directory: cdk.out  # Remove this line!
+  files:
+    - '**/*'
+
+# ✅ CORRECT - Paths relative to workspace root
+artifacts:
+  files:
+    - 'cdk.out/**/*'
+    - 'template.yaml'  # If you have one
+```
+
+**Why this matters**:
+- With `base-directory: cdk.out`, the artifact root IS `cdk.out/`
+- Pipeline looks for `cdk.out/Stack.template.json`
+- But that path becomes `cdk.out/cdk.out/Stack.template.json` (double nested)
+- Result: File not found
+
+**The fix**: Remove `base-directory` so paths are relative to workspace root, and the pipeline can find `cdk.out/Stack.template.json` correctly.
+
 ### Quick Fix: List All Templates
 
 If you have multiple stacks, you can use a wildcard pattern or specify the exact stack:
