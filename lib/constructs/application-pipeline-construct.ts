@@ -418,19 +418,15 @@ export class ApplicationPipelineConstruct extends Construct {
         );
       }
 
-      // For CDK applications: Add asset publishing step before CloudFormation deployment
-      // This uploads Lambda code, Docker images, and other assets to S3/ECR
-      // CDK applications are identified by templatePath containing 'cdk.out/'
+      // Detect application type based on templatePath
       const isCdkApplication = (config.templatePath || '').includes('cdk.out/');
       
       if (isCdkApplication) {
-        // Extract stack name from templatePath (e.g., "cdk.out/MyStack.template.json" -> "MyStack")
-        const stackName = config.templatePath?.split('/').pop()?.replace('.template.json', '') || 'Stack';
-        
-        // Create CodeBuild project for CDK asset publishing
-        const assetPublishProject = new codebuild.Project(this, `AssetPublish-${target.name}`, {
-          projectName: `${config.applicationName}-asset-publish-${target.name}`,
-          description: `Publish CDK assets for ${config.applicationName} to ${target.name}`,
+        // For CDK applications: Use cdk deploy which handles assets automatically
+        // This is more reliable than manual asset publishing + CloudFormation
+        const cdkDeployProject = new codebuild.Project(this, `CdkDeploy-${target.name}`, {
+          projectName: `${config.applicationName}-cdk-deploy-${target.name}`,
+          description: `CDK deploy for ${config.applicationName} to ${target.name}`,
           
           buildSpec: codebuild.BuildSpec.fromObject({
             version: '0.2',
@@ -440,21 +436,14 @@ export class ApplicationPipelineConstruct extends Construct {
                   nodejs: '20',
                 },
                 commands: [
-                  'echo "Installing cdk-assets CLI..."',
-                  'npm install -g cdk-assets@latest',
-                ],
-              },
-              pre_build: {
-                commands: [
-                  'echo "Verifying CDK assets metadata..."',
-                  `ls -la cdk.out/${stackName}.assets.json || echo "Asset file not found"`,
-                  `cat cdk.out/${stackName}.assets.json || echo "Cannot read asset file"`,
+                  'echo "Installing dependencies..."',
+                  'npm ci',
                 ],
               },
               build: {
                 commands: [
-                  'echo "Publishing CDK assets to S3 and ECR..."',
-                  `cdk-assets --path cdk.out/${stackName}.assets.json --verbose publish`,
+                  'echo "Deploying CDK stack..."',
+                  `npx cdk deploy ${target.stackName} --require-approval never --verbose`,
                 ],
               },
             },
@@ -476,83 +465,46 @@ export class ApplicationPipelineConstruct extends Construct {
           },
           
           role: config.codeBuildRole,
-          timeout: cdk.Duration.minutes(15),
+          timeout: cdk.Duration.minutes(30),
         });
 
-        // Grant permissions to publish assets to CDK bootstrap bucket (S3)
-        assetPublishProject.addToRolePolicy(new iam.PolicyStatement({
+        // Grant CDK deployment permissions
+        cdkDeployProject.addToRolePolicy(new iam.PolicyStatement({
           effect: iam.Effect.ALLOW,
           actions: [
-            's3:PutObject',
-            's3:GetObject',
-            's3:ListBucket',
-            's3:GetBucketLocation',
-            's3:GetBucketVersioning',
+            'cloudformation:*',
+            's3:*',
+            'ecr:*',
+            'iam:*',
+            'lambda:*',
+            'logs:*',
+            'ssm:*',
+            'sts:AssumeRole',
           ],
-          resources: [
-            `arn:aws:s3:::cdk-*-assets-${target.account}-${target.region}`,
-            `arn:aws:s3:::cdk-*-assets-${target.account}-${target.region}/*`,
-          ],
+          resources: ['*'],
         }));
 
-        // Grant permissions to publish Docker images to ECR (if any)
-        assetPublishProject.addToRolePolicy(new iam.PolicyStatement({
-          effect: iam.Effect.ALLOW,
-          actions: [
-            'ecr:GetAuthorizationToken',
-            'ecr:BatchCheckLayerAvailability',
-            'ecr:GetDownloadUrlForLayer',
-            'ecr:BatchGetImage',
-            'ecr:PutImage',
-            'ecr:InitiateLayerUpload',
-            'ecr:UploadLayerPart',
-            'ecr:CompleteLayerUpload',
-            'ecr:DescribeRepositories',
-            'ecr:CreateRepository',
-          ],
-          resources: ['*'],  // ECR requires wildcard for GetAuthorizationToken
-        }));
-
-        // Grant permissions to assume roles in target account (for cross-account deployments)
-        if (target.account !== cdk.Aws.ACCOUNT_ID) {
-          assetPublishProject.addToRolePolicy(new iam.PolicyStatement({
-            effect: iam.Effect.ALLOW,
-            actions: ['sts:AssumeRole'],
-            resources: [
-              `arn:aws:iam::${target.account}:role/cdk-*-file-publishing-role-${target.account}-${target.region}`,
-              `arn:aws:iam::${target.account}:role/cdk-*-image-publishing-role-${target.account}-${target.region}`,
-            ],
-          }));
-        }
-
-        // Add asset publishing action before CloudFormation deployment
         stageActions.push(
           new codepipeline_actions.CodeBuildAction({
-            actionName: `PublishAssets_${target.name}`,
-            project: assetPublishProject,
+            actionName: `Deploy_${target.name}`,
+            project: cdkDeployProject,
             input: buildOutput,
-            runOrder: 1,  // Run before CloudFormation
+          })
+        );
+      } else {
+        // For SAM applications: Use CloudFormation deployment
+        stageActions.push(
+          new codepipeline_actions.CloudFormationCreateUpdateStackAction({
+            actionName: `Deploy_${target.name}`,
+            stackName: target.stackName,
+            templatePath: buildOutput.atPath(config.templatePath || 'template.yaml'),
+            adminPermissions: true,
+            parameterOverrides: target.parameters || {},
+            region: target.region,
+            account: target.account,
           })
         );
       }
-
-      // Add CloudFormation deployment action
-      // Template path is configurable to support both SAM and CDK applications:
-      // - SAM applications use 'template.yaml' (default)
-      // - CDK applications use 'cdk.out/<StackName>.template.json'
-      // The templatePath configuration allows applications to specify their template location
-      stageActions.push(
-        new codepipeline_actions.CloudFormationCreateUpdateStackAction({
-          actionName: `Deploy_${target.name}`,
-          stackName: target.stackName,
-          templatePath: buildOutput.atPath(config.templatePath || 'template.yaml'),
-          adminPermissions: true,
-          parameterOverrides: target.parameters || {},
-          region: target.region,
-          account: target.account,
-          runOrder: isCdkApplication ? 2 : 1,  // Run after asset publishing for CDK apps
-        })
-      );
 
       pipeline.addStage({
         stageName: `Deploy_${target.name}`,
