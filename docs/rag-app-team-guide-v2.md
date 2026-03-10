@@ -4,6 +4,8 @@
 
 This guide explains how to build RAG applications using the platform-provided foundational infrastructure. The platform provides core AI/ML services, while you create application-specific resources and business logic.
 
+**Important**: This platform supports CDK (Cloud Development Kit) applications only. All applications must use AWS CDK with TypeScript for infrastructure as code.
+
 ## Application Pipeline Build Process
 
 ### Your buildspec.yml File
@@ -14,7 +16,7 @@ The platform pipeline uses your buildspec.yml to:
 - Install dependencies
 - Run tests
 - Build your application
-- Generate CloudFormation templates (for CDK apps) or package artifacts (for SAM apps)
+- Synthesize CDK stacks (generate CloudFormation templates)
 
 #### Example buildspec.yml for CDK Applications
 
@@ -39,7 +41,7 @@ phases:
       - echo "Building application..."
       - npm run build
       - echo "Synthesizing CDK stack..."
-      - npx cdk synth --if-present
+      - npx cdk synth
   
   post_build:
     commands:
@@ -49,35 +51,11 @@ artifacts:
   files:
     - '**/*'
   # IMPORTANT: Do NOT use base-directory for CDK apps
-  # The platform expects templates at cdk.out/<StackName>.template.json
+  # The platform expects all files including cdk.out/ at the root
 
 cache:
   paths:
     - 'node_modules/**/*'
-```
-
-#### Example buildspec.yml for SAM Applications
-
-```yaml
-version: 0.2
-
-phases:
-  install:
-    runtime-versions:
-      nodejs: 20
-      python: 3.11
-    commands:
-      - pip install aws-sam-cli
-  
-  build:
-    commands:
-      - sam build
-      - sam package --output-template-file packaged.yaml --s3-bucket $ARTIFACT_BUCKET
-  
-artifacts:
-  files:
-    - template.yaml
-    - packaged.yaml
 ```
 
 #### Critical buildspec.yml Rules
@@ -85,7 +63,7 @@ artifacts:
 1. **Do NOT set `NODE_ENV=production`** in environment variables - it breaks devDependencies installation
 2. **Do NOT use `base-directory: cdk.out`** in artifacts - it causes double-nested paths
 3. **Use `nodejs: 20`** for Node.js runtime (compatible with npm 11+)
-4. **Include all necessary files** in artifacts section
+4. **Include `npx cdk synth`** in build commands to generate CloudFormation templates
 5. **Cache node_modules** for faster builds
 
 #### Troubleshooting Your buildspec.yml
@@ -93,10 +71,10 @@ artifacts:
 If your build fails, check:
 - [ ] buildspec.yml exists at repository root
 - [ ] Runtime versions are specified correctly
-- [ ] All required commands are present
+- [ ] All required commands are present (npm ci, npm test, npm build, npx cdk synth)
 - [ ] Artifacts section includes necessary files
 - [ ] No `NODE_ENV=production` in env variables
-- [ ] No `base-directory` in artifacts section (for CDK apps)
+- [ ] No `base-directory` in artifacts section
 
 See [Application Team Troubleshooting Guide](./APP_TEAM_TROUBLESHOOTING.md) for detailed debugging steps.
 
@@ -863,16 +841,6 @@ npx cdk deploy --require-approval never
 npx cdk deploy --context environment=staging
 ```
 
-### Using SAM
-
-```bash
-# Build
-sam build
-
-# Deploy
-sam deploy --guided
-```
-
 ## Verification
 
 ### Check Your Resources
@@ -913,12 +881,9 @@ aws dynamodb scan \
 
 ## Troubleshooting
 
-### Issue: Pipeline Build Fails - "template.yaml not found"
+### Issue: Pipeline Build Fails - CDK Synthesis Error
 
-**Symptom**: Application pipeline deployment stage fails with:
-```
-File [template.yaml] does not exist in artifact [BuildOutput]
-```
+**Symptom**: Application pipeline build stage fails during CDK synthesis.
 
 **Root Cause**: Build failed before CDK synthesis could create the template file.
 
@@ -982,7 +947,7 @@ ls cdk.out/
 
 #### Step 4: Update templatePath in Pipeline Config
 
-If using CDK, specify the correct template path:
+Specify the correct template path in your application configuration:
 
 ```json
 {
@@ -990,12 +955,7 @@ If using CDK, specify the correct template path:
 }
 ```
 
-For SAM applications, use:
-```json
-{
-  "templatePath": "template.yaml"
-}
-```
+Replace `YourStackName` with your actual CDK stack name (e.g., `RAGApplicationStack`).
 
 ### Issue: NODE_ENV=production Breaks Builds
 

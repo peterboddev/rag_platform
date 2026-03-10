@@ -2,14 +2,16 @@
 
 ## Overview
 
-This directory contains working buildspec.yml examples that have been tested with the RAG platform pipeline. Use these as templates for your application's build process.
+This directory contains a working buildspec.yml example that has been tested with the RAG platform pipeline. Use this as a template for your CDK application's build process.
 
-## Available Examples
+**Important**: This platform supports CDK applications only. All applications must use AWS CDK with TypeScript.
 
-### 1. buildspec-example-cdk.yml
+## Available Example
+
+### buildspec-example-cdk.yml
 For CDK (Cloud Development Kit) applications that use TypeScript/JavaScript infrastructure as code.
 
-**Use this if:**
+**Use this for:**
 - Your application uses AWS CDK
 - You have a `cdk.json` file in your repository
 - You run `npx cdk synth` to generate CloudFormation templates
@@ -21,31 +23,11 @@ For CDK (Cloud Development Kit) applications that use TypeScript/JavaScript infr
 - CDK synthesis
 - Proper artifact configuration (no base-directory)
 
-### 2. buildspec-example-sam.yml
-For SAM (Serverless Application Model) applications that use template.yaml.
-
-**Use this if:**
-- Your application uses AWS SAM
-- You have a `template.yaml` file in your repository
-- You run `sam build` to build your application
-
-**Key features:**
-- Node.js 20 + Python 3.11 runtimes
-- SAM CLI installation
-- npm ci for reproducible builds
-- Test execution before build
-- SAM build and package
-- Proper artifact configuration for SAM
-
 ## How to Use
 
-1. **Copy the appropriate example** to your repository root as `buildspec.yml`:
+1. **Copy the example** to your repository root as `buildspec.yml`:
    ```bash
-   # For CDK applications
    cp docs/buildspec-example-cdk.yml buildspec.yml
-   
-   # For SAM applications
-   cp docs/buildspec-example-sam.yml buildspec.yml
    ```
 
 2. **Customize for your application**:
