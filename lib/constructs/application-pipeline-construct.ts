@@ -405,6 +405,7 @@ export class ApplicationPipelineConstruct extends Construct {
     });
 
     // Deployment Stages - Multiple environments
+    // All applications use CDK, so we use 'cdk deploy' for proper asset handling
     config.deploymentTargets.forEach((target, index) => {
       const stageActions: codepipeline.IAction[] = [];
 
@@ -418,93 +419,74 @@ export class ApplicationPipelineConstruct extends Construct {
         );
       }
 
-      // Detect application type based on templatePath
-      const isCdkApplication = (config.templatePath || '').includes('cdk.out/');
-      
-      if (isCdkApplication) {
-        // For CDK applications: Use cdk deploy which handles assets automatically
-        // This is more reliable than manual asset publishing + CloudFormation
-        const cdkDeployProject = new codebuild.Project(this, `CdkDeploy-${target.name}`, {
-          projectName: `${config.applicationName}-cdk-deploy-${target.name}`,
-          description: `CDK deploy for ${config.applicationName} to ${target.name}`,
-          
-          buildSpec: codebuild.BuildSpec.fromObject({
-            version: '0.2',
-            phases: {
-              install: {
-                'runtime-versions': {
-                  nodejs: '20',
-                },
-                commands: [
-                  'echo "Installing dependencies..."',
-                  'npm ci',
-                ],
+      // Use cdk deploy which handles assets automatically
+      const cdkDeployProject = new codebuild.Project(this, `CdkDeploy-${target.name}`, {
+        projectName: `${config.applicationName}-cdk-deploy-${target.name}`,
+        description: `CDK deploy for ${config.applicationName} to ${target.name}`,
+        
+        buildSpec: codebuild.BuildSpec.fromObject({
+          version: '0.2',
+          phases: {
+            install: {
+              'runtime-versions': {
+                nodejs: '20',
               },
-              build: {
-                commands: [
-                  'echo "Deploying CDK stack..."',
-                  `npx cdk deploy ${target.stackName} --require-approval never --verbose`,
-                ],
-              },
+              commands: [
+                'echo "Installing dependencies..."',
+                'npm ci',
+              ],
             },
-          }),
-          
-          environment: {
-            buildImage: codebuild.LinuxArmBuildImage.AMAZON_LINUX_2_STANDARD_3_0,
-            computeType: codebuild.ComputeType.SMALL,
-            environmentVariables: {
-              'AWS_DEFAULT_REGION': {
-                value: target.region,
-                type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
-              },
-              'AWS_ACCOUNT_ID': {
-                value: target.account,
-                type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
-              },
+            build: {
+              commands: [
+                'echo "Deploying CDK stack..."',
+                `npx cdk deploy ${target.stackName} --require-approval never --verbose`,
+              ],
             },
           },
-          
-          role: config.codeBuildRole,
-          timeout: cdk.Duration.minutes(30),
-        });
+        }),
+        
+        environment: {
+          buildImage: codebuild.LinuxArmBuildImage.AMAZON_LINUX_2_STANDARD_3_0,
+          computeType: codebuild.ComputeType.SMALL,
+          environmentVariables: {
+            'AWS_DEFAULT_REGION': {
+              value: target.region,
+              type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
+            },
+            'AWS_ACCOUNT_ID': {
+              value: target.account,
+              type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
+            },
+          },
+        },
+        
+        role: config.codeBuildRole,
+        timeout: cdk.Duration.minutes(30),
+      });
 
-        // Grant CDK deployment permissions
-        cdkDeployProject.addToRolePolicy(new iam.PolicyStatement({
-          effect: iam.Effect.ALLOW,
-          actions: [
-            'cloudformation:*',
-            's3:*',
-            'ecr:*',
-            'iam:*',
-            'lambda:*',
-            'logs:*',
-            'ssm:*',
-            'sts:AssumeRole',
-          ],
-          resources: ['*'],
-        }));
+      // Grant CDK deployment permissions
+      cdkDeployProject.addToRolePolicy(new iam.PolicyStatement({
+        effect: iam.Effect.ALLOW,
+        actions: [
+          'cloudformation:*',
+          's3:*',
+          'ecr:*',
+          'iam:*',
+          'lambda:*',
+          'logs:*',
+          'ssm:*',
+          'sts:AssumeRole',
+        ],
+        resources: ['*'],
+      }));
 
-        stageActions.push(
-          new codepipeline_actions.CodeBuildAction({
-            actionName: `Deploy_${target.name}`,
-            project: cdkDeployProject,
-            input: buildOutput,
-          })
-        );
-      } else {
-        // For SAM applications: Use CloudFormation deployment
-        stageActions.push(
-          new codepipeline_actions.CloudFormationCreateUpdateStackAction({
-            actionName: `Deploy_${target.name}`,
-            stackName: target.stackName,
-            templatePath: buildOutput.atPath(config.templatePath || 'template.yaml'),
-            adminPermissions: true,
-            parameterOverrides: target.parameters || {},
-            region: target.region,
-            account: target.account,
-          })
-        );
-      }
+      stageActions.push(
+        new codepipeline_actions.CodeBuildAction({
+          actionName: `Deploy_${target.name}`,
+          project: cdkDeployProject,
+          input: buildOutput,
+        })
+      );
 
       pipeline.addStage({
         stageName: `Deploy_${target.name}`,
