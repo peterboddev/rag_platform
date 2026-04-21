@@ -118,6 +118,9 @@ lib/**/*.d.ts
 *.pem
 *.key
 
+# Kiro
+.kiro/
+
 # IDE files
 .vscode/
 .idea/

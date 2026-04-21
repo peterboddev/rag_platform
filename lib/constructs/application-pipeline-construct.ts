@@ -434,12 +434,14 @@ export class ApplicationPipelineConstruct extends Construct {
               commands: [
                 'echo "Installing dependencies..."',
                 'npm ci',
+                'echo "Installing latest CDK CLI..."',
+                'npm install -g aws-cdk@latest',
               ],
             },
             build: {
               commands: [
                 'echo "Deploying CDK stack..."',
-                `npx cdk deploy ${target.stackName} --require-approval never --verbose`,
+                `cdk deploy ${target.stackName} --require-approval never --verbose`,
               ],
             },
           },
@@ -478,6 +480,25 @@ export class ApplicationPipelineConstruct extends Construct {
           'sts:AssumeRole',
         ],
         resources: ['*'],
+      }));
+
+      // Grant API Gateway permissions for modifying platform-provided API Gateway
+      // App teams deploy their CDK stacks which add methods/resources to the platform API Gateway
+      // CloudFormation needs these permissions to create/update API Gateway resources
+      cdkDeployProject.addToRolePolicy(new iam.PolicyStatement({
+        effect: iam.Effect.ALLOW,
+        actions: [
+          'apigateway:GET',
+          'apigateway:POST',
+          'apigateway:PUT',
+          'apigateway:PATCH',
+          'apigateway:DELETE',
+        ],
+        resources: [
+          // Allow access to all API Gateways in the region
+          // App teams will import the specific platform API Gateway ID via SSM
+          `arn:aws:apigateway:${target.region}::/restapis/*`,
+        ],
       }));
 
       stageActions.push(
