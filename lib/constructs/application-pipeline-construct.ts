@@ -356,6 +356,29 @@ export class ApplicationPipelineConstruct extends Construct {
       ],
     }));
 
+    // Grant permissions to trigger AgentCore agent container builds
+    // The buildspec's post_build phase packages agent source code, uploads to S3,
+    // and triggers CodeBuild projects that build/push Docker images to ECR for AgentCore
+    buildProject.addToRolePolicy(new iam.PolicyStatement({
+      effect: iam.Effect.ALLOW,
+      actions: [
+        's3:PutObject',
+      ],
+      resources: [
+        `arn:aws:s3:::bedrock-agentcore-codebuild-sources-${cdk.Aws.ACCOUNT_ID}-${cdk.Aws.REGION}/*`,
+      ],
+    }));
+
+    buildProject.addToRolePolicy(new iam.PolicyStatement({
+      effect: iam.Effect.ALLOW,
+      actions: [
+        'codebuild:StartBuild',
+      ],
+      resources: [
+        `arn:aws:codebuild:${cdk.Aws.REGION}:${cdk.Aws.ACCOUNT_ID}:project/bedrock-agentcore-*-builder`,
+      ],
+    }));
+
     return buildProject;
   }
 
